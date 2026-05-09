@@ -1,0 +1,42 @@
+{
+  "originHash" : "bd4614c69c49b1f6c061a6a9948c45a083aceac91eb1504894a76dd72d89d517",
+  "pins" : [
+    {
+      "identity" : "defaults",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sindresorhus/Defaults.git",
+      "state" : {
+        "revision" : "38925e3cfacf3fb89a81a35b1cd44fd5a5b7e0fa",
+        "version" : "8.2.0"
+      }
+    },
+    {
+      "identity" : "keyboardshortcuts",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sindresorhus/KeyboardShortcuts.git",
+      "state" : {
+        "revision" : "1aef85578fdd4f9eaeeb8d53b7b4fc31bf08fe27",
+        "version" : "2.4.0"
+      }
+    },
+    {
+      "identity" : "launchatlogin-modern",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sindresorhus/LaunchAtLogin-Modern.git",
+      "state" : {
+        "revision" : "a04ec1c363be3627734f6dad757d82f5d4fa8fcc",
+        "version" : "1.1.0"
+      }
+    },
+    {
+      "identity" : "sparkle",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/sparkle-project/Sparkle.git",
+      "state" : {
+        "revision" : "066e75a8b3e99962685d6a90cdd5293ebffd9261",
+        "version" : "2.9.1"
+      }
+    }
+  ],
+  "version" : 3
+}

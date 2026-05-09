@@ -6,6 +6,13 @@
 	objectVersion = 77;
 	objects = {
 
+/* Begin PBXBuildFile section */
+		1CB902702FAFA449009B01E1 /* KeyboardShortcuts in Frameworks */ = {isa = PBXBuildFile; productRef = 327B47F91B747C3E6BD88CC8 /* KeyboardShortcuts */; };
+		1CB902712FAFA449009B01E1 /* LaunchAtLogin in Frameworks */ = {isa = PBXBuildFile; productRef = 7A72EF3D76B2B4E29E05EAE6 /* LaunchAtLogin */; };
+		1CB902722FAFA449009B01E1 /* Defaults in Frameworks */ = {isa = PBXBuildFile; productRef = 6E88687003DC44ECD34ED313 /* Defaults */; };
+		1CB902732FAFA449009B01E1 /* Sparkle in Frameworks */ = {isa = PBXBuildFile; productRef = 66340611CB1B75BFC38357D0 /* Sparkle */; };
+/* End PBXBuildFile section */
+
 /* Begin PBXFileReference section */
 		1CB9025E2FAF9F25009B01E1 /* NotchApp.app */ = {isa = PBXFileReference; explicitFileType = wrapper.application; includeInIndex = 0; path = NotchApp.app; sourceTree = BUILT_PRODUCTS_DIR; };
 /* End PBXFileReference section */
@@ -23,6 +30,10 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
+				1CB902732FAFA449009B01E1 /* Sparkle in Frameworks */,
+				1CB902722FAFA449009B01E1 /* Defaults in Frameworks */,
+				1CB902712FAFA449009B01E1 /* LaunchAtLogin in Frameworks */,
+				1CB902702FAFA449009B01E1 /* KeyboardShortcuts in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -65,6 +76,10 @@
 			);
 			name = NotchApp;
 			packageProductDependencies = (
+				327B47F91B747C3E6BD88CC8 /* KeyboardShortcuts */,
+				7A72EF3D76B2B4E29E05EAE6 /* LaunchAtLogin */,
+				6E88687003DC44ECD34ED313 /* Defaults */,
+				66340611CB1B75BFC38357D0 /* Sparkle */,
 			);
 			productName = NotchApp;
 			productReference = 1CB9025E2FAF9F25009B01E1 /* NotchApp.app */;
@@ -94,6 +109,12 @@
 			);
 			mainGroup = 1CB902552FAF9F25009B01E1;
 			minimizedProjectReferenceProxies = 1;
+			packageReferences = (
+				D23EC33D5B30F9E7E936483D /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */,
+				C2CF6F611C982A817C59A358 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */,
+				052EE289A6052E5EA6BB754B /* XCRemoteSwiftPackageReference "Defaults" */,
+				5C6BC88190589609B7408957 /* XCRemoteSwiftPackageReference "Sparkle" */,
+			);
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 1CB9025F2FAF9F25009B01E1 /* Products */;
 			projectDirPath = "";
@@ -248,22 +269,41 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				AUTOMATION_APPLE_EVENTS = NO;
+				CODE_SIGN_ENTITLEMENTS = NotchApp/NotchApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSAccessibilityUsageDescription = "NotchApp needs accessibility access for system-wide keyboard shortcuts.";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "NotchApp uses Apple Events for app integration features.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "NotchApp needs screen access to create PiP windows for any app.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = Nia.NotchApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
+				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
+				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
+				RUNTIME_EXCEPTION_ALLOW_UNSIGNED_EXECUTABLE_MEMORY = NO;
+				RUNTIME_EXCEPTION_DEBUGGING_TOOL = NO;
+				RUNTIME_EXCEPTION_DISABLE_EXECUTABLE_PAGE_PROTECTION = NO;
+				RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION = NO;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -278,22 +318,41 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				AUTOMATION_APPLE_EVENTS = NO;
+				CODE_SIGN_ENTITLEMENTS = NotchApp/NotchApp.entitlements;
 				CODE_SIGN_STYLE = Automatic;
 				COMBINE_HIDPI_IMAGES = YES;
 				CURRENT_PROJECT_VERSION = 1;
-				ENABLE_APP_SANDBOX = YES;
+				ENABLE_APP_SANDBOX = NO;
+				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
-				ENABLE_USER_SELECTED_FILES = readonly;
+				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
+				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
+				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
+				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_KEY_LSUIElement = YES;
+				INFOPLIST_KEY_NSAccessibilityUsageDescription = "NotchApp needs accessibility access for system-wide keyboard shortcuts.";
+				INFOPLIST_KEY_NSAppleEventsUsageDescription = "NotchApp uses Apple Events for app integration features.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "NotchApp needs screen access to create PiP windows for any app.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/../Frameworks",
 				);
+				MACOSX_DEPLOYMENT_TARGET = 14.0;
 				MARKETING_VERSION = 1.0;
 				PRODUCT_BUNDLE_IDENTIFIER = Nia.NotchApp;
 				PRODUCT_NAME = "$(TARGET_NAME)";
 				REGISTER_APP_GROUPS = YES;
+				RUNTIME_EXCEPTION_ALLOW_DYLD_ENVIRONMENT_VARIABLES = NO;
+				RUNTIME_EXCEPTION_ALLOW_JIT = NO;
+				RUNTIME_EXCEPTION_ALLOW_UNSIGNED_EXECUTABLE_MEMORY = NO;
+				RUNTIME_EXCEPTION_DEBUGGING_TOOL = NO;
+				RUNTIME_EXCEPTION_DISABLE_EXECUTABLE_PAGE_PROTECTION = NO;
+				RUNTIME_EXCEPTION_DISABLE_LIBRARY_VALIDATION = NO;
 				STRING_CATALOG_GENERATE_SYMBOLS = YES;
 				SWIFT_APPROACHABLE_CONCURRENCY = YES;
 				SWIFT_DEFAULT_ACTOR_ISOLATION = MainActor;
@@ -325,6 +384,64 @@
 			defaultConfigurationName = Release;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCRemoteSwiftPackageReference section */
+		052EE289A6052E5EA6BB754B /* XCRemoteSwiftPackageReference "Defaults" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/Defaults.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 8.0.0;
+			};
+		};
+		5C6BC88190589609B7408957 /* XCRemoteSwiftPackageReference "Sparkle" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sparkle-project/Sparkle.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.6.0;
+			};
+		};
+		C2CF6F611C982A817C59A358 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/LaunchAtLogin-Modern.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 1.0.0;
+			};
+		};
+		D23EC33D5B30F9E7E936483D /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */ = {
+			isa = XCRemoteSwiftPackageReference;
+			repositoryURL = "https://github.com/sindresorhus/KeyboardShortcuts.git";
+			requirement = {
+				kind = upToNextMajorVersion;
+				minimumVersion = 2.0.0;
+			};
+		};
+/* End XCRemoteSwiftPackageReference section */
+
+/* Begin XCSwiftPackageProductDependency section */
+		327B47F91B747C3E6BD88CC8 /* KeyboardShortcuts */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = D23EC33D5B30F9E7E936483D /* XCRemoteSwiftPackageReference "KeyboardShortcuts" */;
+			productName = KeyboardShortcuts;
+		};
+		66340611CB1B75BFC38357D0 /* Sparkle */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 5C6BC88190589609B7408957 /* XCRemoteSwiftPackageReference "Sparkle" */;
+			productName = Sparkle;
+		};
+		6E88687003DC44ECD34ED313 /* Defaults */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 052EE289A6052E5EA6BB754B /* XCRemoteSwiftPackageReference "Defaults" */;
+			productName = Defaults;
+		};
+		7A72EF3D76B2B4E29E05EAE6 /* LaunchAtLogin */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = C2CF6F611C982A817C59A358 /* XCRemoteSwiftPackageReference "LaunchAtLogin-Modern" */;
+			productName = LaunchAtLogin;
+		};
+/* End XCSwiftPackageProductDependency section */
 	};
 	rootObject = 1CB902562FAF9F25009B01E1 /* Project object */;
 }
