@@ -74,11 +74,38 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
     }
 
     private func updateExpansion(_ expanded: Bool) {
-        if NotchState.shared.isExpanded != expanded {
-            print("[Hover] Changing expansion to: \(expanded)")
-            DispatchQueue.main.async {
-                NotchState.shared.isExpanded = expanded
-                NotchWindowController.shared.isExpanded = expanded
+        let state = NotchState.shared
+        
+        if expanded {
+            if !state.isHovering && !state.isExpanded {
+                print("[Hover] Stage 1: Shadow")
+                DispatchQueue.main.async {
+                    withAnimation(.easeIn(duration: 0.15)) {
+                        state.isHovering = true
+                    }
+                }
+                
+                // Stage 2: Expand after snappy delay
+                DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
+                    if state.isHovering && !state.isExpanded {
+                        print("[Hover] Stage 2: Expand")
+                        withAnimation(.spring(response: 0.35, dampingFraction: 1.0)) {
+                            state.isExpanded = true
+                            NotchWindowController.shared.isExpanded = true
+                        }
+                    }
+                }
+            }
+        } else {
+            if state.isHovering || state.isExpanded {
+                print("[Hover] Collapse")
+                DispatchQueue.main.async {
+                    withAnimation(.spring(response: 0.35, dampingFraction: 1.0)) {
+                        state.isHovering = false
+                        state.isExpanded = false
+                        NotchWindowController.shared.isExpanded = false
+                    }
+                }
             }
         }
     }

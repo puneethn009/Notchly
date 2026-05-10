@@ -33,6 +33,7 @@ class NotchState: NSObject, ObservableObject {
     static let shared = NotchState()
     
     @Published var isExpanded: Bool = false
+    @Published var isHovering: Bool = false
     @Published var stickyType: StickyType = .none
     @Published var isSticky: Bool = false {
         didSet { if !isSticky { stickyType = .none } }

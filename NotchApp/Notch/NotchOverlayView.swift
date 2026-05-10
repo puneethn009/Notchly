@@ -11,6 +11,8 @@ struct NotchOverlayView: View {
     private let expandedWidth: CGFloat = 700
     private let expandedHeight: CGFloat = 200
 
+    @State private var currentRadius: CGFloat = 6
+    
     private var isExpanded: Bool { notchState.isExpanded }
     private var isSticky: Bool { notchState.isSticky }
 
@@ -20,10 +22,23 @@ struct NotchOverlayView: View {
         
         ZStack(alignment: .top) {
             // Main Notch Background Shape
-            NotchShape(cornerRadius: isExpanded ? 20 : (isSticky ? 12 : 6))
+            NotchShape(cornerRadius: currentRadius)
                 .fill(Color.black)
-                .shadow(color: Color.black.opacity(isExpanded ? 0.6 : 0), radius: 30, x: 0, y: 15)
+                .shadow(color: Color.black.opacity((isExpanded || notchState.isHovering) ? 0.5 : 0), radius: isExpanded ? 20 : 8, x: 0, y: isExpanded ? 10 : 4)
                 .frame(width: width, height: height)
+                .onAppear {
+                    currentRadius = isExpanded ? 20 : (isSticky ? 12 : 6)
+                }
+                .onChange(of: isExpanded) { expanded in
+                    withAnimation(.spring(response: 0.45, dampingFraction: 0.9)) {
+                        currentRadius = expanded ? 20 : (isSticky ? 12 : 6)
+                    }
+                }
+                .onChange(of: isSticky) { sticky in
+                    withAnimation(.spring(response: 0.45, dampingFraction: 0.9)) {
+                        currentRadius = isExpanded ? 20 : (sticky ? 12 : 6)
+                    }
+                }
             
             // Content
             Group {
