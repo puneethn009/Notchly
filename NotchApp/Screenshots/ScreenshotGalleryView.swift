@@ -6,6 +6,7 @@ struct ScreenshotGalleryView: View {
     @Query(sort: \ScreenshotItem.capturedAt, order: .reverse) private var items: [ScreenshotItem]
     @State private var searchText = ""
     @State private var selectedItem: ScreenshotItem?
+    // Hover is now handled via PreviewWindowController
     
     var filteredItems: [ScreenshotItem] {
         if searchText.isEmpty {
@@ -62,7 +63,16 @@ struct ScreenshotGalleryView: View {
                     LazyHStack(spacing: 12) {
                         ForEach(filteredItems) { item in
                             ScreenshotThumbnail(item: item)
+                                .onHover { isHovering in
+                                    if isHovering {
+                                        let mouseLoc = NSEvent.mouseLocation
+                                        PreviewWindowController.shared.showPreview(item: item, at: mouseLoc)
+                                    } else {
+                                        PreviewWindowController.shared.hidePreview()
+                                    }
+                                }
                                 .onTapGesture {
+                                    PreviewWindowController.shared.hidePreview()
                                     withAnimation(.spring(response: 0.3)) {
                                         selectedItem = item
                                     }
@@ -80,6 +90,7 @@ struct ScreenshotGalleryView: View {
                 ScreenshotDetailOverlay(item: item) {
                     selectedItem = nil
                 }
+                .zIndex(200)
             }
         }
     }
@@ -138,55 +149,61 @@ struct ScreenshotDetailOverlay: View {
     
     var body: some View {
         ZStack {
-            Color.black.opacity(0.8)
+            // Full solid black background
+            Color.black
                 .ignoresSafeArea()
                 .onTapGesture(perform: onClose)
             
-            VStack(spacing: 20) {
+            VStack(spacing: 12) { // Slightly tighter spacing to pull items up
+                // Header with close button
+                HStack {
+                    Spacer()
+                    Button(action: onClose) {
+                        Image(systemName: "xmark.circle.fill")
+                            .font(.system(size: 18))
+                            .foregroundColor(.white.opacity(0.2))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 30)
+                .padding(.top, 16)
+                
                 if let image = NSImage(contentsOfFile: item.filePath) {
                     Image(nsImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(maxHeight: 180)
+                        .frame(maxHeight: 130) // Tighter height
                         .clipShape(RoundedRectangle(cornerRadius: 12))
-                        .shadow(radius: 20)
+                        .shadow(color: .black.opacity(0.5), radius: 20)
                 }
                 
                 ScreenshotActionBar(item: item)
+                    .scaleEffect(0.85) // Slightly more compact
                 
                 if let text = item.extractedText, !text.isEmpty {
-                    VStack(alignment: .leading, spacing: 8) {
+                    VStack(alignment: .leading, spacing: 4) {
                         Text("EXTRACTED TEXT")
-                            .font(.system(size: 9, weight: .black))
-                            .foregroundColor(.white.opacity(0.4))
+                            .font(.system(size: 8, weight: .black))
+                            .foregroundColor(.white.opacity(0.3))
                         
                         ScrollView {
                             Text(text)
-                                .font(.system(size: 12, weight: .medium, design: .monospaced))
-                                .foregroundColor(.white.opacity(0.8))
+                                .font(.system(size: 10, weight: .medium, design: .monospaced))
+                                .foregroundColor(.white.opacity(0.6))
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .frame(maxHeight: 100)
-                        .padding(12)
-                        .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.05)))
+                        .frame(maxHeight: 45) // Slightly shorter
+                        .padding(8)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.03)))
                     }
-                    .padding(.horizontal, 20)
+                    .padding(.horizontal, 40)
+                    .padding(.bottom, 20) // Pull up from bottom
                 }
-            }
-            .padding(.vertical, 30)
-            .background(VisualEffectView(material: .hudWindow, blendingMode: .withinWindow).clipShape(RoundedRectangle(cornerRadius: 24)))
-            .padding(20)
-            .overlay(alignment: .topTrailing) {
-                Button(action: onClose) {
-                    Image(systemName: "xmark.circle.fill")
-                        .font(.system(size: 24))
-                        .foregroundColor(.white.opacity(0.4))
-                }
-                .buttonStyle(.plain)
-                .padding(32)
+                
+                Spacer(minLength: 40) // Increased bottom spacer to keep everything high
             }
         }
-        .transition(.opacity.combined(with: .scale(scale: 0.95)))
+        .transition(.opacity.combined(with: .scale(scale: 1.01)))
     }
 }
 
