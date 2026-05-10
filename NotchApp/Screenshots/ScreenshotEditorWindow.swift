@@ -45,7 +45,7 @@ class ScreenshotEditorWindowController: NSWindowController {
 }
 
 enum CanvasTool: String, CaseIterable {
-    case cursor, pen, highlighter, marker, arrow, shape, text, snippet, erase
+    case cursor, pen, highlighter, marker, arrow, shape, text, snippet, sticker, erase
 }
 
 enum ShapeType: String {
@@ -78,11 +78,12 @@ struct CanvasAnnotation: Identifiable, Equatable {
     var isBold: Bool = false
     var isItalic: Bool = false
     var isUnderlined: Bool = false
+    var image: NSImage? = nil
     
     // For movement
     var offset: CGSize = .zero
     
-    init(id: UUID = UUID(), tool: CanvasTool, color: Color, points: [CGPoint] = [], text: String = "", lineWidth: CGFloat = 3, opacity: Double = 1.0, arrowStyle: ArrowStyle = .straight, shapeType: ShapeType = .rectangle, isSolid: Bool = false, isDashed: Bool = false, fontName: String = "Helvetica", fontSize: CGFloat = 18, isBold: Bool = false, isItalic: Bool = false, isUnderlined: Bool = false, offset: CGSize = .zero) {
+    init(id: UUID = UUID(), tool: CanvasTool, color: Color, points: [CGPoint] = [], text: String = "", lineWidth: CGFloat = 3, opacity: Double = 1.0, arrowStyle: ArrowStyle = .straight, shapeType: ShapeType = .rectangle, isSolid: Bool = false, isDashed: Bool = false, fontName: String = "Helvetica", fontSize: CGFloat = 18, isBold: Bool = false, isItalic: Bool = false, isUnderlined: Bool = false, offset: CGSize = .zero, image: NSImage? = nil) {
         self.id = id
         self.tool = tool
         self.color = color
@@ -100,6 +101,7 @@ struct CanvasAnnotation: Identifiable, Equatable {
         self.isItalic = isItalic
         self.isUnderlined = isUnderlined
         self.offset = offset
+        self.image = image
     }
     
     static func == (lhs: CanvasAnnotation, rhs: CanvasAnnotation) -> Bool {
@@ -119,7 +121,8 @@ struct CanvasAnnotation: Identifiable, Equatable {
         lhs.isBold == rhs.isBold &&
         lhs.isItalic == rhs.isItalic &&
         lhs.isUnderlined == rhs.isUnderlined &&
-        lhs.offset == rhs.offset
+        lhs.offset == rhs.offset &&
+        lhs.image == rhs.image
     }
 }
 
@@ -142,6 +145,8 @@ class ScreenshotEditorState {
     var editingAnnotationID: UUID?
     var selectedAnnotationID: UUID?
     var extractedSnippets: [ExtractedSnippet] = []
+    var activeItem: ScreenshotItem?
+    var allAnnotations: [String: [CanvasAnnotation]] = [:]
     
     var selectedTool: CanvasTool = .pen {
         didSet { 
@@ -180,12 +185,13 @@ class ScreenshotEditorState {
     
     func cancelEditing() {
         if let id = editingAnnotationID {
-            // Remove the annotation if it was just created and is empty
             if let index = annotations.firstIndex(where: { $0.id == id }), annotations[index].text.isEmpty {
                 annotations.remove(at: index)
             }
             editingAnnotationID = nil
         }
+        // Cleanup all empty text annotations
+        annotations.removeAll { $0.tool == .text && $0.text.isEmpty }
     }
     
     func findAnnotation(at point: CGPoint, in size: CGSize) -> UUID? {
@@ -307,6 +313,7 @@ struct ScreenshotEditorView: View {
     @Query(sort: \ScreenshotItem.capturedAt, order: .reverse) private var items: [ScreenshotItem]
     
     @State private var dragStartAnnotationOffset: CGSize = .zero
+    @FocusState private var focusedFieldID: UUID?
     
     var body: some View {
         VStack(spacing: 0) {
@@ -436,19 +443,38 @@ struct ScreenshotEditorView: View {
                             VStack(spacing: 20) {
                                 ForEach(items) { item in
                                     ThumbnailItem(item: item, isActive: state.imageURL.path == item.filePath) {
+                                        // Save current annotations before switching
+                                        state.allAnnotations[state.imageURL.path] = state.annotations
+                                        
                                         state.imageURL = URL(fileURLWithPath: item.filePath)
                                         state.currentImage = NSImage(contentsOf: state.imageURL)
                                         state.analyzeImage()
+                                        state.cornerRadius = item.cornerRadius
+                                        state.rotation = item.rotation
+                                        state.activeItem = item
+                                        
+                                        // Load annotations for the new item
+                                        state.annotations = state.allAnnotations[state.imageURL.path] ?? []
                                     }
                                 }
                             }
                             .padding(.bottom, 40)
                         }
-                        .onDrop(of: [.image], isTargeted: nil) { providers in
+                        .onDrop(of: [.image, .text], isTargeted: nil) { providers in
                             for provider in providers {
-                                provider.loadDataRepresentation(forTypeIdentifier: "public.image") { data, error in
-                                    if let data = data, let image = NSImage(data: data) {
-                                        DispatchQueue.main.async { saveSnippetToHistory(image) }
+                                if provider.canLoadObject(ofClass: NSImage.self) {
+                                    provider.loadDataRepresentation(forTypeIdentifier: "public.image") { data, error in
+                                        if let data = data, let image = NSImage(data: data) {
+                                            DispatchQueue.main.async { saveSnippetToHistory(image) }
+                                        }
+                                    }
+                                } else {
+                                    _ = provider.loadObject(ofClass: NSString.self) { uuidString, _ in
+                                        if let uuidString = uuidString as? String, let uuid = UUID(uuidString: uuidString) {
+                                            if let snippet = state.extractedSnippets.first(where: { $0.id == uuid }) {
+                                                DispatchQueue.main.async { saveSnippetToHistory(snippet.image) }
+                                            }
+                                        }
                                     }
                                 }
                             }
@@ -567,8 +593,8 @@ struct ScreenshotEditorView: View {
                                                         let last = annotation.points.last ?? .zero
                                                         let isTap = abs(first.x - last.x) < 0.005
                                                         
-                                                        let boxWidth = isTap ? 250 : max(min(abs(first.x - last.x) * geo.size.width, geo.size.width - (first.x * geo.size.width)), 100)
-                                                        let boxHeight = isTap ? (annotation.fontSize * 2.5) : max(abs(first.y - last.y) * geo.size.height, 40)
+                                                        let boxWidth = isTap ? 200 : max(abs(first.x - last.x) * geo.size.width, 40)
+                                                        let boxHeight = isTap ? (annotation.fontSize * 1.8) : max(abs(first.y - last.y) * geo.size.height, 20)
                                                         
                                                         TextField("Type something...", text: $annotation.text, axis: .vertical)
                                                             .textFieldStyle(.plain)
@@ -576,7 +602,8 @@ struct ScreenshotEditorView: View {
                                                             .italic(annotation.isItalic)
                                                             .underline(annotation.isUnderlined)
                                                             .foregroundColor(annotation.color)
-                                                            .padding(10)
+                                                            .padding(4)
+                                                            .focused($focusedFieldID, equals: annotation.id)
                                                             .frame(width: boxWidth, height: boxHeight, alignment: .topLeading)
                                                             .position(x: (min(first.x, last.x) * geo.size.width) + (boxWidth / 2) + annotation.offset.width, 
                                                                       y: (min(first.y, last.y) * geo.size.height) + (boxHeight / 2) + annotation.offset.height)
@@ -633,6 +660,30 @@ struct ScreenshotEditorView: View {
                             .frame(maxWidth: .infinity, maxHeight: .infinity)
                             .contentShape(Rectangle())
                             .clipped()
+                            .onDrop(of: ["public.text"], isTargeted: nil) { providers, location in
+                                for provider in providers {
+                                    _ = provider.loadObject(ofClass: NSString.self) { uuidString, _ in
+                                        if let uuidString = uuidString as? String, let uuid = UUID(uuidString: uuidString) {
+                                            if let snippet = state.extractedSnippets.first(where: { $0.id == uuid }) {
+                                                DispatchQueue.main.async {
+                                                    let imgSize = snippet.image.size
+                                                    let aspect = imgSize.width / imgSize.height
+                                                    let dropWidth: CGFloat = 0.25
+                                                    let dropHeight = dropWidth / aspect
+                                                    
+                                                    let dropPoint = CGPoint(x: 0.5 - (dropWidth/2), y: 0.5 - (dropHeight/2)) 
+                                                    let newAnnotation = CanvasAnnotation(
+                                                        tool: .sticker, color: .clear, points: [dropPoint, CGPoint(x: dropPoint.x + dropWidth, y: dropPoint.y + dropHeight)],
+                                                        image: snippet.image
+                                                    )
+                                                    state.annotations.append(newAnnotation)
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                                return true
+                            }
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -676,7 +727,7 @@ struct ScreenshotEditorView: View {
                                                 .frame(width: 80, height: 80)
                                                 .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.05)))
                                                 .clipShape(RoundedRectangle(cornerRadius: 8))
-                                                .onDrag { NSItemProvider(object: snippet.image) }
+                                                .onDrag { NSItemProvider(object: snippet.id.uuidString as NSString) }
                                             
                                             Button(action: { state.extractedSnippets.removeAll(where: { $0.id == snippet.id }) }) {
                                                 Image(systemName: "xmark.circle.fill")
@@ -743,6 +794,25 @@ struct ScreenshotEditorView: View {
         }
         .frame(minWidth: 1100, minHeight: 750)
         .preferredColorScheme(.dark)
+        .onExitCommand { state.cancelEditing() }
+        .onChange(of: state.editingAnnotationID) { oldValue, newValue in
+            focusedFieldID = newValue
+        }
+        .onChange(of: state.cornerRadius) { _, newValue in
+            state.activeItem?.cornerRadius = newValue
+        }
+        .onChange(of: state.rotation) { _, newValue in
+            state.activeItem?.rotation = newValue
+        }
+        .onAppear {
+            if state.activeItem == nil {
+                state.activeItem = items.first(where: { $0.filePath == state.imageURL.path })
+                if let item = state.activeItem {
+                    state.cornerRadius = item.cornerRadius
+                    state.rotation = item.rotation
+                }
+            }
+        }
     }
     
     @MainActor
@@ -765,8 +835,11 @@ struct ScreenshotEditorView: View {
         
         let scaledPoints = points.map { CGPoint(x: $0.x * size.width, y: (1 - $0.y) * size.height) }
         guard scaledPoints.count >= 2 else { return }
-        let first = scaledPoints.first!; let last = scaledPoints.last!
-        let rect = CGRect(x: min(first.x, last.x), y: min(first.y, last.y), width: max(abs(first.x - last.x), 1), height: max(abs(first.y - last.y), 1))
+        let minX = scaledPoints.map { $0.x }.min() ?? 0
+        let maxX = scaledPoints.map { $0.x }.max() ?? 0
+        let minY = scaledPoints.map { $0.y }.min() ?? 0
+        let maxY = scaledPoints.map { $0.y }.max() ?? 0
+        let rect = CGRect(x: minX, y: minY, width: max(maxX - minX, 1), height: max(maxY - minY, 1))
         
         let snippetImage = NSImage(size: rect.size)
         snippetImage.lockFocus()
@@ -836,8 +909,11 @@ struct ScreenshotEditorView: View {
             let strokeStyle = StrokeStyle(lineWidth: 1.5, lineCap: .round, lineJoin: .round, dash: [5, 3])
             
             // Draw the selection shape
-            let first = scaledPoints.first!; let last = scaledPoints.last!
-            let rect = CGRect(x: min(first.x, last.x), y: min(first.y, last.y), width: abs(first.x - last.x), height: abs(first.y - last.y))
+            let minX = scaledPoints.map { $0.x }.min() ?? 0
+            let maxX = scaledPoints.map { $0.x }.max() ?? 0
+            let minY = scaledPoints.map { $0.y }.min() ?? 0
+            let maxY = scaledPoints.map { $0.y }.max() ?? 0
+            let rect = CGRect(x: minX, y: minY, width: maxX - minX, height: maxY - minY)
             
             var selectionPath = Path()
             switch annotation.shapeType {
@@ -872,16 +948,23 @@ struct ScreenshotEditorView: View {
             drawShape(in: context, annotation: annotation, size: size)
             
         case .text:
-            if state.editingAnnotationID != annotation.id && !annotation.text.isEmpty {
-                let first = scaledPoints.first ?? .zero
-                let last = scaledPoints.last ?? .zero
-                let rect = CGRect(
-                    x: min(first.x, last.x),
-                    y: min(first.y, last.y),
-                    width: max(abs(first.x - last.x), 200),
-                    height: max(abs(first.y - last.y), 100)
-                )
-                
+            let first = scaledPoints.first ?? .zero
+            let last = scaledPoints.last ?? .zero
+            let isTap = abs(first.x - last.x) < 0.002
+            let rect = CGRect(
+                x: min(first.x, last.x),
+                y: min(first.y, last.y),
+                width: isTap ? 200 : max(abs(first.x - last.x), 40),
+                height: isTap ? (annotation.fontSize * 1.8) : max(abs(first.y - last.y), 20)
+            )
+            
+            // Show reference box while drawing or if empty
+            if annotation.text.isEmpty || state.editingAnnotationID == annotation.id {
+                let dashedStyle = StrokeStyle(lineWidth: 1, dash: [4, 4])
+                context.stroke(Path(rect), with: .color(annotation.color.opacity(0.3)), style: dashedStyle)
+            }
+            
+            if !annotation.text.isEmpty && state.editingAnnotationID != annotation.id {
                 let font = Font.custom(annotation.fontName, size: annotation.fontSize)
                     .weight(annotation.isBold ? .bold : .regular)
                 
@@ -891,8 +974,16 @@ struct ScreenshotEditorView: View {
                         .italic(annotation.isItalic)
                         .underline(annotation.isUnderlined)
                         .foregroundColor(annotation.color),
-                    in: rect
+                    in: rect.insetBy(dx: 4, dy: 4) // Small inset to match TextField's internal margin
                 )
+            }
+            
+        case .sticker:
+            if let image = annotation.image {
+                let first = scaledPoints.first ?? .zero
+                let last = scaledPoints.last ?? .zero
+                let rect = CGRect(x: min(first.x, last.x), y: min(first.y, last.y), width: max(abs(first.x - last.x), 40), height: max(abs(first.y - last.y), 40))
+                context.draw(Image(nsImage: image), in: rect)
             }
             
         default: break
@@ -1064,6 +1155,8 @@ struct ToolButton: View {
                         Text("SF Pro").tag("SF Pro Display")
                         Text("Georgia").tag("Georgia")
                         Text("Courier").tag("Courier")
+                        Text("Avenir").tag("Avenir")
+                        Text("Times New Roman").tag("Times New Roman")
                     }
                     .pickerStyle(.menu)
                     .labelsHidden()
@@ -1073,14 +1166,24 @@ struct ToolButton: View {
                 VStack(alignment: .leading, spacing: 8) {
                     Text("SIZE").font(.system(size: 10, weight: .bold)).opacity(0.6)
                     HStack(spacing: 12) {
-                        Slider(value: $fontSize, in: 8...120)
+                        Image(systemName: "textformat.size.smaller")
+                            .font(.system(size: 10))
+                            .foregroundColor(.white.opacity(0.4))
+                        
+                        Slider(value: $fontSize, in: 1...120, step: 1)
                             .accentColor(.blue)
+                        
+                        Image(systemName: "textformat.size.larger")
+                            .font(.system(size: 14))
+                            .foregroundColor(.white.opacity(0.4))
+                        
                         TextField("", value: $fontSize, format: .number)
                             .textFieldStyle(.plain)
-                            .frame(width: 40)
-                            .padding(6)
-                            .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.08)))
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            .frame(width: 36)
+                            .padding(.vertical, 4)
+                            .padding(.horizontal, 6)
+                            .background(RoundedRectangle(cornerRadius: 4).fill(Color.white.opacity(0.1)))
+                            .font(.system(size: 10, weight: .bold, design: .monospaced))
                     }
                 }
                 

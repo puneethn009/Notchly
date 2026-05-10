@@ -10,6 +10,8 @@ class ScreenshotItem {
     var contentType: String
     var extractedText: String?
     var isFavorited: Bool
+    var cornerRadius: Double = 12
+    var rotation: Double = 0
     
     init(id: UUID = UUID(), filename: String, filePath: String, capturedAt: Date = Date(), contentType: ContentType = .unknown, extractedText: String? = nil) {
         self.id = id
@@ -19,5 +21,7 @@ class ScreenshotItem {
         self.contentType = contentType.rawValue
         self.extractedText = extractedText
         self.isFavorited = false
+        self.cornerRadius = 12
+        self.rotation = 0
     }
 }
