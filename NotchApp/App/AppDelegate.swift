@@ -39,7 +39,8 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
         var currentWidth = isExpanded ? expandedW : (isSticky ? stickyW : collapsedW)
         currentWidth += (flareSize * 2)
         
-        let currentHeight = isExpanded ? 200.0 : (isSticky ? 34.0 : 31.0)
+        let isRunning = MediaPlayerManager.shared.isPlaying || TimerManager.shared.isRunning || TimerManager.shared.isStopwatchRunning
+        let currentHeight = isExpanded ? 200.0 : (isSticky ? 34.0 : (isRunning ? 32.0 : 31.0))
         
         let notchRect = NSRect(
             x: screenMidX - (currentWidth / 2.0),
@@ -135,6 +136,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             hostingView.frame = NSRect(x: 0, y: 0, width: 900, height: 400)
             hostingView.autoresizingMask = []
             window.contentView = hostingView
+            
+            // Initialize Capture Manager
+            CaptureManager.shared.setup()
             
             // Start screenshot monitoring with persistence
             ScreenshotMonitor.shared.start(container: PersistenceController.shared.container)

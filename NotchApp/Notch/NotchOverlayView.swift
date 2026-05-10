@@ -18,8 +18,9 @@ struct NotchOverlayView: View {
 
     var body: some View {
         let isShowingPopup = notchState.isShowingScreenshotPopup && !isExpanded
+        let isRunning = mediaManager.isPlaying || timerManager.isRunning || timerManager.isStopwatchRunning
         let width = isExpanded ? expandedWidth : (isShowingPopup ? 280 : (isSticky ? 300 : collapsedWidth))
-        let height = isExpanded ? expandedHeight : (isShowingPopup ? 36 : (isSticky ? 30 : collapsedHeight))
+        let height = isExpanded ? expandedHeight : (isShowingPopup ? 36 : (isSticky ? 34 : (isRunning ? 31 : collapsedHeight)))
         
         ZStack(alignment: .top) {
             // Main Notch Background Shape

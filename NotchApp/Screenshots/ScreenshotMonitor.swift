@@ -26,12 +26,11 @@ class ScreenshotMonitor {
         guard let files = try? FileManager.default.contentsOfDirectory(at: pendingDir, includingPropertiesForKeys: nil) else { return }
         
         for file in files {
-            // If they are more than 5 mins old, move them to the main folder as orphaned or delete
-            // For now, let's just move them to the main folder so they aren't lost
-            let destination = managedURL.appendingPathComponent(file.lastPathComponent)
-            try? FileManager.default.moveItem(at: file, to: destination)
+            // Auto-finalize any orphans found in .pending
+            NotchState.shared.pendingScreenshotURL = file
+            finalizePendingScreenshot(withName: "")
         }
-        print("[ScreenshotMonitor] Cleaned up \(files.count) pending files")
+        print("[ScreenshotMonitor] Cleaned up and indexed \(files.count) orphaned captures")
     }
     
     func start(container: ModelContainer) {
@@ -122,15 +121,8 @@ class ScreenshotMonitor {
                 print("[ScreenshotMonitor] Successfully moved to pending: \(tempURL.path)")
                 
                 await MainActor.run {
-                    // Force window to front and make it key for keyboard focus
-                    NSApp.activate(ignoringOtherApps: true)
-                    NotchWindowController.shared.window?.makeKeyAndOrderFront(nil)
-                    
-                    withAnimation(.spring(response: 0.45, dampingFraction: 0.7)) {
-                        NotchState.shared.pendingScreenshotURL = tempURL
-                        NotchState.shared.isExpanded = true
-                    }
-                    print("[ScreenshotMonitor] Triggered UI naming prompt & window activated")
+                    ScreenshotPreviewController.shared.showPreview(for: tempURL)
+                    print("[ScreenshotMonitor] Triggered floating preview for: \(filename)")
                 }
             } catch {
                 print("[ScreenshotMonitor] ERROR moving file: \(error.localizedDescription)")

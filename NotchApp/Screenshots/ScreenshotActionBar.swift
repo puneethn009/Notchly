@@ -34,6 +34,11 @@ struct ScreenshotActionBar: View {
                 picker.show(relativeTo: .zero, of: NSView(), preferredEdge: .minY)
             }
             
+            ActionButton(icon: "pencil.circle.fill", label: "Edit", color: .blue) {
+                let url = URL(fileURLWithPath: item.filePath)
+                ScreenshotEditorWindowController.shared.open(with: url)
+            }
+            
             ActionButton(icon: "trash.fill", label: "Delete", color: .red) {
                 // Delete from disk
                 try? FileManager.default.removeItem(atPath: item.filePath)
