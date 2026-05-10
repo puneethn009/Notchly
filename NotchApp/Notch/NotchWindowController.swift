@@ -36,6 +36,7 @@ class NotchWindowController: NSWindowController {
         window.hasShadow = false
         window.collectionBehavior = [.stationary, .ignoresCycle, .fullScreenAuxiliary]
         window.ignoresMouseEvents = false // We handle click-through via hitTest
+        window.sharingType = .none // Prevents appearing in screenshots/screen recordings
 
         super.init(window: window)
         window.orderFrontRegardless()
