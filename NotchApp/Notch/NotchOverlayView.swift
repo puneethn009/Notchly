@@ -44,8 +44,18 @@ struct NotchOverlayView: View {
                 } else {
                     // Static Collapsed Icons
                     HStack(spacing: 25) {
-                        Image(systemName: "music.note")
+                        ZStack {
+                            if SettingsManager.shared.showClosedNotchMusicIndicator && mediaManager.isPlaying {
+                                VisualizerView(color: .blue, isPlaying: true)
+                                    .scaleEffect(0.5)
+                            } else {
+                                Image(systemName: "music.note")
+                            }
+                        }
+                        .frame(width: 14)
+                        
                         Image(systemName: "timer")
+                            .foregroundColor(timerManager.isRunning ? .orange : .white.opacity(0.3))
                         Image(systemName: "calendar")
                         Image(systemName: "cpu")
                         Image(systemName: "gearshape")
@@ -76,11 +86,13 @@ struct StickyTimerView: View {
     
     var body: some View {
         HStack {
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 Image(systemName: "timer")
+                Text(timerManager.currentTimerName.uppercased())
+                    .font(.system(size: 9, weight: .black))
+                    .tracking(1)
             }
             .foregroundColor(.orange)
-            .font(.system(size: 12, weight: .black))
             .padding(.leading, 20)
             
             Spacer()

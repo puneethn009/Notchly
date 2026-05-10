@@ -7,6 +7,7 @@ class TimerManager: ObservableObject {
     @Published var totalTime: TimeInterval = 0
     @Published var isCompleted: Bool = false
     @Published var isAlarmPlaying: Bool = false
+    @Published var currentTimerName: String = ""
     
     static let shared = TimerManager()
     
@@ -24,9 +25,10 @@ class TimerManager: ObservableObject {
         return 1.0 - (timeRemaining / totalTime)
     }
     
-    func start(minutes: Int) {
+    func start(minutes: Int, name: String = "Timer") {
         stop()
         stopAlarm()
+        currentTimerName = name
         totalTime = TimeInterval(minutes * 60)
         timeRemaining = totalTime
         isRunning = true

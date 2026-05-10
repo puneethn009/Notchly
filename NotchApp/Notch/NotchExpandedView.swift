@@ -262,8 +262,8 @@ struct MediaModuleView: View {
                                 .fill(Color.white)
                                 .frame(width: 24, height: 24)
                                 .overlay(
-                                    Image(systemName: mediaManager.isSystemMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                                    .foregroundColor(mediaManager.isSystemMuted ? .gray : .pink)
+                                    Image(systemName: mediaManager.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                                    .foregroundColor(mediaManager.isMuted ? .gray : .pink)
                                     .font(.system(size: 12))
                                 )
                         }
@@ -311,7 +311,14 @@ struct MediaModuleView: View {
                         
                         // Controls
                         HStack(spacing: 24) {
+                            if SettingsManager.shared.showMuteButton {
+                                Button(action: { mediaManager.toggleMute() }) {
+                                    Image(systemName: mediaManager.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                                }.buttonStyle(.plain)
+                            }
+                            
                             Spacer()
+                            
                             Button(action: { mediaManager.prevTrack() }) {
                                 Image(systemName: "backward.fill")
                             }.buttonStyle(.plain)
@@ -330,7 +337,7 @@ struct MediaModuleView: View {
                         .foregroundColor(.white)
                         .font(.system(size: 16))
                     }
-                    .frame(width: 200, height: 100)
+                    .frame(width: 240, height: 100)
                 }
                 .padding(.bottom, 20)
             } else {
@@ -352,7 +359,7 @@ struct TimerModuleView: View {
     @ObservedObject var timerManager: TimerManager
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 16) {
             if timerManager.isAlarmPlaying {
                 VStack(spacing: 20) {
                     Text("TIME'S UP!")
@@ -371,7 +378,11 @@ struct TimerModuleView: View {
                     .buttonStyle(.plain)
                 }
             } else if timerManager.isRunning {
-                VStack(spacing: 12) {
+                VStack(spacing: 8) {
+                    Text(timerManager.currentTimerName)
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white.opacity(0.6))
+                    
                     ZStack {
                         Circle()
                             .stroke(Color.white.opacity(0.1), lineWidth: 8)
@@ -403,19 +414,18 @@ struct TimerModuleView: View {
                     .buttonStyle(.plain)
                 }
             } else {
-                VStack(spacing: 16) {
-                    Text("Quick Start")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white)
+                VStack(spacing: 12) {
+                    Text("MY TIMERS")
+                        .font(.system(size: 10, weight: .black))
+                        .foregroundColor(.white.opacity(0.3))
+                        .tracking(2)
                     
                     HStack(spacing: 12) {
-                        TimerButton(label: "1m", color: .gray) { timerManager.start(minutes: 1) }
-                        TimerButton(label: "5m", color: .blue) { timerManager.start(minutes: 5) }
-                        TimerButton(label: "10m", color: .cyan) { timerManager.start(minutes: 10) }
-                        TimerButton(label: "15m", color: .teal) { timerManager.start(minutes: 15) }
-                        TimerButton(label: "25m", color: .indigo) { timerManager.start(minutes: 25) }
-                        TimerButton(label: "60m", color: .purple) { timerManager.start(minutes: 60) }
-                        TimerButton(label: "90m", color: .pink) { timerManager.start(minutes: 90) }
+                        ForEach(SettingsManager.shared.customTimers) { timer in
+                            TimerButton(label: timer.name, color: .blue) { 
+                                timerManager.start(minutes: timer.minutes, name: timer.name) 
+                            }
+                        }
                     }
                 }
             }
@@ -430,15 +440,22 @@ struct TimerButton: View {
     
     var body: some View {
         Button(action: action) {
-            Text(label)
-                .font(.system(size: 14, weight: .bold))
-                .foregroundColor(.white)
-                .frame(width: 50, height: 50)
-                .background(
+            VStack(spacing: 8) {
+                ZStack {
                     Circle()
                         .fill(color.opacity(0.2))
-                        .overlay(Circle().stroke(color.opacity(0.5), lineWidth: 2))
-                )
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "timer")
+                        .font(.system(size: 18))
+                        .foregroundColor(color)
+                }
+                
+                Text(label)
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                    .frame(width: 60)
+            }
         }
         .buttonStyle(.plain)
     }
@@ -446,56 +463,59 @@ struct TimerButton: View {
 
 struct SystemModuleView: View {
     @ObservedObject var systemManager: SystemMonitorManager
+    @ObservedObject var settings = SettingsManager.shared
     
     var body: some View {
         VStack(spacing: 20) {
             // Top Row: Core Gauges
             HStack(spacing: 30) {
-                CircularGauge(label: "CPU", value: systemManager.cpuUsage, color: .green)
-                CircularGauge(label: "RAM", value: systemManager.ramUsage, color: .blue)
-                CircularGauge(label: "GPU", value: systemManager.gpuUsage, color: .orange)
-                CircularGauge(label: "DISK", value: systemManager.diskUsage, color: .purple)
+                if settings.showCPU { CircularGauge(label: "CPU", value: systemManager.cpuUsage, color: .green) }
+                if settings.showRAM { CircularGauge(label: "RAM", value: systemManager.ramUsage, color: .blue) }
+                if settings.showGPU { CircularGauge(label: "GPU", value: systemManager.gpuUsage, color: .orange) }
+                if settings.showDisk { CircularGauge(label: "DISK", value: systemManager.diskUsage, color: .purple) }
             }
             
             // Bottom Row: Status Strip
             HStack(spacing: 30) {
-                // Network
-                HStack(spacing: 12) {
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.down")
-                            .font(.system(size: 8, weight: .bold))
-                            .foregroundColor(.cyan)
-                        Text(systemManager.downloadSpeed)
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                if settings.showNetwork {
+                    HStack(spacing: 12) {
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.down")
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundColor(.cyan)
+                            Text(systemManager.downloadSpeed)
+                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        }
+                        HStack(spacing: 4) {
+                            Image(systemName: "arrow.up")
+                                .font(.system(size: 8, weight: .bold))
+                                .foregroundColor(.orange)
+                            Text(systemManager.uploadSpeed)
+                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        }
                     }
-                    HStack(spacing: 4) {
-                        Image(systemName: "arrow.up")
-                            .font(.system(size: 8, weight: .bold))
-                            .foregroundColor(.orange)
-                        Text(systemManager.uploadSpeed)
-                            .font(.system(size: 11, weight: .bold, design: .monospaced))
-                    }
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(Capsule().fill(Color.white.opacity(0.05)))
-                
-                // Thermal
-                HStack(spacing: 6) {
-                    Image(systemName: "thermometer.medium")
-                        .foregroundColor(thermalColor(systemManager.thermalPressure))
-                    Text(systemManager.thermalPressure.uppercased())
-                        .font(.system(size: 10, weight: .black))
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 6)
+                    .background(Capsule().fill(Color.white.opacity(0.05)))
                 }
                 
-                // Battery Cycles
-                HStack(spacing: 6) {
-                    Image(systemName: "battery.100.bolt")
-                        .foregroundColor(.green)
-                    Text("\(systemManager.batteryCycles) CYCLES")
-                        .font(.system(size: 10, weight: .black))
+                if settings.showThermal {
+                    HStack(spacing: 6) {
+                        Image(systemName: "thermometer.medium")
+                            .foregroundColor(thermalColor(systemManager.thermalPressure))
+                        Text(systemManager.thermalPressure.uppercased())
+                            .font(.system(size: 10, weight: .black))
+                    }
                 }
-                .opacity(systemManager.batteryCycles > 0 ? 1 : 0)
+                
+                if settings.showBattery && systemManager.batteryCycles > 0 {
+                    HStack(spacing: 6) {
+                        Image(systemName: "battery.100.bolt")
+                            .foregroundColor(.green)
+                        Text("\(systemManager.batteryCycles) CYCLES")
+                            .font(.system(size: 10, weight: .black))
+                    }
+                }
             }
             .foregroundColor(.white.opacity(0.6))
         }
@@ -794,15 +814,15 @@ struct LauncherModuleView: View {
 }
 
 struct LauncherIcon: View {
-    let app: LauncherApp
+    let app: DockApp
     let launcherManager: LauncherManager
     @State private var isHovering = false
     
     var body: some View {
-        Button(action: { launcherManager.launch(bundleID: app.id) }) {
+        Button(action: { launcherManager.launch(bundleID: app.bundleId) }) {
             VStack(spacing: 8) {
                 ZStack {
-                    if let icon = launcherManager.icon(for: app.id) {
+                    if let icon = launcherManager.icon(for: app.bundleId) {
                         Image(nsImage: icon)
                             .resizable()
                             .frame(width: 48, height: 48)

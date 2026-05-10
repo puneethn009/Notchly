@@ -10,7 +10,7 @@ class MediaPlayerManager: ObservableObject {
     @Published var progress: Double = 0.0
     @Published var isPlaying: Bool = false
     @Published var isRunning: Bool = false
-    @Published var isSystemMuted: Bool = false
+    @Published var isMuted: Bool = false
     @Published var artworkImage: NSImage? = nil
     @Published var activeSource: String? = nil
     
@@ -56,9 +56,10 @@ class MediaPlayerManager: ObservableObject {
     func fetchNowPlaying() {
         // Check both players via AppleScript for initial state
         Task {
-            if let music = await getMusicInfo() {
+            let settings = SettingsManager.shared
+            if settings.useAppleMusic, let music = await getMusicInfo() {
                 updateWithInfo(music, source: "Music")
-            } else if let spotify = await getSpotifyInfo() {
+            } else if settings.useSpotify, let spotify = await getSpotifyInfo() {
                 updateWithInfo(spotify, source: "Spotify")
             }
         }
@@ -79,7 +80,7 @@ class MediaPlayerManager: ObservableObject {
             // Check mute state
             let script = "output volume of (get volume settings)"
             if let volStr = self.runScriptSync(script), let vol = Int(volStr) {
-                self.isSystemMuted = (vol == 0)
+                self.isMuted = (vol == 0)
             }
         }
     }
