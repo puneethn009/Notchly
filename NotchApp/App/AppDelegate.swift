@@ -1,5 +1,6 @@
 import SwiftUI
 import AppKit
+import SwiftData
 
 class PassThroughHostingView<Content: View>: NSHostingView<Content> {
     private var timer: Timer?
@@ -126,10 +127,16 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         setupMenuBar()
         
         if let window = NotchWindowController.shared.window {
-            let hostingView = PassThroughHostingView(rootView: NotchOverlayView())
+            let rootView = NotchOverlayView()
+                .modelContainer(PersistenceController.shared.container)
+            
+            let hostingView = PassThroughHostingView(rootView: rootView)
             hostingView.frame = NSRect(x: 0, y: 0, width: 900, height: 400)
             hostingView.autoresizingMask = []
             window.contentView = hostingView
+            
+            // Start screenshot monitoring with persistence
+            ScreenshotMonitor.shared.start(container: PersistenceController.shared.container)
         }
     }
 

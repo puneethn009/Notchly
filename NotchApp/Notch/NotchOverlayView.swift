@@ -2,7 +2,7 @@ import SwiftUI
 import Combine
 
 struct NotchOverlayView: View {
-    @StateObject private var notchState = NotchState.shared
+    @ObservedObject private var notchState = NotchState.shared
     @StateObject private var timerManager = TimerManager.shared
     @StateObject private var mediaManager = MediaPlayerManager.shared
 
@@ -17,14 +17,15 @@ struct NotchOverlayView: View {
     private var isSticky: Bool { notchState.isSticky }
 
     var body: some View {
-        let width = isExpanded ? expandedWidth : (isSticky ? 300 : collapsedWidth)
-        let height = isExpanded ? expandedHeight : (isSticky ? 30 : collapsedHeight)
+        let isShowingPopup = notchState.isShowingScreenshotPopup && !isExpanded
+        let width = isExpanded ? expandedWidth : (isShowingPopup ? 280 : (isSticky ? 300 : collapsedWidth))
+        let height = isExpanded ? expandedHeight : (isShowingPopup ? 36 : (isSticky ? 30 : collapsedHeight))
         
         ZStack(alignment: .top) {
             // Main Notch Background Shape
             NotchShape(cornerRadius: currentRadius)
                 .fill(Color.black)
-                .shadow(color: Color.black.opacity((isExpanded || notchState.isHovering) ? 0.5 : 0), radius: isExpanded ? 20 : 8, x: 0, y: isExpanded ? 10 : 4)
+                .shadow(color: Color.black.opacity((isExpanded || notchState.isHovering || isShowingPopup) ? 0.5 : 0), radius: isExpanded ? 20 : 8, x: 0, y: isExpanded ? 10 : 4)
                 .frame(width: width, height: height)
                 .onAppear {
                     currentRadius = isExpanded ? 20 : (isSticky ? 12 : 6)
@@ -50,6 +51,32 @@ struct NotchOverlayView: View {
                             insertion: .scale(scale: 0.95).combined(with: .opacity).animation(.spring(response: 0.3, dampingFraction: 0.75).delay(0.2)),
                             removal: .opacity.animation(.easeOut(duration: 0.1))
                         ))
+                } else if isShowingPopup {
+                    HStack(spacing: 12) {
+                        Image(systemName: "camera.viewfinder")
+                            .foregroundColor(.blue)
+                            .font(.system(size: 14, weight: .bold))
+                        
+                        Text("New Screenshot Captured")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.white)
+                        
+                        Spacer()
+                        
+                        if let url = notchState.lastCapturedScreenshotURL,
+                           let image = NSImage(contentsOf: url) {
+                            Image(nsImage: image)
+                                .resizable()
+                                .aspectRatio(contentMode: .fill)
+                                .frame(width: 34, height: 22)
+                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.white.opacity(0.2), lineWidth: 0.5))
+                        }
+                    }
+                    .padding(.horizontal, 16)
+                    .frame(width: 280, height: 36)
+                    .onAppear { print("[UI] Showing Screenshot Popup for: \(notchState.lastCapturedScreenshotURL?.lastPathComponent ?? "nil")") }
+                    .transition(.scale(scale: 0.9).combined(with: .opacity))
                 } else if isSticky {
                     if notchState.stickyType == .timer {
                         StickyTimerView()
@@ -94,6 +121,7 @@ struct NotchOverlayView: View {
         .frame(width: 900, height: 400, alignment: .top)
         .animation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45), value: isExpanded)
         .animation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45), value: isSticky)
+        .animation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45), value: isShowingPopup)
     }
 
     // Static helper for notch width based on screen

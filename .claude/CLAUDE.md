@@ -317,76 +317,25 @@ enum ContentType {
 
 **Never jump ahead. Each sprint depends on the previous.**
 
-### Sprint 1 — Foundation (Do This First)
+### ✅ Sprint 1 — Foundation (COMPLETED)
 ```
-Task 1: Configure Xcode project
-        - Set deployment target macOS 14.0
-        - Disable App Sandbox
-        - Enable Hardened Runtime
-        - Create NotchApp.entitlements with all keys
-        - Add all Info.plist keys (LSUIElement, usage descriptions)
-        - Add all Swift Package dependencies
-        - Create full folder group structure in Xcode
-        - Verify clean build (Cmd+B, zero errors)
-
-Task 2: NotchWindowController.swift
-        - Borderless NSWindow at notch position on NSScreen.main
-        - Level .statusBar, clear background, no shadow
-        - collectionBehavior canJoinAllSpaces + stationary
-        - resizeWindow(to:) method for expand/collapse
-        - Singleton pattern
-
-Task 3: NotchOverlayView.swift + NotchExpandedView.swift
-        - onHover expand animation with spring physics
-        - response: 0.35, dampingFraction: 0.8
-        - Collapsed: 37pt height (notch height)
-        - Expanded: 280pt height
-        - Tab bar: Screenshots | Clipboard | Notes | PiP
-        - Calls NotchWindowController.shared.resizeWindow on hover
-
-Task 4: AppDelegate.swift + NotchAppApp.swift
-        - NSApplicationDelegate
-        - LSUIElement hides Dock icon
-        - Menu bar extra with NSStatusItem (right-click → Quit, Settings)
-        - Start NotchWindowController.shared on launch
-        - Start ClipboardMonitor.shared on launch
-        - Start ScreenshotMonitor.shared on launch
+Task 1: Configure Xcode project (Done)
+Task 2: NotchWindowController.swift (Done)
+Task 3: NotchOverlayView.swift + NotchExpandedView.swift (Done)
+Task 4: AppDelegate.swift + NotchAppApp.swift (Done)
+Bonus: Productivity Hub (Timer, SysMonitor, Media, Calendar, Launcher) (Done)
 ```
 
-### Sprint 2 — Screenshot Intelligence
+### ✅ Sprint 2 — Screenshot Intelligence (COMPLETED)
 ```
-Task 5: ScreenshotMonitor.swift
-        - FSEventStream on ~/Desktop path
-        - 100ms latency
-        - Filter: filename contains "Screenshot" + .png/.jpg extension
-        - On detect: call ScreenshotInterceptor
-
-Task 6: ScreenshotInterceptor.swift
-        - Move file from Desktop to ~/Library/Application Support/NotchApp/Screenshots/
-        - Create directory if not exists
-        - Trigger ScreenshotAnalyzer async
-        - Trigger notch popup on MainActor
-
-Task 7: ContentClassifier.swift + VisionAnalyzer.swift
-        - VNDetectBarcodesRequest for QR detection
-        - VNRecognizeTextRequest (fast mode) for text density
-        - Code pattern heuristics (keywords: func, def, class, import...)
-        - Receipt heuristics (total, $, subtax patterns)
-        - Returns ContentType enum
-
-Task 8: ScreenshotActionBar.swift
-        - Horizontal ScrollView of action buttons
-        - Actions array computed from ContentType
-        - Each ActionButton triggers its handler async
-
-Task 9: ScreenshotGallery.swift
-        - LazyVGrid, 3 columns
-        - Search bar filtering extractedText + aiSummary + tags
-        - Tap → full preview with action bar
-        - SwiftData @Query for ScreenshotItem
+Task 5: ScreenshotMonitor.swift (Done)
+Task 6: ScreenshotInterceptor.swift (Done)
+Task 7: ContentClassifier.swift + VisionAnalyzer.swift (Done)
+Task 8: ScreenshotActionBar.swift (Done)
+Task 9: ScreenshotGallery.swift (Done)
 ```
 
-### Sprint 3 — Clipboard Intelligence
+### 🚀 Sprint 3 — Clipboard Intelligence (ACTIVE)
 ```
 Task 10: ClipboardMonitor.swift
          - Timer 0.5s interval

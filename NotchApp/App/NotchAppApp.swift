@@ -1,4 +1,5 @@
 import SwiftUI
+import SwiftData
 
 @main
 struct NotchAppApp: App {
@@ -13,10 +14,9 @@ struct NotchAppApp: App {
     }
 
     var body: some Scene {
-        // SwiftUI's built-in Settings scene.
-        // Opened via: NSApp.sendAction(Selector("showSettingsWindow:"), to: nil, from: nil)
         Settings {
             SettingsView()
         }
+        .modelContainer(PersistenceController.shared.container)
     }
 }

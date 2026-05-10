@@ -7,6 +7,7 @@ enum NotchPage: String, CaseIterable {
     case system = "cpu"
     case calendar = "calendar"
     case launcher = "square.grid.2x2"
+    case screenshots = "camera.viewfinder"
     
     func next() -> NotchPage {
         let all = NotchPage.allCases
@@ -39,4 +40,6 @@ class NotchState: NSObject, ObservableObject {
         didSet { if !isSticky { stickyType = .none } }
     }
     @Published var selectedPage: NotchPage = .media
+    @Published var lastCapturedScreenshotURL: URL?
+    @Published var isShowingScreenshotPopup: Bool = false
 }

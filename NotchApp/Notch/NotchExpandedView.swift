@@ -57,7 +57,7 @@ class BatteryManager {
 
 struct NotchExpandedView: View {
     @Environment(\.openSettings) private var openSettings
-    @StateObject private var notchState = NotchState.shared
+    @ObservedObject private var notchState = NotchState.shared
     @State private var batteryManager = BatteryManager()
     @StateObject private var mediaManager = MediaPlayerManager.shared
     @ObservedObject private var timerManager = TimerManager.shared
@@ -137,6 +137,8 @@ struct NotchExpandedView: View {
                         CalendarModuleView(calendarManager: calendarManager)
                     case .launcher:
                         LauncherModuleView(launcherManager: launcherManager)
+                    case .screenshots:
+                        ScreenshotGalleryView()
                     }
                 }
                 .id(NotchState.shared.selectedPage)
