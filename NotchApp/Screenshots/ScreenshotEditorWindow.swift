@@ -82,8 +82,9 @@ struct CanvasAnnotation: Identifiable, Equatable {
     
     // For movement
     var offset: CGSize = .zero
+    var cornerRadius: Double = 0
     
-    init(id: UUID = UUID(), tool: CanvasTool, color: Color, points: [CGPoint] = [], text: String = "", lineWidth: CGFloat = 3, opacity: Double = 1.0, arrowStyle: ArrowStyle = .straight, shapeType: ShapeType = .rectangle, isSolid: Bool = false, isDashed: Bool = false, fontName: String = "Helvetica", fontSize: CGFloat = 18, isBold: Bool = false, isItalic: Bool = false, isUnderlined: Bool = false, offset: CGSize = .zero, image: NSImage? = nil) {
+    init(id: UUID = UUID(), tool: CanvasTool, color: Color, points: [CGPoint] = [], text: String = "", lineWidth: CGFloat = 3, opacity: Double = 1.0, arrowStyle: ArrowStyle = .straight, shapeType: ShapeType = .rectangle, isSolid: Bool = false, isDashed: Bool = false, fontName: String = "Helvetica", fontSize: CGFloat = 18, isBold: Bool = false, isItalic: Bool = false, isUnderlined: Bool = false, offset: CGSize = .zero, image: NSImage? = nil, cornerRadius: Double = 0) {
         self.id = id
         self.tool = tool
         self.color = color
@@ -102,6 +103,7 @@ struct CanvasAnnotation: Identifiable, Equatable {
         self.isUnderlined = isUnderlined
         self.offset = offset
         self.image = image
+        self.cornerRadius = cornerRadius
     }
     
     static func == (lhs: CanvasAnnotation, rhs: CanvasAnnotation) -> Bool {
@@ -122,7 +124,8 @@ struct CanvasAnnotation: Identifiable, Equatable {
         lhs.isItalic == rhs.isItalic &&
         lhs.isUnderlined == rhs.isUnderlined &&
         lhs.offset == rhs.offset &&
-        lhs.image == rhs.image
+        lhs.image == rhs.image &&
+        lhs.cornerRadius == rhs.cornerRadius
     }
 }
 
@@ -139,7 +142,9 @@ class ScreenshotEditorState {
     var extractedText: String = ""
     
     var annotations: [CanvasAnnotation] = []
-    private var redoStack: [CanvasAnnotation] = []
+    private var historyStack: [[CanvasAnnotation]] = []
+    private var redoHistory: [[CanvasAnnotation]] = []
+    var initialResizePoints: [CGPoint]? = nil
     
     var currentAnnotation: CanvasAnnotation?
     var editingAnnotationID: UUID?
@@ -222,6 +227,14 @@ class ScreenshotEditorState {
                 let paddedRect = rect.insetBy(dx: -0.02, dy: -0.01)
                 
                 if paddedRect.contains(normalizedPoint) { return annotation.id }
+            } else if annotation.tool == .sticker {
+                let first = points.first ?? .zero
+                let last = points.last ?? .zero
+                let rect = CGRect(x: min(first.x, last.x), y: min(first.y, last.y), 
+                                  width: max(abs(first.x - last.x), 0.05), 
+                                  height: max(abs(first.y - last.y), 0.05))
+                let paddedRect = rect.insetBy(dx: -0.02, dy: -0.02)
+                if paddedRect.contains(normalizedPoint) { return annotation.id }
             } else if points.count >= 2 {
                 let first = points.first!; let last = points.last!
                 let rect = CGRect(x: min(first.x, last.x), y: min(first.y, last.y), 
@@ -241,6 +254,66 @@ class ScreenshotEditorState {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.75)) {
             rotation += 90
         }
+    }
+    
+    func addImageSticker(image: NSImage) {
+        let imgSize = image.size
+        let aspect = imgSize.width / imgSize.height
+        let dropWidth: CGFloat = 0.3
+        let dropHeight = dropWidth / aspect
+        
+        let dropPoint = CGPoint(x: 0.5 - (dropWidth/2), y: 0.5 - (dropHeight/2)) 
+        let newAnnotation = CanvasAnnotation(
+            tool: .sticker, color: .clear, points: [dropPoint, CGPoint(x: dropPoint.x + dropWidth, y: dropPoint.y + dropHeight)],
+            image: image
+        )
+        annotations.append(newAnnotation)
+    }
+    
+    func startResize(id: UUID) {
+        if let ann = annotations.first(where: { $0.id == id }) {
+            initialResizePoints = ann.points
+        }
+    }
+    
+    func resizeAnnotation(_ id: UUID, handleIndex: Int, translation: CGSize, in size: CGSize) {
+        guard let idx = annotations.firstIndex(where: { $0.id == id }) else { return }
+        guard let start = initialResizePoints, start.count >= 2 else { return }
+        
+        let dx = translation.width / size.width
+        let dy = translation.height / size.height
+        
+        let minX = min(start[0].x, start[1].x); let maxX = max(start[0].x, start[1].x)
+        let minY = min(start[0].y, start[1].y); let maxY = max(start[0].y, start[1].y)
+        
+        var newMinX = minX; var newMaxX = maxX
+        var newMinY = minY; var newMaxY = maxY
+        
+        switch handleIndex {
+        case 0: // TL
+            newMinX += dx; newMinY += dy
+        case 1: // TC
+            newMinY += dy
+        case 2: // TR
+            newMaxX += dx; newMinY += dy
+        case 3: // ML
+            newMinX += dx
+        case 4: // MR
+            newMaxX += dx
+        case 5: // BL
+            newMinX += dx; newMaxY += dy
+        case 6: // BC
+            newMaxY += dy
+        case 7: // BR
+            newMaxX += dx; newMaxY += dy
+        default: break
+        }
+        
+        // Ensure minimum size
+        if newMaxX - newMinX < 0.02 { newMaxX = newMinX + 0.02 }
+        if newMaxY - newMinY < 0.02 { newMaxY = newMinY + 0.02 }
+        
+        annotations[idx].points = [CGPoint(x: newMinX, y: newMinY), CGPoint(x: newMaxX, y: newMaxY)]
     }
     
     func startDrawing(at point: CGPoint, in size: CGSize) {
@@ -281,20 +354,28 @@ class ScreenshotEditorState {
             if annotation.tool == .text {
                 editingAnnotationID = annotation.id
             }
+            saveHistory()
             annotations.append(annotation)
             currentAnnotation = nil
-            redoStack.removeAll()
         }
     }
     
+    func saveHistory() {
+        historyStack.append(annotations)
+        redoHistory = []
+        if historyStack.count > 100 { historyStack.removeFirst() }
+    }
+    
     func undo() {
-        guard !annotations.isEmpty else { return }
-        redoStack.append(annotations.removeLast())
+        guard !historyStack.isEmpty else { return }
+        redoHistory.append(annotations)
+        annotations = historyStack.removeLast()
     }
     
     func redo() {
-        guard !redoStack.isEmpty else { return }
-        annotations.append(redoStack.removeLast())
+        guard !redoHistory.isEmpty else { return }
+        historyStack.append(annotations)
+        annotations = redoHistory.removeLast()
     }
     
     func analyzeImage() {
@@ -335,7 +416,7 @@ struct ScreenshotEditorView: View {
                         CommandButton(icon: "arrow.uturn.forward") { state.redo() }
                         Divider().frame(height: 18).padding(.horizontal, 4).opacity(0.3)
                         CommandButton(icon: "rotate.right") { state.rotate() }
-                        CornerRadiusButton(radius: $state.cornerRadius)
+                        CornerRadiusButton(radius: $state.cornerRadius, state: state)
                     }
                     
                     Spacer()
@@ -539,7 +620,7 @@ struct ScreenshotEditorView: View {
                                                     }
                                                     .onEnded { _ in 
                                                         if state.selectedTool == .cursor {
-                                                            state.selectedAnnotationID = nil 
+                                                            // Keep selection
                                                         } else if state.selectedTool == .snippet {
                                                             if let current = state.currentAnnotation {
                                                                 captureSnippet(shape: state.selectedShapeType, points: current.points, size: geo.size)
@@ -576,9 +657,28 @@ struct ScreenshotEditorView: View {
                                                                 state.startDrawing(at: event.location, in: geo.size)
                                                                 state.endDrawing()
                                                             }
+                                                        } else {
+                                                            state.selectAnnotation(at: event.location, in: geo.size)
                                                         }
                                                     }
                                             )
+                                            
+                                            // Selection Overlay
+                                            if let selectedID = state.selectedAnnotationID, 
+                                               let index = state.annotations.firstIndex(where: { $0.id == selectedID }) {
+                                                let ann = state.annotations[index]
+                                                if ann.tool == .sticker || ann.tool == .shape || ann.tool == .arrow {
+                                                    let first = ann.points.first ?? .zero
+                                                    let last = ann.points.last ?? .zero
+                                                    let rect = CGRect(
+                                                        x: (min(first.x, last.x) * geo.size.width) + ann.offset.width,
+                                                        y: (min(first.y, last.y) * geo.size.height) + ann.offset.height,
+                                                        width: max(abs(first.x - last.x) * geo.size.width, 20),
+                                                        height: max(abs(first.y - last.y) * geo.size.height, 20)
+                                                    )
+                                                    AnnotationSelectionOverlay(rect: rect, annotation: ann, state: state)
+                                                }
+                                            }
                                             
                                             // Interactive Text Editor Overlay
                                             ZStack {
@@ -662,22 +762,14 @@ struct ScreenshotEditorView: View {
                             .clipped()
                             .onDrop(of: ["public.text"], isTargeted: nil) { providers, location in
                                 for provider in providers {
-                                    _ = provider.loadObject(ofClass: NSString.self) { uuidString, _ in
-                                        if let uuidString = uuidString as? String, let uuid = UUID(uuidString: uuidString) {
-                                            if let snippet = state.extractedSnippets.first(where: { $0.id == uuid }) {
-                                                DispatchQueue.main.async {
-                                                    let imgSize = snippet.image.size
-                                                    let aspect = imgSize.width / imgSize.height
-                                                    let dropWidth: CGFloat = 0.25
-                                                    let dropHeight = dropWidth / aspect
-                                                    
-                                                    let dropPoint = CGPoint(x: 0.5 - (dropWidth/2), y: 0.5 - (dropHeight/2)) 
-                                                    let newAnnotation = CanvasAnnotation(
-                                                        tool: .sticker, color: .clear, points: [dropPoint, CGPoint(x: dropPoint.x + dropWidth, y: dropPoint.y + dropHeight)],
-                                                        image: snippet.image
-                                                    )
-                                                    state.annotations.append(newAnnotation)
+                                    _ = provider.loadObject(ofClass: NSString.self) { dropString, _ in
+                                        if let dropString = dropString as? String {
+                                            if let uuid = UUID(uuidString: dropString) {
+                                                if let snippet = state.extractedSnippets.first(where: { $0.id == uuid }) {
+                                                    DispatchQueue.main.async { state.addImageSticker(image: snippet.image) }
                                                 }
+                                            } else if let image = NSImage(contentsOfFile: dropString) {
+                                                DispatchQueue.main.async { state.addImageSticker(image: image) }
                                             }
                                         }
                                     }
@@ -982,8 +1074,18 @@ struct ScreenshotEditorView: View {
             if let image = annotation.image {
                 let first = scaledPoints.first ?? .zero
                 let last = scaledPoints.last ?? .zero
-                let rect = CGRect(x: min(first.x, last.x), y: min(first.y, last.y), width: max(abs(first.x - last.x), 40), height: max(abs(first.y - last.y), 40))
-                context.draw(Image(nsImage: image), in: rect)
+                let rect = CGRect(x: min(first.x, last.x), y: min(first.y, last.y), width: max(abs(first.x - last.x), 20), height: max(abs(first.y - last.y), 20))
+                
+                context.drawLayer { ctx in
+                    let clipPath = Path(roundedRect: rect, cornerRadius: annotation.cornerRadius)
+                    ctx.clip(to: clipPath)
+                    ctx.draw(Image(nsImage: image), in: rect)
+                }
+                
+                if state.selectedAnnotationID == annotation.id {
+                    let clipPath = Path(roundedRect: rect, cornerRadius: annotation.cornerRadius)
+                    context.stroke(clipPath, with: .color(.blue.opacity(0.5)), lineWidth: 2)
+                }
             }
             
         default: break
@@ -1375,41 +1477,54 @@ struct ToolButton: View {
 
 struct CornerRadiusButton: View {
     @Binding var radius: Double
-    @State private var showPicker = false
+    @Bindable var state: ScreenshotEditorState
+    @State private var showPopover = false
     
     var body: some View {
-        Button(action: { showPicker.toggle() }) {
-            Image(systemName: "square.dashed.inset.filled")
-                .font(.system(size: 13, weight: .bold))
-                .foregroundColor(showPicker ? .blue : .white.opacity(0.8))
-                .frame(width: 32, height: 32)
-                .background(RoundedRectangle(cornerRadius: 8).fill(showPicker ? Color.blue.opacity(0.1) : Color.white.opacity(0.05)))
+        Button(action: { showPopover.toggle() }) {
+            Image(systemName: "square.dashed")
+                .font(.system(size: 14, weight: .bold))
+                .frame(width: 34, height: 34)
+                .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.1)))
         }
         .buttonStyle(.plain)
-        .popover(isPresented: $showPicker, arrowEdge: .bottom) {
+        .popover(isPresented: $showPopover, arrowEdge: .bottom) {
             VStack(alignment: .leading, spacing: 12) {
-                Text("CORNER RADIUS")
+                Text(state.selectedAnnotationID != nil ? "OBJECT RADIUS" : "SCREENSHOT RADIUS")
                     .font(.system(size: 10, weight: .black))
                     .foregroundColor(.white.opacity(0.4))
-                    .tracking(1)
                 
                 HStack(spacing: 12) {
-                    Slider(value: $radius, in: 0...100)
+                    Slider(value: radiusBinding, in: 0...100, step: 1)
                         .accentColor(.blue)
                     
-                    TextField("", value: $radius, format: .number)
-                        .textFieldStyle(.plain)
-                        .frame(width: 44)
-                        .padding(.vertical, 6)
-                        .padding(.horizontal, 8)
-                        .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.08)))
+                    Text("\(Int(radiusBinding.wrappedValue))")
                         .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .frame(width: 30)
                 }
             }
             .padding(16)
             .frame(width: 240)
             .background(VisualEffectView(material: .hudWindow, blendingMode: .withinWindow))
         }
+    }
+    
+    private var radiusBinding: Binding<Double> {
+        Binding(
+            get: { 
+                if let id = state.selectedAnnotationID, let idx = state.annotations.firstIndex(where: { $0.id == id }) {
+                    return state.annotations[idx].cornerRadius
+                }
+                return radius 
+            },
+            set: { newValue in
+                if let id = state.selectedAnnotationID, let idx = state.annotations.firstIndex(where: { $0.id == id }) {
+                    state.annotations[idx].cornerRadius = newValue
+                } else {
+                    radius = newValue
+                }
+            }
+        )
     }
 }
 
@@ -1515,6 +1630,7 @@ struct ThumbnailItem: View {
                 .clipShape(RoundedRectangle(cornerRadius: 8))
                 .overlay(RoundedRectangle(cornerRadius: 8).stroke(isActive ? Color.blue : Color.white.opacity(0.1), lineWidth: isActive ? 2 : 1))
                 .shadow(color: .black.opacity(isActive ? 0.3 : 0), radius: 10)
+                .onDrag { NSItemProvider(object: item.filePath as NSString) }
                 
                 Text(item.filename)
                     .font(.system(size: 9, weight: .medium))
@@ -1539,5 +1655,62 @@ extension Color {
         default: (a, r, g, b) = (1, 1, 1, 0)
         }
         self.init(.sRGB, red: Double(r) / 255, green: Double(g) / 255, blue:  Double(b) / 255, opacity: Double(a) / 255)
+    }
+}
+
+struct AnnotationSelectionOverlay: View {
+    let rect: CGRect
+    let annotation: CanvasAnnotation
+    let state: ScreenshotEditorState
+    
+    var body: some View {
+        ZStack {
+            Rectangle()
+                .stroke(Color.blue, lineWidth: 1.5)
+                .frame(width: rect.width, height: rect.height)
+                .position(x: rect.midX, y: rect.midY)
+            
+            Button(action: { state.annotations.removeAll(where: { $0.id == annotation.id }); state.selectedAnnotationID = nil }) {
+                Image(systemName: "trash.fill")
+                    .font(.system(size: 10, weight: .bold))
+                    .foregroundColor(.white)
+                    .frame(width: 24, height: 24)
+                    .background(Circle().fill(Color.red))
+                    .shadow(radius: 4)
+            }
+            .buttonStyle(.plain)
+            .position(x: rect.maxX + 12, y: rect.minY - 12)
+            
+            Group {
+                handle(at: rect.origin, index: 0) // TL
+                handle(at: CGPoint(x: rect.midX, y: rect.minY), index: 1) // TC
+                handle(at: CGPoint(x: rect.maxX, y: rect.minY), index: 2) // TR
+                handle(at: CGPoint(x: rect.minX, y: rect.midY), index: 3) // ML
+                handle(at: CGPoint(x: rect.maxX, y: rect.midY), index: 4) // MR
+                handle(at: CGPoint(x: rect.minX, y: rect.maxY), index: 5) // BL
+                handle(at: CGPoint(x: rect.midX, y: rect.maxY), index: 6) // BC
+                handle(at: CGPoint(x: rect.maxX, y: rect.maxY), index: 7) // BR
+            }
+        }
+    }
+    
+    private func handle(at point: CGPoint, index: Int) -> some View {
+        Circle()
+            .fill(Color.white)
+            .overlay(Circle().stroke(Color.blue, lineWidth: 1))
+            .frame(width: 10, height: 10)
+            .position(point)
+            .gesture(
+                DragGesture(minimumDistance: 0)
+                    .onChanged { value in
+                        if state.initialResizePoints == nil {
+                            state.startResize(id: annotation.id)
+                        }
+                        state.resizeAnnotation(annotation.id, handleIndex: index, translation: value.translation, in: CGSize(width: 1200, height: 800))
+                    }
+                    .onEnded { _ in
+                        state.initialResizePoints = nil
+                    }
+            )
     }
 }
