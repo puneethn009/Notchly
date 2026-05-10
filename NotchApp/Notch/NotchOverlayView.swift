@@ -7,7 +7,7 @@ struct NotchOverlayView: View {
     @StateObject private var mediaManager = MediaPlayerManager.shared
 
     private let collapsedWidth: CGFloat = 190
-    private let collapsedHeight: CGFloat = 32
+    private let collapsedHeight: CGFloat = 31
     private let expandedWidth: CGFloat = 700
     private let expandedHeight: CGFloat = 200
 
@@ -16,7 +16,7 @@ struct NotchOverlayView: View {
 
     var body: some View {
         let width = isExpanded ? expandedWidth : (isSticky ? 300 : collapsedWidth)
-        let height = isExpanded ? expandedHeight : (isSticky ? 37 : collapsedHeight)
+        let height = isExpanded ? expandedHeight : (isSticky ? 32 : collapsedHeight)
         
         ZStack(alignment: .top) {
             // Main Notch Background Shape
@@ -89,7 +89,7 @@ struct StickyTimerView: View {
                 .foregroundColor(.white)
                 .padding(.trailing, 20)
         }
-        .frame(width: 300, height: 37)
+        .frame(width: 300, height: 32)
     }
 }
 
@@ -117,7 +117,7 @@ struct StickyMediaView: View {
             VisualizerView(color: .white, isPlaying: mediaManager.isPlaying)
                 .padding(.trailing, 20)
         }
-        .frame(width: 300, height: 37)
+        .frame(width: 300, height: 32)
     }
 }
 
