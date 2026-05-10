@@ -21,46 +21,53 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
     }
 
     private func checkMousePosition() {
-        if let delegate = NSApp.delegate as? AppDelegate,
-           let settings = delegate.settingsWindow, 
-           settings.isKeyWindow { 
-            delegate.syncWindowLevel()
-            return 
-        }
-        
-        if let delegate = NSApp.delegate as? AppDelegate {
-            delegate.syncWindowLevel()
-        }
-
         let mouseLoc = NSEvent.mouseLocation
         let screen = NSScreen.main ?? NSScreen.screens[0]
-        
-        let notchH = screen.safeAreaInsets.top > 0 ? screen.safeAreaInsets.top : 37.0
-        let notchW = NotchOverlayView.hardwareNotchWidth(for: screen)
         let screenMidX = screen.frame.midX
         let screenMaxY = screen.frame.maxY
         
-        let collapsedRect = NSRect(
-            x: screenMidX - (220.0 / 2.0),
-            y: screenMaxY - 45.0,
-            width: 220.0,
-            height: 50.0
+        let isExpanded = NotchState.shared.isExpanded
+        let isSticky = NotchState.shared.isSticky
+        
+        // Match the hitTest logic for consistency
+        let collapsedW: CGFloat = 192
+        let expandedW: CGFloat = 700
+        let stickyW: CGFloat = 300
+        let flareSize: CGFloat = 8
+        
+        var currentWidth = isExpanded ? expandedW : (isSticky ? stickyW : collapsedW)
+        currentWidth += (flareSize * 2)
+        
+        let currentHeight = isExpanded ? 200.0 : (isSticky ? 34.0 : 31.0)
+        
+        let notchRect = NSRect(
+            x: screenMidX - (currentWidth / 2.0),
+            y: screenMaxY - currentHeight,
+            width: currentWidth,
+            height: currentHeight
         )
         
-        let isExpanded = NotchState.shared.isExpanded
+        // Dynamic Interactivity Toggle
+        // We add a small buffer (5px) to make the re-activation feel smoother
+        let interactionRect = notchRect.insetBy(dx: -5, dy: -5)
+        let isInside = interactionRect.contains(mouseLoc)
+        let window = NotchWindowController.shared.window
+        
+        // If settings is active, we must allow interaction to move the window
+        let settingsActive = (NSApp.delegate as? AppDelegate)?.settingsWindow?.isVisible ?? false
+        
+        if isInside || settingsActive {
+            window?.ignoresMouseEvents = false
+        } else {
+            window?.ignoresMouseEvents = true
+        }
         
         if isExpanded {
-            let expandedRect = NSRect(
-                x: screenMidX - (700.0 / 2.0),
-                y: screenMaxY - 200.0,
-                width: 700.0,
-                height: 200.0
-            )
-            if !expandedRect.contains(mouseLoc) && !TimerManager.shared.isAlarmPlaying {
+            if !isInside && !TimerManager.shared.isAlarmPlaying {
                 updateExpansion(false)
             }
         } else {
-            if collapsedRect.contains(mouseLoc) {
+            if isInside {
                 updateExpansion(true)
             }
         }
@@ -77,43 +84,9 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
-        let isExpanded = NotchState.shared.isExpanded
-        let isSticky = NotchState.shared.isSticky
-        let screen = NSScreen.main ?? NSScreen.screens[0]
-        let notchH = screen.safeAreaInsets.top > 0 ? screen.safeAreaInsets.top : 37.0
-        let notchW = NotchOverlayView.hardwareNotchWidth(for: screen)
-
-        // Calculate hit area in the 900x400 view (bottom-left origin)
-        var hitWidth: CGFloat = notchW
-        var hitHeight: CGFloat = notchH
-        
-        if isExpanded {
-            hitWidth = 700
-            hitHeight = 200
-        } else if isSticky {
-            hitWidth = 340
-            hitHeight = 44
-        } else {
-            hitWidth = 200
-            hitHeight = 37
-        }
-
-        let x = (900.0 - hitWidth) / 2.0
-        let y = 400.0 - hitHeight
-        
-        // Add a small 2px buffer to the hit area to make it easier to click
-        let hitRect = NSRect(x: x - 2, y: y - 2, width: hitWidth + 4, height: hitHeight + 4)
-
-        // Bypass if settings is active to allow moving the window
-        let delegate = NSApp.delegate as? AppDelegate
-        if let settings = delegate?.settingsWindow, settings.isVisible && settings.isKeyWindow {
-            return nil
-        }
-        
-        if hitRect.contains(point) {
-            return super.hitTest(point)
-        }
-        return nil
+        // Since we now use window.ignoresMouseEvents for global click-through,
+        // we can simplify hitTest to just return super if we are interactive.
+        return super.hitTest(point)
     }
 }
 
@@ -128,7 +101,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         if let window = NotchWindowController.shared.window {
             let hostingView = PassThroughHostingView(rootView: NotchOverlayView())
             hostingView.frame = NSRect(x: 0, y: 0, width: 900, height: 400)
-            hostingView.autoresizingMask = [] // Stay at 900x400
+            hostingView.autoresizingMask = []
             window.contentView = hostingView
         }
     }
@@ -158,16 +131,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     func syncWindowLevel() {
-        DispatchQueue.main.async {
-            let window = NotchWindowController.shared.window
-            if let settings = self.settingsWindow, settings.isVisible && settings.isKeyWindow {
-                window?.level = .normal
-                window?.ignoresMouseEvents = true
-            } else {
-                window?.level = .screenSaver
-                window?.ignoresMouseEvents = false
-            }
-        }
+        // Window level management is now handled dynamically in checkMousePosition
     }
 
     @objc func openSettings(_ sender: Any?) {
@@ -182,6 +146,5 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         } else {
             NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
         }
-        self.syncWindowLevel()
     }
 }
