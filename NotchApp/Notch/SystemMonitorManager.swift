@@ -1,11 +1,18 @@
 import Foundation
 import Combine
+import IOKit.ps
 
 class SystemMonitorManager: ObservableObject {
     @Published var cpuUsage: Double = 0
     @Published var ramUsage: Double = 0
+    @Published var gpuUsage: Double = 0
     @Published var uploadSpeed: String = "0 Kb/s"
     @Published var downloadSpeed: String = "0 Kb/s"
+    @Published var diskUsage: Double = 0
+    @Published var diskText: String = "0/0 GB"
+    @Published var batteryHealth: Int = 100
+    @Published var batteryCycles: Int = 0
+    @Published var thermalPressure: String = "Nominal"
     
     private var timer: AnyCancellable?
     private var lastBytesIn: UInt64 = 0
@@ -26,7 +33,11 @@ class SystemMonitorManager: ObservableObject {
     private func updateStats() {
         cpuUsage = getCPUUsage()
         ramUsage = getMemoryUsage()
+        gpuUsage = getGPUUsage()
         updateNetworkSpeeds()
+        updateDiskUsage()
+        updateThermalPressure()
+        updateBatteryHealth()
     }
     
     private func getCPUUsage() -> Double {
@@ -66,6 +77,74 @@ class SystemMonitorManager: ObservableObject {
         let total = free + active + inactive + wire
         
         return (active + wire) / total
+    }
+    
+    private func getGPUUsage() -> Double {
+        var iterator: io_iterator_t = 0
+        let result = IOServiceGetMatchingServices(kIOMainPortDefault, IOServiceMatching("IOAccelerator"), &iterator)
+        if result != KERN_SUCCESS { return 0 }
+        
+        defer { IOObjectRelease(iterator) }
+        
+        var service = IOIteratorNext(iterator)
+        while service != 0 {
+            if let stats = IORegistryEntryCreateCFProperty(service, "PerformanceStatistics" as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue() as? [String: Any] {
+                if let usage = stats["Device Utilization %"] as? Int {
+                    IOObjectRelease(service)
+                    return Double(usage) / 100.0
+                } else if let usage = stats["Utilization %"] as? Int {
+                    IOObjectRelease(service)
+                    return Double(usage) / 100.0
+                }
+            }
+            let nextService = IOIteratorNext(iterator)
+            IOObjectRelease(service)
+            service = nextService
+        }
+        return 0
+    }
+    
+    private func updateDiskUsage() {
+        let fileManager = FileManager.default
+        let path = NSHomeDirectory()
+        
+        do {
+            let values = try fileManager.attributesOfFileSystem(forPath: path)
+            if let total = values[.systemSize] as? Int64,
+               let free = values[.systemFreeSize] as? Int64 {
+                let used = total - free
+                diskUsage = Double(used) / Double(total)
+                
+                let usedGB = used / (1024 * 1024 * 1024)
+                let totalGB = total / (1024 * 1024 * 1024)
+                diskText = "\(usedGB)/\(totalGB) GB"
+            }
+        } catch {
+            print("Error disk usage: \(error)")
+        }
+    }
+    
+    private func updateThermalPressure() {
+        let level = ProcessInfo.processInfo.thermalState
+        switch level {
+        case .nominal: thermalPressure = "Nominal"
+        case .fair: thermalPressure = "Fair"
+        case .serious: thermalPressure = "Serious"
+        case .critical: thermalPressure = "Critical"
+        @unknown default: thermalPressure = "Unknown"
+        }
+    }
+    
+    private func updateBatteryHealth() {
+        let snapshot = IOPSCopyPowerSourcesInfo().takeRetainedValue()
+        let sources = IOPSCopyPowerSourcesList(snapshot).takeRetainedValue() as Array
+        
+        for ps in sources {
+            let info = IOPSGetPowerSourceDescription(snapshot, ps).takeUnretainedValue() as! [String: Any]
+            if let cycles = info["Battery Cycle Count"] as? Int {
+                batteryCycles = cycles
+            }
+        }
     }
     
     private func updateNetworkSpeeds() {

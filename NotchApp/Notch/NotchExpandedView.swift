@@ -448,21 +448,67 @@ struct SystemModuleView: View {
     @ObservedObject var systemManager: SystemMonitorManager
     
     var body: some View {
-        HStack(spacing: 40) {
-            // Circular Gauges
+        VStack(spacing: 20) {
+            // Top Row: Core Gauges
             HStack(spacing: 30) {
                 CircularGauge(label: "CPU", value: systemManager.cpuUsage, color: .green)
                 CircularGauge(label: "RAM", value: systemManager.ramUsage, color: .blue)
+                CircularGauge(label: "GPU", value: systemManager.gpuUsage, color: .orange)
+                CircularGauge(label: "DISK", value: systemManager.diskUsage, color: .purple)
             }
             
-            // Network Info
-            VStack(alignment: .leading, spacing: 15) {
-                NetworkSpeedRow(label: "Download", value: systemManager.downloadSpeed, icon: "arrow.down.circle.fill", color: .cyan)
-                NetworkSpeedRow(label: "Upload", value: systemManager.uploadSpeed, icon: "arrow.up.circle.fill", color: .orange)
+            // Bottom Row: Status Strip
+            HStack(spacing: 30) {
+                // Network
+                HStack(spacing: 12) {
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.down")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundColor(.cyan)
+                        Text(systemManager.downloadSpeed)
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    }
+                    HStack(spacing: 4) {
+                        Image(systemName: "arrow.up")
+                            .font(.system(size: 8, weight: .bold))
+                            .foregroundColor(.orange)
+                        Text(systemManager.uploadSpeed)
+                            .font(.system(size: 11, weight: .bold, design: .monospaced))
+                    }
+                }
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(Capsule().fill(Color.white.opacity(0.05)))
+                
+                // Thermal
+                HStack(spacing: 6) {
+                    Image(systemName: "thermometer.medium")
+                        .foregroundColor(thermalColor(systemManager.thermalPressure))
+                    Text(systemManager.thermalPressure.uppercased())
+                        .font(.system(size: 10, weight: .black))
+                }
+                
+                // Battery Cycles
+                HStack(spacing: 6) {
+                    Image(systemName: "battery.100.bolt")
+                        .foregroundColor(.green)
+                    Text("\(systemManager.batteryCycles) CYCLES")
+                        .font(.system(size: 10, weight: .black))
+                }
+                .opacity(systemManager.batteryCycles > 0 ? 1 : 0)
             }
-            .frame(width: 140)
+            .foregroundColor(.white.opacity(0.6))
         }
-        .padding(.horizontal, 20)
+    }
+    
+    private func thermalColor(_ pressure: String) -> Color {
+        switch pressure {
+        case "Nominal": return .green
+        case "Fair": return .yellow
+        case "Serious": return .orange
+        case "Critical": return .red
+        default: return .gray
+        }
     }
 }
 
@@ -583,7 +629,7 @@ struct CalendarModuleView: View {
     @ObservedObject var calendarManager: CalendarManager
     
     var body: some View {
-        VStack(spacing: 16) {
+        VStack(spacing: 20) {
             if calendarManager.permissionStatus == .notDetermined {
                 VStack(spacing: 16) {
                     Image(systemName: "calendar.badge.exclamationmark")
@@ -601,104 +647,87 @@ struct CalendarModuleView: View {
                     }
                     .buttonStyle(.plain)
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             } else {
-                VStack(spacing: 24) {
-                    // Top: Month/Year and Date Strip
-                    HStack(alignment: .top, spacing: 0) {
-                        // Month & Year (Left Aligned)
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(calendarManager.selectedDate.formatted(.dateTime.month(.wide)))
-                                .font(.system(size: 24, weight: .black))
-                                .foregroundColor(.white)
-                            Text(calendarManager.selectedDate.formatted(.dateTime.year()))
-                                .font(.system(size: 18, weight: .bold))
-                                .foregroundColor(.white.opacity(0.4))
-                        }
-                        .frame(width: 120, alignment: .leading)
-                        
-                        // Horizontal Date Scroll
-                        ScrollViewReader { proxy in
-                            ScrollView(.horizontal, showsIndicators: false) {
-                                HStack(spacing: 14) {
-                                    ForEach(-7..<14, id: \.self) { offset in
-                                        let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
-                                        DatePill(date: date, isSelected: Calendar.current.isDate(date, inSameDayAs: calendarManager.selectedDate)) {
-                                            withAnimation(.spring(response: 0.3)) {
-                                                calendarManager.fetchEvents(for: date)
-                                            }
-                                        }
-                                        .id(offset)
+                // TOP: Horizontal Date Strip
+                ScrollViewReader { proxy in
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 18) {
+                            ForEach(-30..<30, id: \.self) { offset in
+                                let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
+                                DatePill(date: date, isSelected: Calendar.current.isDate(date, inSameDayAs: calendarManager.selectedDate)) {
+                                    withAnimation(.spring(response: 0.3)) {
+                                        calendarManager.fetchEvents(for: date)
                                     }
                                 }
-                                .padding(.vertical, 4)
-                            }
-                            .onAppear { proxy.scrollTo(0, anchor: .center) }
-                        }
-                    }
-                    .padding(.horizontal, 24)
-                    
-                    // Bottom: Events List
-                    ScrollView(.vertical, showsIndicators: false) {
-                        VStack(spacing: 12) {
-                            if calendarManager.eventsForSelectedDate.isEmpty {
-                                VStack(spacing: 12) {
-                                    Image(systemName: "calendar.badge.checkmark")
-                                        .font(.system(size: 32))
-                                        .foregroundColor(.white.opacity(0.3))
-                                        .padding(.top, 20)
-                                    Text("No events today")
-                                        .font(.system(size: 16, weight: .bold))
-                                        .foregroundColor(.white)
-                                    Text("Enjoy your free time!")
-                                        .font(.system(size: 14))
-                                        .foregroundColor(.gray)
-                                }
-                            } else {
-                                ForEach(calendarManager.eventsForSelectedDate, id: \.eventIdentifier) { event in
-                                    HStack(spacing: 16) {
-                                        // Color indicator
-                                        RoundedRectangle(cornerRadius: 2)
-                                            .fill(Color(nsColor: event.calendar.color))
-                                            .frame(width: 4, height: 32)
-                                        
-                                        VStack(alignment: .leading, spacing: 2) {
-                                            Text(event.title)
-                                                .font(.system(size: 15, weight: .bold))
-                                                .foregroundColor(.white)
-                                                .lineLimit(1)
-                                            
-                                            HStack(spacing: 4) {
-                                                Image(systemName: "clock")
-                                                    .font(.system(size: 10))
-                                                Text("\(event.startDate.formatted(date: .omitted, time: .shortened)) - \(event.endDate.formatted(date: .omitted, time: .shortened))")
-                                            }
-                                            .font(.system(size: 12, weight: .medium))
-                                            .foregroundColor(.white.opacity(0.5))
-                                        }
-                                        
-                                        Spacer()
-                                        
-                                        if event.location != nil {
-                                            Image(systemName: "location.fill")
-                                                .font(.system(size: 12))
-                                                .foregroundColor(.white.opacity(0.3))
-                                        }
-                                    }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 12)
-                                    .background(
-                                        RoundedRectangle(cornerRadius: 16)
-                                            .fill(Color.white.opacity(0.04))
-                                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.08), lineWidth: 0.5))
-                                    )
-                                }
+                                .id(offset)
                             }
                         }
-                        .padding(.horizontal, 24)
+                        .padding(.horizontal, 32)
+                        .padding(.vertical, 4)
                     }
+                    .onAppear {
+                        proxy.scrollTo(0, anchor: .center)
+                    }
+                }
+                
+                // BOTTOM: Events Agenda
+                ScrollView(.vertical, showsIndicators: false) {
+                    VStack(spacing: 10) {
+                        if calendarManager.eventsForSelectedDate.isEmpty {
+                            VStack(spacing: 8) {
+                                Image(systemName: "calendar.badge.checkmark")
+                                    .font(.system(size: 24))
+                                    .foregroundColor(.white.opacity(0.2))
+                                Text("No Events")
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(.white.opacity(0.4))
+                            }
+                            .padding(.top, 20)
+                        } else {
+                            ForEach(calendarManager.eventsForSelectedDate, id: \.eventIdentifier) { event in
+                                CalendarEventRow(event: event)
+                            }
+                        }
+                    }
+                    .padding(.horizontal, 32)
                 }
             }
         }
+        .padding(.top, 12)
+    }
+}
+
+struct CalendarEventRow: View {
+    let event: EKEvent
+    
+    var body: some View {
+        HStack(spacing: 12) {
+            RoundedRectangle(cornerRadius: 2)
+                .fill(Color(nsColor: event.calendar.color))
+                .frame(width: 3, height: 24)
+            
+            VStack(alignment: .leading, spacing: 1) {
+                Text(event.title)
+                    .font(.system(size: 13, weight: .bold))
+                    .foregroundColor(.white)
+                    .lineLimit(1)
+                
+                Text("\(event.startDate.formatted(date: .omitted, time: .shortened))")
+                    .font(.system(size: 10, weight: .medium))
+                    .foregroundColor(.white.opacity(0.4))
+            }
+            
+            Spacer()
+            
+            if event.startDate < Date() && event.endDate > Date() {
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 6, height: 6)
+            }
+        }
+        .padding(10)
+        .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.04)))
     }
 }
 
@@ -709,29 +738,29 @@ struct DatePill: View {
     
     var body: some View {
         Button(action: action) {
-            VStack(spacing: 8) {
-                Text(date.formatted(.dateTime.weekday(.abbreviated)))
-                    .font(.system(size: 12, weight: .bold))
+            VStack(spacing: 6) {
+                Text(date.formatted(.dateTime.weekday(.abbreviated)).uppercased())
+                    .font(.system(size: 8, weight: .black))
                     .foregroundColor(isSelected ? .white : .white.opacity(0.3))
+                    .tracking(0.5)
                 
-                ZStack {
-                    if isSelected {
-                        Circle()
-                            .fill(Color.blue)
-                            .frame(width: 32, height: 32)
-                            .shadow(color: .blue.opacity(0.4), radius: 6)
-                    }
-                    Text(date.formatted(.dateTime.day()))
-                        .font(.system(size: 15, weight: .black))
-                        .foregroundColor(.white)
-                }
+                Text(date.formatted(.dateTime.day()))
+                    .font(.system(size: 16, weight: .black))
+                    .foregroundColor(isSelected ? .white : .white.opacity(0.6))
+                    .frame(width: 32, height: 32)
+                    .background(
+                        ZStack {
+                            if isSelected {
+                                Circle()
+                                    .fill(Color.blue)
+                                    .shadow(color: .blue.opacity(0.4), radius: 4)
+                            } else if Calendar.current.isDate(date, inSameDayAs: Date()) {
+                                Circle()
+                                    .stroke(Color.blue, lineWidth: 1)
+                            }
+                        }
+                    )
             }
-            .padding(.vertical, 10)
-            .padding(.horizontal, 8)
-            .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(isSelected ? Color.blue.opacity(0.15) : Color.clear)
-            )
         }
         .buttonStyle(.plain)
     }
