@@ -89,7 +89,7 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.2) {
                     if state.isHovering && !state.isExpanded {
                         print("[Hover] Stage 2: Expand")
-                        withAnimation(.spring(response: 0.35, dampingFraction: 1.0)) {
+                        withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45)) {
                             state.isExpanded = true
                             NotchWindowController.shared.isExpanded = true
                         }
@@ -100,7 +100,7 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
             if state.isHovering || state.isExpanded {
                 print("[Hover] Collapse")
                 DispatchQueue.main.async {
-                    withAnimation(.spring(response: 0.35, dampingFraction: 1.0)) {
+                    withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.4)) {
                         state.isHovering = false
                         state.isExpanded = false
                         NotchWindowController.shared.isExpanded = false

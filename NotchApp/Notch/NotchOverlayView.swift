@@ -30,12 +30,12 @@ struct NotchOverlayView: View {
                     currentRadius = isExpanded ? 20 : (isSticky ? 12 : 6)
                 }
                 .onChange(of: isExpanded) { expanded in
-                    withAnimation(.spring(response: 0.45, dampingFraction: 0.9)) {
+                    withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45)) {
                         currentRadius = expanded ? 20 : (isSticky ? 12 : 6)
                     }
                 }
                 .onChange(of: isSticky) { sticky in
-                    withAnimation(.spring(response: 0.45, dampingFraction: 0.9)) {
+                    withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45)) {
                         currentRadius = isExpanded ? 20 : (sticky ? 12 : 6)
                     }
                 }
@@ -47,7 +47,7 @@ struct NotchOverlayView: View {
                         .frame(width: expandedWidth, height: expandedHeight)
                         .clipShape(NotchShape(cornerRadius: 20))
                         .transition(.asymmetric(
-                            insertion: .scale(scale: 0.95).combined(with: .opacity).animation(.spring(response: 0.3, dampingFraction: 0.75).delay(0.15)),
+                            insertion: .scale(scale: 0.95).combined(with: .opacity).animation(.spring(response: 0.3, dampingFraction: 0.75).delay(0.2)),
                             removal: .opacity.animation(.easeOut(duration: 0.1))
                         ))
                 } else if isSticky {
@@ -92,8 +92,8 @@ struct NotchOverlayView: View {
             }
         }
         .frame(width: 900, height: 400, alignment: .top)
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isExpanded)
-        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSticky)
+        .animation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45), value: isExpanded)
+        .animation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45), value: isSticky)
     }
 
     // Static helper for notch width based on screen
