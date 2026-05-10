@@ -98,9 +98,9 @@ class ScreenshotMonitor {
         
         print("[ScreenshotMonitor] Potential match detected: \(filename)")
         
-        // Wait for macOS to finish writing the file and hide its own floating thumbnail
+        // Wait for macOS to finish writing the file
         Task {
-            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s delay
+            try? await Task.sleep(nanoseconds: 150_000_000) // 0.15s delay
             
             guard FileManager.default.fileExists(atPath: path) else {
                 print("[ScreenshotMonitor] File disappeared before processing: \(path)")

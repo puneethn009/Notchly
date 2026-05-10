@@ -139,6 +139,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             
             // Initialize Capture Manager
             CaptureManager.shared.setup()
+            CaptureManager.shared.disableNativeThumbnails()
             
             // Start screenshot monitoring with persistence
             ScreenshotMonitor.shared.start(container: PersistenceController.shared.container)
