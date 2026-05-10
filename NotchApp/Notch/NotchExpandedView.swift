@@ -155,6 +155,13 @@ struct NotchExpandedView: View {
         .frame(height: 200) // Explicitly match expandedHeight
         .background(Color.clear)
         .contentShape(Rectangle()) 
+        .overlay {
+            if let pendingURL = notchState.pendingScreenshotURL {
+                ScreenshotNamingView(url: pendingURL)
+                    .transition(.move(edge: .top).combined(with: .opacity))
+                    .zIndex(1000)
+            }
+        }
         .onAppear {
             setupSwipeMonitor()
         }
@@ -349,15 +356,29 @@ struct TimerModuleView: View {
     
     var body: some View {
         VStack(spacing: 12) {
-            if !timerManager.isRunning && !timerManager.isStopwatchRunning && !timerManager.isAlarmPlaying {
-                Picker("", selection: $mode) {
-                    Text("Timer").tag(0)
-                    if SettingsManager.shared.enableStopwatch {
-                        Text("Stopwatch").tag(1)
+            if !timerManager.isRunning && !timerManager.isStopwatchRunning && !timerManager.isAlarmPlaying && SettingsManager.shared.enableStopwatch {
+                HStack(spacing: 0) {
+                    Button(action: { withAnimation { mode = 0 } }) {
+                        Text("TIMER")
+                            .font(.system(size: 9, weight: .black))
+                            .foregroundColor(mode == 0 ? .black : .white.opacity(0.4))
+                            .frame(width: 100, height: 28)
+                            .background(mode == 0 ? Color.white : Color.clear)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
                     }
+                    .buttonStyle(.plain)
+                    
+                    Button(action: { withAnimation { mode = 1 } }) {
+                        Text("STOPWATCH")
+                            .font(.system(size: 9, weight: .black))
+                            .foregroundColor(mode == 1 ? .black : .white.opacity(0.4))
+                            .frame(width: 100, height: 28)
+                            .background(mode == 1 ? Color.white : Color.clear)
+                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                    }
+                    .buttonStyle(.plain)
                 }
-                .pickerStyle(.segmented)
-                .frame(width: 200)
+                .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.05)))
                 .padding(.bottom, 8)
             }
             

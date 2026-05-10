@@ -41,5 +41,6 @@ class NotchState: NSObject, ObservableObject {
     }
     @Published var selectedPage: NotchPage = .media
     @Published var lastCapturedScreenshotURL: URL?
+    @Published var pendingScreenshotURL: URL?
     @Published var isShowingScreenshotPopup: Bool = false
 }

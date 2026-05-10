@@ -21,7 +21,7 @@ struct ScreenshotPreviewPopup: View {
         .background(
             VisualEffectView(material: .hudWindow, blendingMode: .withinWindow)
                 .clipShape(RoundedRectangle(cornerRadius: 16))
-                .shadow(color: .black.opacity(0.5), radius: 20, x: 0, y: 10)
+                .shadow(color: Color.black.opacity(0.5), radius: 20, x: 0, y: 10)
         )
     }
 }

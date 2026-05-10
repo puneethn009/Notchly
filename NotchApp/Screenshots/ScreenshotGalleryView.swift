@@ -4,9 +4,10 @@ import SwiftData
 struct ScreenshotGalleryView: View {
     @Environment(\.modelContext) private var modelContext
     @Query(sort: \ScreenshotItem.capturedAt, order: .reverse) private var items: [ScreenshotItem]
+    
     @State private var searchText = ""
     @State private var selectedItem: ScreenshotItem?
-    // Hover is now handled via PreviewWindowController
+    @State private var isWiggleMode: Bool = false
     
     var filteredItems: [ScreenshotItem] {
         if searchText.isEmpty {
@@ -19,70 +20,95 @@ struct ScreenshotGalleryView: View {
         }
     }
     
-    let columns = [
-        GridItem(.adaptive(minimum: 120, maximum: 180), spacing: 12)
-    ]
-    
     var body: some View {
-        VStack(spacing: 0) {
-            // Search Bar
-            HStack {
-                Image(systemName: "magnifyingglass")
-                    .foregroundColor(.gray)
-                TextField("Search text, code, or receipts...", text: $searchText)
-                    .textFieldStyle(.plain)
-                    .font(.system(size: 12, weight: .medium))
-                
-                if !searchText.isEmpty {
-                    Button(action: { searchText = "" }) {
-                        Image(systemName: "xmark.circle.fill")
-                            .foregroundColor(.gray)
+        ZStack {
+            
+            VStack(spacing: 0) {
+                // Header
+                HStack {
+                    if isWiggleMode {
+                        Text("EDIT MODE")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundColor(.red)
+                            .tracking(2)
+                    } else {
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.gray)
+                            TextField("Search screenshots...", text: $searchText)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 12, weight: .medium))
+                        }
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.05)))
+                        .frame(maxWidth: 250)
                     }
-                    .buttonStyle(.plain)
+                    
+                    Spacer()
+                    
+                    if isWiggleMode {
+                        Button("Done") {
+                            withAnimation(.spring()) {
+                                isWiggleMode = false
+                            }
+                        }
+                        .font(.system(size: 10, weight: .bold))
+                        .foregroundColor(.blue)
+                        .buttonStyle(.plain)
+                    }
+                }
+                .padding(.horizontal, 40)
+                .padding(.bottom, 12)
+                
+                if items.isEmpty {
+                    VStack(spacing: 8) {
+                        Image(systemName: "camera.viewfinder")
+                            .font(.system(size: 30))
+                            .foregroundColor(.white.opacity(0.1))
+                        Text("No screenshots yet")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white.opacity(0.3))
+                    }
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                } else {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        LazyHStack(spacing: 16) {
+                            ForEach(filteredItems) { item in
+                                ScreenshotThumbnail(
+                                    item: item,
+                                    isWiggling: isWiggleMode,
+                                    onDelete: {
+                                        deleteItem(item)
+                                    }
+                                )
+                                .onTapGesture {
+                                    if !isWiggleMode {
+                                        withAnimation(.spring(response: 0.3)) {
+                                            selectedItem = item
+                                        }
+                                    }
+                                }
+                                .onLongPressGesture {
+                                    withAnimation(.spring()) {
+                                        isWiggleMode = true
+                                    }
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 40)
+                    }
+                    .frame(height: 100)
+                    .padding(.bottom, 10)
                 }
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.05)))
-            .frame(maxWidth: 300)
-            .padding(.horizontal, 20)
-            .padding(.bottom, 12)
-            
-            if items.isEmpty {
-                VStack(spacing: 8) {
-                    Image(systemName: "camera.viewfinder")
-                        .font(.system(size: 30))
-                        .foregroundColor(.white.opacity(0.1))
-                    Text("No screenshots yet")
-                        .font(.system(size: 12, weight: .bold))
-                        .foregroundColor(.white.opacity(0.3))
-                }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
-            } else {
-                ScrollView(.horizontal, showsIndicators: false) {
-                    LazyHStack(spacing: 12) {
-                        ForEach(filteredItems) { item in
-                            ScreenshotThumbnail(item: item)
-                                .onHover { isHovering in
-                                    if isHovering {
-                                        let mouseLoc = NSEvent.mouseLocation
-                                        PreviewWindowController.shared.showPreview(item: item, at: mouseLoc)
-                                    } else {
-                                        PreviewWindowController.shared.hidePreview()
-                                    }
-                                }
-                                .onTapGesture {
-                                    PreviewWindowController.shared.hidePreview()
-                                    withAnimation(.spring(response: 0.3)) {
-                                        selectedItem = item
-                                    }
-                                }
-                        }
+            .onTapGesture {
+                // Tapping anywhere in the gallery area (between items) exits wiggle mode
+                if isWiggleMode {
+                    withAnimation(.spring()) {
+                        isWiggleMode = false
                     }
-                    .padding(.horizontal, 40) // Increased padding for edge breathing room
                 }
-                .frame(height: 100) // Fixed height for horizontal reel
-                .padding(.bottom, 10)
             }
         }
         .overlay {
@@ -91,43 +117,99 @@ struct ScreenshotGalleryView: View {
                     selectedItem = nil
                 }
                 .zIndex(200)
+                .transition(.opacity.combined(with: .scale(scale: 0.95)))
             }
         }
+    }
+    
+    private func deleteItem(_ item: ScreenshotItem) {
+        try? FileManager.default.removeItem(atPath: item.filePath)
+        modelContext.delete(item)
+        try? modelContext.save()
     }
 }
 
 struct ScreenshotThumbnail: View {
     let item: ScreenshotItem
+    let isWiggling: Bool
+    let onDelete: () -> Void
+    
+    @State private var wiggleRotation: Double = 0
+    @State private var randomDelay: Double = Double.random(in: 0...0.15)
     
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            ZStack(alignment: .bottomTrailing) {
-                if let image = NSImage(contentsOfFile: item.filePath) {
-                    Image(nsImage: image)
-                        .resizable()
-                        .aspectRatio(contentMode: .fill)
-                        .frame(width: 100, height: 60)
-                        .clipShape(RoundedRectangle(cornerRadius: 6))
-                } else {
-                    RoundedRectangle(cornerRadius: 6)
-                        .fill(Color.white.opacity(0.05))
-                        .frame(width: 100, height: 60)
-                        .overlay(Image(systemName: "photo").foregroundColor(.white.opacity(0.2)))
+        ZStack(alignment: .topTrailing) {
+            VStack(alignment: .center, spacing: 4) {
+                ZStack(alignment: .bottomTrailing) {
+                    if let image = NSImage(contentsOfFile: item.filePath) {
+                        Image(nsImage: image)
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(width: 100, height: 60)
+                            .clipShape(RoundedRectangle(cornerRadius: 8))
+                    } else {
+                        RoundedRectangle(cornerRadius: 8)
+                            .fill(Color.white.opacity(0.05))
+                            .frame(width: 100, height: 60)
+                    }
+                    
+                    // Content Type Badge
+                    Image(systemName: iconForType(item.contentType))
+                        .font(.system(size: 7, weight: .bold))
+                        .padding(3)
+                        .background(Color.black.opacity(0.6).clipShape(Circle()))
+                        .padding(4)
                 }
+                .scaleEffect(isWiggling ? 0.98 : 1.0)
+                .rotationEffect(.degrees(isWiggling ? wiggleRotation : 0))
+                .animation(isWiggling ? 
+                           Animation.easeInOut(duration: 0.15)
+                            .repeatForever(autoreverses: true)
+                            .delay(randomDelay) : 
+                           .spring(response: 0.3, dampingFraction: 0.7), value: isWiggling)
+                .animation(isWiggling ? 
+                           Animation.easeInOut(duration: 0.15)
+                            .repeatForever(autoreverses: true)
+                            .delay(randomDelay) : 
+                           .default, value: wiggleRotation)
                 
-                // Content Type Badge
-                Image(systemName: iconForType(item.contentType))
-                    .font(.system(size: 8, weight: .bold))
-                    .padding(3)
-                    .background(VisualEffectView(material: .hudWindow, blendingMode: .withinWindow).clipShape(Circle()))
-                    .padding(3)
+                Text(item.filename)
+                    .font(.system(size: 8, weight: .medium))
+                    .foregroundColor(.white.opacity(0.4))
+                    .lineLimit(1)
+                    .frame(width: 100)
             }
             
-            Text(item.filename)
-                .font(.system(size: 8, weight: .medium))
-                .foregroundColor(.white.opacity(0.5))
-                .lineLimit(1)
-                .frame(width: 100)
+            if isWiggling {
+                Button(action: onDelete) {
+                    Image(systemName: "xmark.circle.fill")
+                        .font(.system(size: 16))
+                        .foregroundColor(.red)
+                        .background(Circle().fill(Color.white))
+                }
+                .buttonStyle(.plain)
+                .offset(x: 5, y: -5)
+                .transition(.scale(scale: 0.5).combined(with: .opacity))
+            }
+        }
+        .onAppear {
+            if isWiggling {
+                startWiggling()
+            }
+        }
+        .onChange(of: isWiggling) { wiggling in
+            if wiggling {
+                startWiggling()
+            } else {
+                wiggleRotation = 0
+            }
+        }
+    }
+    
+    private func startWiggling() {
+        wiggleRotation = -0.8
+        withAnimation {
+            wiggleRotation = 0.8
         }
     }
     
@@ -144,18 +226,17 @@ struct ScreenshotThumbnail: View {
 }
 
 struct ScreenshotDetailOverlay: View {
+    @Environment(\.modelContext) private var modelContext
     let item: ScreenshotItem
     let onClose: () -> Void
     
     var body: some View {
         ZStack {
-            // Full solid black background
             Color.black
                 .ignoresSafeArea()
                 .onTapGesture(perform: onClose)
             
-            VStack(spacing: 12) { // Slightly tighter spacing to pull items up
-                // Header with close button
+            VStack(spacing: 12) {
                 HStack {
                     Spacer()
                     Button(action: onClose) {
@@ -172,13 +253,13 @@ struct ScreenshotDetailOverlay: View {
                     Image(nsImage: image)
                         .resizable()
                         .aspectRatio(contentMode: .fit)
-                        .frame(maxHeight: 130) // Tighter height
+                        .frame(maxHeight: 130)
                         .clipShape(RoundedRectangle(cornerRadius: 12))
                         .shadow(color: .black.opacity(0.5), radius: 20)
                 }
                 
                 ScreenshotActionBar(item: item)
-                    .scaleEffect(0.85) // Slightly more compact
+                    .scaleEffect(0.85)
                 
                 if let text = item.extractedText, !text.isEmpty {
                     VStack(alignment: .leading, spacing: 4) {
@@ -192,35 +273,25 @@ struct ScreenshotDetailOverlay: View {
                                 .foregroundColor(.white.opacity(0.6))
                                 .frame(maxWidth: .infinity, alignment: .leading)
                         }
-                        .frame(maxHeight: 45) // Slightly shorter
+                        .frame(maxHeight: 45)
                         .padding(8)
                         .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.03)))
                     }
                     .padding(.horizontal, 40)
-                    .padding(.bottom, 20) // Pull up from bottom
+                    .padding(.bottom, 20)
                 }
                 
-                Spacer(minLength: 40) // Increased bottom spacer to keep everything high
+                Spacer(minLength: 40)
             }
         }
-        .transition(.opacity.combined(with: .scale(scale: 1.01)))
-    }
-}
-
-struct VisualEffectView: NSViewRepresentable {
-    let material: NSVisualEffectView.Material
-    let blendingMode: NSVisualEffectView.BlendingMode
-    
-    func makeNSView(context: Context) -> NSVisualEffectView {
-        let view = NSVisualEffectView()
-        view.material = material
-        view.blendingMode = blendingMode
-        view.state = .active
-        return view
-    }
-    
-    func updateNSView(_ nsView: NSVisualEffectView, context: Context) {
-        nsView.material = material
-        nsView.blendingMode = blendingMode
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("DeleteScreenshot"))) { notification in
+            if let item = notification.object as? ScreenshotItem {
+                modelContext.delete(item)
+                try? modelContext.save()
+                withAnimation {
+                    onClose()
+                }
+            }
+        }
     }
 }

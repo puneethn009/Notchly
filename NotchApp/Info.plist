@@ -4,5 +4,9 @@
 <dict>
 	<key>NSCalendarUsageDescription</key>
 	<string>NotchApp needs calendar access to show your upcoming events in the notch overlay.</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>NotchApp needs desktop access to monitor and organize your screenshots.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>NotchApp needs documents access to store and manage your screenshot gallery.</string>
 </dict>
 </plist>

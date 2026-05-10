@@ -18,6 +18,20 @@ class ScreenshotMonitor {
         self.managedURL = docs.appendingPathComponent("Notchly/Screenshots", isDirectory: true)
         
         createManagedDirectoryIfNeeded()
+        cleanupPendingScreenshots()
+    }
+    
+    private func cleanupPendingScreenshots() {
+        let pendingDir = managedURL.appendingPathComponent(".pending")
+        guard let files = try? FileManager.default.contentsOfDirectory(at: pendingDir, includingPropertiesForKeys: nil) else { return }
+        
+        for file in files {
+            // If they are more than 5 mins old, move them to the main folder as orphaned or delete
+            // For now, let's just move them to the main folder so they aren't lost
+            let destination = managedURL.appendingPathComponent(file.lastPathComponent)
+            try? FileManager.default.moveItem(at: file, to: destination)
+        }
+        print("[ScreenshotMonitor] Cleaned up \(files.count) pending files")
     }
     
     func start(container: ModelContainer) {
@@ -77,67 +91,105 @@ class ScreenshotMonitor {
         let url = URL(fileURLWithPath: path)
         let filename = url.lastPathComponent
         
+        // Match both "Screenshot" and localizations like "Screen Shot"
         let isScreenshot = filename.hasPrefix("Screenshot") || filename.hasPrefix("Screen Shot")
         let hasValidExtension = ["png", "jpg", "jpeg"].contains(url.pathExtension.lowercased())
         
         guard isScreenshot && hasValidExtension else { return }
         
-        DispatchQueue.global().asyncAfter(deadline: .now() + 0.2) {
-            self.interceptScreenshot(at: url)
+        print("[ScreenshotMonitor] Potential match detected: \(filename)")
+        
+        // Wait for macOS to finish writing the file and hide its own floating thumbnail
+        Task {
+            try? await Task.sleep(nanoseconds: 500_000_000) // 0.5s delay
+            
+            guard FileManager.default.fileExists(atPath: path) else {
+                print("[ScreenshotMonitor] File disappeared before processing: \(path)")
+                return
+            }
+            
+            let pendingDir = self.managedURL.appendingPathComponent(".pending", isDirectory: true)
+            try? FileManager.default.createDirectory(at: pendingDir, withIntermediateDirectories: true)
+            
+            let tempURL = pendingDir.appendingPathComponent(filename)
+            
+            do {
+                if FileManager.default.fileExists(atPath: tempURL.path) {
+                    try? FileManager.default.removeItem(at: tempURL)
+                }
+                
+                try FileManager.default.moveItem(at: url, to: tempURL)
+                print("[ScreenshotMonitor] Successfully moved to pending: \(tempURL.path)")
+                
+                await MainActor.run {
+                    // Force window to front and make it key for keyboard focus
+                    NSApp.activate(ignoringOtherApps: true)
+                    NotchWindowController.shared.window?.makeKeyAndOrderFront(nil)
+                    
+                    withAnimation(.spring(response: 0.45, dampingFraction: 0.7)) {
+                        NotchState.shared.pendingScreenshotURL = tempURL
+                        NotchState.shared.isExpanded = true
+                    }
+                    print("[ScreenshotMonitor] Triggered UI naming prompt & window activated")
+                }
+            } catch {
+                print("[ScreenshotMonitor] ERROR moving file: \(error.localizedDescription)")
+                self.logger.error("Failed to move to pending: \(error.localizedDescription)")
+            }
         }
     }
     
-    private func interceptScreenshot(at sourceURL: URL) {
-        guard FileManager.default.fileExists(atPath: sourceURL.path) else { return }
+    func finalizePendingScreenshot(withName name: String) {
+        guard let sourceURL = NotchState.shared.pendingScreenshotURL else { 
+            print("[ScreenshotMonitor] ERROR: No pending screenshot URL found")
+            return 
+        }
         
-        let destinationURL = managedURL.appendingPathComponent(sourceURL.lastPathComponent)
+        print("[ScreenshotMonitor] Finalizing capture with name: \(name)")
+        
+        let cleanName = name.trimmingCharacters(in: .whitespacesAndNewlines)
+        let finalName = cleanName.isEmpty ? sourceURL.lastPathComponent : "\(cleanName).\(sourceURL.pathExtension)"
+        let destinationURL = managedURL.appendingPathComponent(finalName)
         
         do {
-            try FileManager.default.moveItem(at: sourceURL, to: destinationURL)
-            logger.info("Intercepted screenshot: \(sourceURL.lastPathComponent) -> \(destinationURL.path)")
+            if FileManager.default.fileExists(atPath: destinationURL.path) {
+                try? FileManager.default.removeItem(at: destinationURL)
+            }
             
-            DispatchQueue.main.async {
-                withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                    NotchState.shared.lastCapturedScreenshotURL = destinationURL
-                    NotchState.shared.isShowingScreenshotPopup = true
-                }
-                
-                DispatchQueue.main.asyncAfter(deadline: .now() + 5.0) {
-                    if NotchState.shared.lastCapturedScreenshotURL == destinationURL {
-                        withAnimation {
-                            NotchState.shared.isShowingScreenshotPopup = false
-                        }
+            try FileManager.default.moveItem(at: sourceURL, to: destinationURL)
+            print("[ScreenshotMonitor] Finalized file moved to: \(destinationURL.path)")
+            
+            Task {
+                await MainActor.run {
+                    withAnimation {
+                        NotchState.shared.pendingScreenshotURL = nil
+                        NotchState.shared.lastCapturedScreenshotURL = destinationURL
                     }
                 }
                 
-                Task {
-                    let result = await ScreenshotAnalyzer.shared.analyze(imageURL: destinationURL)
-                    
-                    await MainActor.run {
-                        if let container = self.container {
-                            let context = container.mainContext
-                            let newItem = ScreenshotItem(
-                                filename: destinationURL.lastPathComponent,
-                                filePath: destinationURL.path,
-                                contentType: result.contentType,
-                                extractedText: result.text
-                            )
-                            context.insert(newItem)
-                            do {
-                                try context.save()
-                                self.logger.info("Screenshot analysis saved to database: \(result.contentType.rawValue)")
-                                print("[Screenshot] Saved to DB: \(destinationURL.lastPathComponent)")
-                            } catch {
-                                self.logger.error("Failed to save screenshot to database: \(error.localizedDescription)")
-                                print("[Screenshot] SAVE ERROR: \(error)")
-                            }
-                        }
+                let result = await ScreenshotAnalyzer.shared.analyze(imageURL: destinationURL)
+                await MainActor.run {
+                    if let container = self.container {
+                        let newItem = ScreenshotItem(
+                            filename: finalName,
+                            filePath: destinationURL.path,
+                            contentType: result.contentType,
+                            extractedText: result.text
+                        )
+                        container.mainContext.insert(newItem)
+                        try? container.mainContext.save()
+                        print("[ScreenshotMonitor] DB record created for: \(finalName)")
                     }
                 }
             }
         } catch {
-            logger.error("Failed to move screenshot: \(error.localizedDescription)")
+            print("[ScreenshotMonitor] ERROR finalising file: \(error.localizedDescription)")
+            logger.error("Failed to finalize screenshot: \(error.localizedDescription)")
         }
+    }
+    
+    private func interceptScreenshot(at sourceURL: URL) {
+        // This is now handled via processPotentialScreenshot -> finalize
     }
     
     private func createManagedDirectoryIfNeeded() {

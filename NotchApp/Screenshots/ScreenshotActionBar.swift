@@ -33,6 +33,13 @@ struct ScreenshotActionBar: View {
                 let picker = NSSharingServicePicker(items: [url])
                 picker.show(relativeTo: .zero, of: NSView(), preferredEdge: .minY)
             }
+            
+            ActionButton(icon: "trash.fill", label: "Delete", color: .red) {
+                // Delete from disk
+                try? FileManager.default.removeItem(atPath: item.filePath)
+                // Delete from DB is handled by the caller or via environment
+                NotificationCenter.default.post(name: NSNotification.Name("DeleteScreenshot"), object: item)
+            }
         }
         .padding(.vertical, 12)
         .padding(.horizontal, 20)

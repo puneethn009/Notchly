@@ -64,7 +64,8 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
         }
         
         if isExpanded {
-            if !isInside && !TimerManager.shared.isAlarmPlaying {
+            // Prevent auto-collapse if mouse is outside AND NO screenshot is pending
+            if !isInside && !TimerManager.shared.isAlarmPlaying && NotchState.shared.pendingScreenshotURL == nil {
                 updateExpansion(false)
             }
         } else {
