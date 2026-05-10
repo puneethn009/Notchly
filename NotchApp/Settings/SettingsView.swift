@@ -81,6 +81,31 @@ struct TimerSettingsPage: View {
     
     var body: some View {
         VStack {
+            Form {
+                Section("Preferences") {
+                    Toggle("Enable Stopwatch", isOn: $settings.enableStopwatch)
+                    Toggle("Show Timer in Closed Notch", isOn: $settings.showClosedNotchTimerIndicator)
+                    
+                    Picker("Alarm Sound", selection: $settings.selectedAlarmSound) {
+                        Text("Glass").tag("Glass")
+                        Text("Basso").tag("Basso")
+                        Text("Bottle").tag("Bottle")
+                        Text("Frog").tag("Frog")
+                        Text("Funk").tag("Funk")
+                        Text("Hero").tag("Hero")
+                        Text("Morse").tag("Morse")
+                        Text("Ping").tag("Ping")
+                        Text("Pop").tag("Pop")
+                        Text("Purr").tag("Purr")
+                        Text("Sosumi").tag("Sosumi")
+                        Text("Submarine").tag("Submarine")
+                        Text("Tink").tag("Tink")
+                    }
+                }
+            }
+            .formStyle(.grouped)
+            .frame(height: 150)
+            
             List {
                 Section(header: Text("My Timers (\(settings.customTimers.count)/7)")) {
                     ForEach(settings.customTimers) { timer in

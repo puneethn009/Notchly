@@ -69,7 +69,7 @@ struct NotchExpandedView: View {
         VStack(spacing: 0) {
             // Top Bar (Now with Navigation + Settings/Battery)
             HStack(alignment: .center) {
-                // Top-Left: Module Navigation
+                // ... (Navigation content)
                 HStack(spacing: 12) {
                     ForEach(NotchPage.allCases, id: \.self) { page in
                         Button(action: { 
@@ -121,8 +121,7 @@ struct NotchExpandedView: View {
             }
             .padding(.horizontal, 32)
             .padding(.top, 16)
-            
-            Spacer()
+            .frame(height: 50, alignment: .top) // Forced top alignment
             
             // Content Switcher
             ZStack {
@@ -147,11 +146,11 @@ struct NotchExpandedView: View {
                 ))
             }
             .offset(x: shakeOffset)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
+            .padding(.top, 10) 
             .padding(.bottom, 16)
-            
-            Spacer()
         }
+        .frame(height: 200) // Explicitly match expandedHeight
         .background(Color.clear)
         .contentShape(Rectangle()) 
         .onAppear {
@@ -256,19 +255,6 @@ struct MediaModuleView: View {
                                 }
                             )
                             .clipShape(RoundedRectangle(cornerRadius: 12))
-                        
-                        Button(action: { mediaManager.toggleMute() }) {
-                            Circle()
-                                .fill(Color.white)
-                                .frame(width: 24, height: 24)
-                                .overlay(
-                                    Image(systemName: mediaManager.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                                    .foregroundColor(mediaManager.isMuted ? .gray : .pink)
-                                    .font(.system(size: 12))
-                                )
-                        }
-                        .buttonStyle(.plain)
-                        .offset(x: 8, y: 8)
                     }
                     
                     // Track Info
@@ -357,10 +343,40 @@ struct MediaModuleView: View {
 
 struct TimerModuleView: View {
     @ObservedObject var timerManager: TimerManager
+    @State private var mode: Int = 0 // 0: Timer, 1: Stopwatch
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            if !timerManager.isRunning && !timerManager.isStopwatchRunning && !timerManager.isAlarmPlaying {
+                Picker("", selection: $mode) {
+                    Text("Timer").tag(0)
+                    if SettingsManager.shared.enableStopwatch {
+                        Text("Stopwatch").tag(1)
+                    }
+                }
+                .pickerStyle(.segmented)
+                .frame(width: 200)
+                .padding(.bottom, 8)
+            }
+            
+            if timerManager.isStopwatchRunning {
+                StopwatchContent(timerManager: timerManager)
+            } else if mode == 0 || timerManager.isRunning || timerManager.isAlarmPlaying {
+                TimerContent(timerManager: timerManager)
+            } else {
+                StopwatchContent(timerManager: timerManager)
+            }
+        }
+    }
+}
+
+struct TimerContent: View {
+    @ObservedObject var timerManager: TimerManager
     
     var body: some View {
         VStack(spacing: 16) {
             if timerManager.isAlarmPlaying {
+                // ... (Existing Alarm UI)
                 VStack(spacing: 20) {
                     Text("TIME'S UP!")
                         .font(.system(size: 32, weight: .black))
@@ -373,11 +389,11 @@ struct TimerModuleView: View {
                             .padding(.horizontal, 40)
                             .padding(.vertical, 14)
                             .background(Capsule().fill(Color.red))
-                            .shadow(color: .red.opacity(0.4), radius: 10, y: 5)
                     }
                     .buttonStyle(.plain)
                 }
             } else if timerManager.isRunning {
+                // ... (Existing Running UI)
                 VStack(spacing: 8) {
                     Text(timerManager.currentTimerName)
                         .font(.system(size: 14, weight: .bold))
@@ -387,39 +403,22 @@ struct TimerModuleView: View {
                         Circle()
                             .stroke(Color.white.opacity(0.1), lineWidth: 8)
                             .frame(width: 80, height: 80)
-                        
                         Circle()
                             .trim(from: 0, to: CGFloat(timerManager.progress))
-                            .stroke(
-                                LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom),
-                                style: StrokeStyle(lineWidth: 8, lineCap: .round)
-                            )
+                            .stroke(LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom), style: StrokeStyle(lineWidth: 8, lineCap: .round))
                             .frame(width: 80, height: 80)
                             .rotationEffect(.degrees(-90))
-                            .animation(.linear(duration: 1.0), value: timerManager.timeRemaining)
-                        
                         Text(timerManager.timeString)
                             .font(.system(size: 20, weight: .bold, design: .monospaced))
                             .foregroundColor(.white)
                     }
                     
                     Button(action: { timerManager.stop() }) {
-                        Text("Cancel")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 8)
-                            .background(Capsule().fill(Color.red.opacity(0.8)))
-                    }
-                    .buttonStyle(.plain)
+                        Text("Cancel").font(.system(size: 12, weight: .bold)).foregroundColor(.white).padding(.horizontal, 16).padding(.vertical, 8).background(Capsule().fill(Color.red.opacity(0.8)))
+                    }.buttonStyle(.plain)
                 }
             } else {
                 VStack(spacing: 12) {
-                    Text("MY TIMERS")
-                        .font(.system(size: 10, weight: .black))
-                        .foregroundColor(.white.opacity(0.3))
-                        .tracking(2)
-                    
                     HStack(spacing: 12) {
                         ForEach(SettingsManager.shared.customTimers) { timer in
                             TimerButton(label: timer.name, color: .blue) { 
@@ -430,6 +429,53 @@ struct TimerModuleView: View {
                 }
             }
         }
+    }
+}
+
+struct StopwatchContent: View {
+    @ObservedObject var timerManager: TimerManager
+    
+    var body: some View {
+        HStack(spacing: 40) {
+            // Reset Button
+            Button(action: { timerManager.resetStopwatch() }) {
+                ZStack {
+                    Circle()
+                        .fill(Color.white.opacity(0.1))
+                        .frame(width: 44, height: 44)
+                    Image(systemName: "arrow.counterclockwise")
+                        .font(.system(size: 16, weight: .bold))
+                        .foregroundColor(.white)
+                }
+            }
+            .buttonStyle(.plain)
+            
+            // Stopwatch Display
+            Text(timerManager.stopwatchString)
+                .font(.system(size: 32, weight: .bold, design: .monospaced))
+                .foregroundColor(.white)
+                .frame(width: 220)
+            
+            // Start/Stop Button
+            Button(action: { 
+                if timerManager.isStopwatchRunning {
+                    timerManager.stopStopwatch()
+                } else {
+                    timerManager.startStopwatch()
+                }
+            }) {
+                ZStack {
+                    Circle()
+                        .fill(timerManager.isStopwatchRunning ? Color.red.opacity(0.2) : Color.green.opacity(0.2))
+                        .frame(width: 54, height: 54)
+                    Image(systemName: timerManager.isStopwatchRunning ? "pause.fill" : "play.fill")
+                        .font(.system(size: 20, weight: .bold))
+                        .foregroundColor(timerManager.isStopwatchRunning ? .red : .green)
+                }
+            }
+            .buttonStyle(.plain)
+        }
+        .padding(.vertical, 10)
     }
 }
 
@@ -454,8 +500,15 @@ struct TimerButton: View {
                     .font(.system(size: 10, weight: .bold))
                     .foregroundColor(.white)
                     .lineLimit(1)
-                    .frame(width: 60)
+                
+                // Show duration below name
+                if let timer = SettingsManager.shared.customTimers.first(where: { $0.name == label }) {
+                    Text("\(timer.minutes)m")
+                        .font(.system(size: 9, weight: .medium))
+                        .foregroundColor(.white.opacity(0.4))
+                }
             }
+            .frame(width: 60)
         }
         .buttonStyle(.plain)
     }

@@ -7,7 +7,7 @@ struct NotchOverlayView: View {
     @StateObject private var mediaManager = MediaPlayerManager.shared
 
     private let collapsedWidth: CGFloat = 192
-    private let collapsedHeight: CGFloat = 31
+    private let collapsedHeight: CGFloat = 30
     private let expandedWidth: CGFloat = 700
     private let expandedHeight: CGFloat = 200
 
@@ -16,11 +16,11 @@ struct NotchOverlayView: View {
 
     var body: some View {
         let width = isExpanded ? expandedWidth : (isSticky ? 300 : collapsedWidth)
-        let height = isExpanded ? expandedHeight : (isSticky ? 32 : collapsedHeight)
+        let height = isExpanded ? expandedHeight : (isSticky ? 30 : collapsedHeight)
         
         ZStack(alignment: .top) {
             // Main Notch Background Shape
-            NotchShape(cornerRadius: isExpanded ? 20 : (isSticky ? 12 : 8))
+            NotchShape(cornerRadius: isExpanded ? 20 : (isSticky ? 12 : 6))
                 .fill(Color.black)
                 .shadow(color: Color.black.opacity(isExpanded ? 0.6 : 0), radius: 30, x: 0, y: 15)
                 .frame(width: width, height: height)
@@ -54,15 +54,24 @@ struct NotchOverlayView: View {
                         }
                         .frame(width: 14)
                         
-                        Image(systemName: "timer")
-                            .foregroundColor(timerManager.isRunning ? .orange : .white.opacity(0.3))
+                        ZStack {
+                            if SettingsManager.shared.showClosedNotchTimerIndicator && (timerManager.isRunning || timerManager.isStopwatchRunning) {
+                                Image(systemName: "timer")
+                                    .foregroundColor(.orange)
+                            } else {
+                                Image(systemName: "timer")
+                                    .foregroundColor(.white.opacity(0.3))
+                            }
+                        }
+                        .frame(width: 14)
+                        
                         Image(systemName: "calendar")
                         Image(systemName: "cpu")
                         Image(systemName: "gearshape")
                     }
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(.white.opacity(0.3))
-                    .frame(width: collapsedWidth, height: collapsedHeight)
+                    .frame(width: collapsedWidth, height: 30)
                     .offset(y: -1)
                 }
             }
@@ -97,7 +106,7 @@ struct StickyTimerView: View {
             
             Spacer()
             
-            Text(timerManager.timeString)
+            Text(timerManager.isRunning ? timerManager.timeString : timerManager.stopwatchShortString)
                 .font(.system(size: 11, weight: .bold, design: .monospaced))
                 .foregroundColor(.white)
                 .padding(.trailing, 20)

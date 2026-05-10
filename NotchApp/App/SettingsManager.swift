@@ -26,7 +26,12 @@ class SettingsManager: ObservableObject {
     @AppStorage("useAppleMusic") var useAppleMusic: Bool = true
     @AppStorage("useSpotify") var useSpotify: Bool = true
     @AppStorage("showClosedNotchMusicIndicator") var showClosedNotchMusicIndicator: Bool = true
+    @AppStorage("showClosedNotchTimerIndicator") var showClosedNotchTimerIndicator: Bool = true
     @AppStorage("showMuteButton") var showMuteButton: Bool = true
+    
+    // Module Toggles
+    @AppStorage("enableStopwatch") var enableStopwatch: Bool = true
+    @AppStorage("selectedAlarmSound") var selectedAlarmSound: String = "Glass"
     
     // Performance Settings
     @AppStorage("showCPU") var showCPU: Bool = true
