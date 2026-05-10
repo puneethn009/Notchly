@@ -6,7 +6,7 @@ struct NotchOverlayView: View {
     @StateObject private var timerManager = TimerManager.shared
     @StateObject private var mediaManager = MediaPlayerManager.shared
 
-    private let collapsedWidth: CGFloat = 190
+    private let collapsedWidth: CGFloat = 192
     private let collapsedHeight: CGFloat = 31
     private let expandedWidth: CGFloat = 700
     private let expandedHeight: CGFloat = 200
@@ -43,7 +43,7 @@ struct NotchOverlayView: View {
                     }
                 } else {
                     // Static Collapsed Icons
-                    HStack(spacing: 30) {
+                    HStack(spacing: 25) {
                         Image(systemName: "music.note")
                         Image(systemName: "timer")
                         Image(systemName: "calendar")
@@ -53,6 +53,7 @@ struct NotchOverlayView: View {
                     .font(.system(size: 11, weight: .bold))
                     .foregroundColor(.white.opacity(0.3))
                     .frame(width: collapsedWidth, height: collapsedHeight)
+                    .offset(y: -1)
                 }
             }
         }

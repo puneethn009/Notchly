@@ -7,6 +7,20 @@ enum NotchPage: String, CaseIterable {
     case system = "cpu"
     case calendar = "calendar"
     case launcher = "square.grid.2x2"
+    
+    func next() -> NotchPage {
+        let all = NotchPage.allCases
+        let idx = all.firstIndex(of: self) ?? 0
+        let nextIdx = min(idx + 1, all.count - 1)
+        return all[nextIdx]
+    }
+    
+    func previous() -> NotchPage {
+        let all = NotchPage.allCases
+        let idx = all.firstIndex(of: self) ?? 0
+        let prevIdx = max(idx - 1, 0)
+        return all[prevIdx]
+    }
 }
 
 enum StickyType {

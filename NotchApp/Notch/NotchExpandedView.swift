@@ -57,6 +57,7 @@ class BatteryManager {
 
 struct NotchExpandedView: View {
     @Environment(\.openSettings) private var openSettings
+    @StateObject private var notchState = NotchState.shared
     @State private var batteryManager = BatteryManager()
     @StateObject private var mediaManager = MediaPlayerManager.shared
     @ObservedObject private var timerManager = TimerManager.shared
@@ -73,16 +74,16 @@ struct NotchExpandedView: View {
                     ForEach(NotchPage.allCases, id: \.self) { page in
                         Button(action: { 
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                NotchState.shared.selectedPage = page 
+                                notchState.selectedPage = page 
                             }
                         }) {
                             Image(systemName: page.rawValue)
                                 .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(NotchState.shared.selectedPage == page ? .white : .white.opacity(0.4))
+                                .foregroundColor(notchState.selectedPage == page ? .white : .white.opacity(0.4))
                                 .frame(width: 28, height: 28)
                                 .background(
                                     RoundedRectangle(cornerRadius: 8)
-                                        .fill(NotchState.shared.selectedPage == page ? Color.white.opacity(0.15) : Color.clear)
+                                        .fill(notchState.selectedPage == page ? Color.white.opacity(0.15) : Color.clear)
                                 )
                         }
                         .buttonStyle(.plain)
@@ -125,26 +126,101 @@ struct NotchExpandedView: View {
             
             // Content Switcher
             ZStack {
-                switch NotchState.shared.selectedPage {
-                case .media:
-                    MediaModuleView(mediaManager: mediaManager)
-                case .timer:
-                    TimerModuleView(timerManager: timerManager)
-                case .system:
-                    SystemModuleView(systemManager: systemManager)
-                case .calendar:
-                    CalendarModuleView(calendarManager: calendarManager)
-                case .launcher:
-                    LauncherModuleView(launcherManager: launcherManager)
+                Group {
+                    switch NotchState.shared.selectedPage {
+                    case .media:
+                        MediaModuleView(mediaManager: mediaManager)
+                    case .timer:
+                        TimerModuleView(timerManager: timerManager)
+                    case .system:
+                        SystemModuleView(systemManager: systemManager)
+                    case .calendar:
+                        CalendarModuleView(calendarManager: calendarManager)
+                    case .launcher:
+                        LauncherModuleView(launcherManager: launcherManager)
+                    }
                 }
+                .id(NotchState.shared.selectedPage)
+                .transition(.asymmetric(
+                    insertion: .move(edge: slideDirection == .trailing ? .trailing : .leading).combined(with: .opacity),
+                    removal: .move(edge: slideDirection == .trailing ? .leading : .trailing).combined(with: .opacity)
+                ))
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.bottom, 16)
-            .transition(.opacity.combined(with: .move(edge: .bottom))) // Better vertical transition
             
             Spacer()
         }
-        .background(Color.clear) // Remove square black background to allow rounded corners to show
+        .background(Color.clear)
+        .contentShape(Rectangle()) 
+        .overlay(
+            SwipeGestureView(
+                onSwipeLeft: {
+                    let next = notchState.selectedPage.next()
+                    if next != notchState.selectedPage {
+                        slideDirection = .trailing
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            notchState.selectedPage = next
+                        }
+                    }
+                },
+                onSwipeRight: {
+                    let prev = notchState.selectedPage.previous()
+                    if prev != notchState.selectedPage {
+                        slideDirection = .leading
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            notchState.selectedPage = prev
+                        }
+                    }
+                }
+            )
+        )
+    }
+    
+    @State private var slideDirection: Edge = .trailing
+}
+
+// MARK: - Native Swipe Detection
+struct SwipeGestureView: NSViewRepresentable {
+    var onSwipeLeft: () -> Void
+    var onSwipeRight: () -> Void
+    
+    func makeNSView(context: Context) -> NSView {
+        let view = SwipeNSView()
+        view.onSwipeLeft = onSwipeLeft
+        view.onSwipeRight = onSwipeRight
+        return view
+    }
+    
+    func updateNSView(_ nsView: NSView, context: Context) {}
+}
+
+class SwipeNSView: NSView {
+    var onSwipeLeft: (() -> Void)?
+    var onSwipeRight: (() -> Void)?
+    private var hasTriggeredInCurrentGesture = false
+    
+    override func scrollWheel(with event: NSEvent) {
+        // Use phases for modern trackpads to ensure one trigger per 'swipe session'
+        if event.phase == .began || event.momentumPhase == .began {
+            hasTriggeredInCurrentGesture = false
+        }
+        
+        if event.phase == .ended || event.phase == .cancelled {
+            hasTriggeredInCurrentGesture = false
+        }
+
+        if !hasTriggeredInCurrentGesture && abs(event.scrollingDeltaX) > abs(event.scrollingDeltaY) {
+            let threshold: CGFloat = 20.0
+            
+            if event.scrollingDeltaX > threshold {
+                onSwipeRight?()
+                hasTriggeredInCurrentGesture = true
+            } else if event.scrollingDeltaX < -threshold {
+                onSwipeLeft?()
+                hasTriggeredInCurrentGesture = true
+            }
+        }
     }
 }
 
