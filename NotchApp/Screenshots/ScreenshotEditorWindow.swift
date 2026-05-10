@@ -191,100 +191,83 @@ struct ScreenshotEditorView: View {
                     .stroke(Color.white.opacity(0.1), lineWidth: 1)
             )
             
-            // VisionOS-style sidebar blur on top of the global background
-            VisualEffectView(material: .sidebar, blendingMode: .withinWindow)
-                .clipShape(RoundedRectangle(cornerRadius: 24))
-            
             HStack(spacing: 0) {
                 // Left Sidebar: Smart Extraction / Insights
-                VStack(alignment: .leading, spacing: 20) {
-                    // Space for window controls
-                    Spacer().frame(height: 50)
+                ZStack {
+                    VisualEffectView(material: .sidebar, blendingMode: .withinWindow)
                     
-                    Text("INSIGHTS")
-                        .font(.system(size: 10, weight: .black))
-                        .foregroundColor(.white.opacity(0.3))
-                        .tracking(1)
-                    
-                    VStack(alignment: .leading, spacing: 16) {
-                        HStack {
-                            Image(systemName: "text.viewfinder")
-                            Text("Live Text")
-                        }
-                        .font(.system(size: 12, weight: .bold))
+                    VStack(alignment: .leading, spacing: 20) {
+                        // Space for window controls
+                        Spacer().frame(height: 50)
                         
-                        Button(action: {
-                            NSPasteboard.general.clearContents()
-                            NSPasteboard.general.setString(state.extractedText, forType: .string)
-                        }) {
+                        Text("INSIGHTS")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundColor(.white.opacity(0.3))
+                            .tracking(1)
+                        
+                        VStack(alignment: .leading, spacing: 16) {
                             HStack {
-                                Image(systemName: "doc.on.doc.fill")
-                                Text("Copy Results")
+                                Image(systemName: "text.viewfinder")
+                                Text("Live Text")
                             }
-                            .font(.system(size: 11, weight: .bold))
-                            .frame(maxWidth: .infinity)
-                            .padding(.vertical, 8)
-                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.1)))
+                            .font(.system(size: 12, weight: .bold))
+                            
+                            Button(action: {
+                                NSPasteboard.general.clearContents()
+                                NSPasteboard.general.setString(state.extractedText, forType: .string)
+                            }) {
+                                HStack {
+                                    Image(systemName: "doc.on.doc.fill")
+                                    Text("Copy Results")
+                                }
+                                .font(.system(size: 11, weight: .bold))
+                                .frame(maxWidth: .infinity)
+                                .padding(.vertical, 8)
+                                .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.1)))
+                            }
+                            .buttonStyle(.plain)
+                            
+                            ScrollView {
+                                Text(state.extractedText)
+                                    .font(.system(size: 12, design: .monospaced))
+                                    .foregroundColor(.white.opacity(0.7))
+                                    .lineSpacing(4)
+                                    .padding(12)
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                            }
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                            .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.05)))
+                            .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.1), lineWidth: 1))
                         }
-                        .buttonStyle(.plain)
-                        
-                        ScrollView {
-                            Text(state.extractedText)
-                                .font(.system(size: 12, design: .monospaced))
-                                .foregroundColor(.white.opacity(0.7))
-                                .lineSpacing(4)
-                                .padding(12)
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                        }
-                        .frame(maxWidth: .infinity, maxHeight: .infinity)
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.05)))
-                        .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.1), lineWidth: 1))
                     }
+                    .padding(.horizontal, 20)
+                    .padding(.bottom, 20)
+                    .padding(.top, 60)
                 }
-                .padding(.horizontal, 20)
-                .padding(.bottom, 20)
                 .frame(width: 240)
-                .padding(.top, 60) // Add top padding to sidebar content too
 
-                // Main Canvas Area (Center)
-                VStack(spacing: 0) {
-                    // Spacer for the global toolbar
-                    Spacer().frame(height: 104) 
-                    
-                    // Background Presets
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            BackgroundPresetButton(type: .color(Color(white: 0.08)), current: $state.canvasBackground)
-                            BackgroundPresetButton(type: .color(.black), current: $state.canvasBackground)
+                // Main Canvas Area (Center Column)
+                ZStack(alignment: .center) {
+                    // Perfectly Symmetrical Background Frame
+                    if let image = state.currentImage {
+                        ZStack {
+                            // The Selected Background (Framed to the image)
+                            Group {
+                                switch state.canvasBackground {
+                                case .color(let color):
+                                    color
+                                case .gradient(let colors):
+                                    LinearGradient(colors: colors, startPoint: .topLeading, endPoint: .bottomTrailing)
+                                }
+                            }
+                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .shadow(color: .black.opacity(0.3), radius: 20, x: 0, y: 10)
                             
-                            Divider().frame(height: 16).background(Color.white.opacity(0.1))
-                            
-                            // 2-Color Classics
-                            BackgroundPresetButton(type: .gradient([Color(hex: "FF512F"), Color(hex: "DD2476")]), current: $state.canvasBackground) // Sunset
-                            BackgroundPresetButton(type: .gradient([Color(hex: "1FA2FF"), Color(hex: "12D8FA"), Color(hex: "A6FFCB")]), current: $state.canvasBackground) // Oceanic
-                            
-                            Divider().frame(height: 16).background(Color.white.opacity(0.1))
-                            
-                            // Multi-Color Premium (4+ colors)
-                            BackgroundPresetButton(type: .gradient([Color(hex: "00F260"), Color(hex: "0575E6"), Color(hex: "642BBD"), Color(hex: "FF00CC")]), current: $state.canvasBackground) // Aurora
-                            BackgroundPresetButton(type: .gradient([Color(hex: "833ab4"), Color(hex: "fd1d1d"), Color(hex: "fcb045"), Color(hex: "ff0084"), Color(hex: "3300ff")]), current: $state.canvasBackground) // Rainbow Nebula
-                            BackgroundPresetButton(type: .gradient([Color(hex: "232526"), Color(hex: "414345"), Color(hex: "000000"), Color(hex: "2c3e50")]), current: $state.canvasBackground) // Onyx
-                            BackgroundPresetButton(type: .gradient([Color(hex: "fbc2eb"), Color(hex: "a6c1ee"), Color(hex: "fad0c4"), Color(hex: "ffd1ff")]), current: $state.canvasBackground) // Soft Dream
-                            BackgroundPresetButton(type: .gradient([Color(hex: "7028e4"), Color(hex: "e5b2ca"), Color(hex: "2af598"), Color(hex: "009efd")]), current: $state.canvasBackground) // Galactic
-                            BackgroundPresetButton(type: .gradient([Color(hex: "ff0844"), Color(hex: "ffb199"), Color(hex: "30cfd0"), Color(hex: "330867")]), current: $state.canvasBackground) // Fire & Ice
-                        }
-                        .padding(.horizontal, 20)
-                        .padding(.top, 12)
-                    }
-                    
-                    // The actual canvas
-                    ZStack {
-                        if let image = state.currentImage {
+                            // The Screenshot
                             Image(nsImage: image)
                                 .resizable()
                                 .aspectRatio(contentMode: .fit)
-                                .padding(40)
-                                .shadow(color: .black.opacity(0.5), radius: 30, x: 0, y: 15)
+                                .padding(60) // Absolute equal padding on all sides
                                 .overlay(
                                     GeometryReader { geo in
                                         Canvas { context, size in
@@ -312,62 +295,102 @@ struct ScreenshotEditorView: View {
                                     }
                                 )
                         }
+                        .fixedSize(horizontal: false, vertical: true) // Hug the content vertically
+                        .padding(40) // Spacing from sidebars
                     }
-                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                    
+                    // Floating Background Presets (Overlay style at top)
+                    VStack(spacing: 0) {
+                        Spacer().frame(height: 104)
+                        
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                BackgroundPresetButton(type: .color(Color(white: 0.08)), current: $state.canvasBackground)
+                                BackgroundPresetButton(type: .color(.black), current: $state.canvasBackground)
+                                
+                                Divider().frame(height: 16).background(Color.white.opacity(0.1))
+                                
+                                BackgroundPresetButton(type: .gradient([Color(hex: "FF512F"), Color(hex: "DD2476")]), current: $state.canvasBackground)
+                                BackgroundPresetButton(type: .gradient([Color(hex: "1FA2FF"), Color(hex: "12D8FA"), Color(hex: "A6FFCB")]), current: $state.canvasBackground)
+                                
+                                Divider().frame(height: 16).background(Color.white.opacity(0.1))
+                                
+                                BackgroundPresetButton(type: .gradient([Color(hex: "00F260"), Color(hex: "0575E6"), Color(hex: "642BBD"), Color(hex: "FF00CC")]), current: $state.canvasBackground)
+                                BackgroundPresetButton(type: .gradient([Color(hex: "833ab4"), Color(hex: "fd1d1d"), Color(hex: "fcb045"), Color(hex: "ff0084"), Color(hex: "3300ff")]), current: $state.canvasBackground)
+                            }
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 12)
+                            .background(
+                                Capsule()
+                                    .fill(Color.black.opacity(0.4))
+                                    .background(VisualEffectView(material: .hudWindow, blendingMode: .withinWindow).clipShape(Capsule()))
+                                    .overlay(Capsule().stroke(Color.white.opacity(0.1), lineWidth: 0.5))
+                            )
+                        }
+                        .padding(.top, 10)
+                        
+                        Spacer()
+                    }
                 }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color.black.opacity(0.2)) // Base studio floor
 
                 // Right Sidebar: Session/All Screenshots (Preview Style)
-                VStack(spacing: 0) {
-                    // Space for window controls (Symmetry)
-                    Spacer().frame(height: 50)
+                ZStack {
+                    VisualEffectView(material: .sidebar, blendingMode: .withinWindow)
                     
-                    Text("THUMBNAILS")
-                        .font(.system(size: 10, weight: .black))
-                        .foregroundColor(.white.opacity(0.3))
-                        .tracking(1)
-                        .padding(.top, 40)
-                        .padding(.bottom, 20)
-                    
-                    ScrollView(showsIndicators: false) {
-                        VStack(spacing: 20) {
-                            ForEach(items) { item in
-                                VStack(spacing: 6) {
-                                    Button(action: { 
-                                        state.imageURL = URL(fileURLWithPath: item.filePath)
-                                        state.currentImage = NSImage(contentsOf: state.imageURL)
-                                        state.analyzeImage()
-                                    }) {
-                                        ZStack {
-                                            AsyncImage(url: URL(fileURLWithPath: item.filePath)) { img in
-                                                img.resizable().aspectRatio(contentMode: .fit)
-                                            } placeholder: {
-                                                Color.white.opacity(0.05)
+                    VStack(spacing: 0) {
+                        // Space for window controls (Symmetry)
+                        Spacer().frame(height: 50)
+                        
+                        Text("THUMBNAILS")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundColor(.white.opacity(0.3))
+                            .tracking(1)
+                            .padding(.top, 40)
+                            .padding(.bottom, 20)
+                        
+                        ScrollView(showsIndicators: false) {
+                            VStack(spacing: 20) {
+                                ForEach(items) { item in
+                                    VStack(spacing: 6) {
+                                        Button(action: { 
+                                            state.imageURL = URL(fileURLWithPath: item.filePath)
+                                            state.currentImage = NSImage(contentsOf: state.imageURL)
+                                            state.analyzeImage()
+                                        }) {
+                                            ZStack {
+                                                AsyncImage(url: URL(fileURLWithPath: item.filePath)) { img in
+                                                    img.resizable().aspectRatio(contentMode: .fit)
+                                                } placeholder: {
+                                                    Color.white.opacity(0.05)
+                                                }
+                                                .frame(width: 120, height: 90)
+                                                .background(Color.black.opacity(0.2))
+                                                .clipShape(RoundedRectangle(cornerRadius: 4))
+                                                .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 2)
                                             }
-                                            .frame(width: 120, height: 90)
-                                            .background(Color.black.opacity(0.2))
-                                            .clipShape(RoundedRectangle(cornerRadius: 4))
-                                            .shadow(color: .black.opacity(0.3), radius: 5, x: 0, y: 2)
+                                            .padding(8)
+                                            .background(state.imageURL.path == item.filePath ? Color.blue.opacity(0.3) : Color.clear)
+                                            .clipShape(RoundedRectangle(cornerRadius: 8))
                                         }
-                                        .padding(8)
-                                        .background(state.imageURL.path == item.filePath ? Color.blue.opacity(0.3) : Color.clear)
-                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                        .buttonStyle(.plain)
+                                        
+                                        Text(item.filename)
+                                            .font(.system(size: 9, weight: .medium))
+                                            .foregroundColor(.white.opacity(0.5))
+                                            .lineLimit(1)
+                                            .frame(width: 120)
                                     }
-                                    .buttonStyle(.plain)
-                                    
-                                    Text(item.filename)
-                                        .font(.system(size: 9, weight: .medium))
-                                        .foregroundColor(.white.opacity(0.5))
-                                        .lineLimit(1)
-                                        .frame(width: 120)
                                 }
                             }
+                            .padding(.vertical, 10)
                         }
-                        .padding(.vertical, 10)
                     }
+                    .padding(.horizontal, 10)
+                    .padding(.top, 60)
                 }
-                .padding(.horizontal, 10)
                 .frame(width: 160)
-                .padding(.top, 60) // Add top padding to sidebar content too
             }
             
             // GLOBAL OVERLAY TOOLBAR (Wide over sidebars)
