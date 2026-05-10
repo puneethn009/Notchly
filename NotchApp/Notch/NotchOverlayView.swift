@@ -1,54 +1,148 @@
 import SwiftUI
+import Combine
 
 struct NotchOverlayView: View {
     @StateObject private var notchState = NotchState.shared
+    @StateObject private var timerManager = TimerManager.shared
+    @StateObject private var mediaManager = MediaPlayerManager.shared
 
-    // ... (hardwareNotchWidth stays same)
-    static func hardwareNotchWidth(for screen: NSScreen) -> CGFloat {
-        if #available(macOS 12.0, *) {
-            if let left = screen.auxiliaryTopLeftArea,
-               let right = screen.auxiliaryTopRightArea {
-                let w = screen.frame.width - left.width - right.width
-                if w > 0 { return w }
-            }
-        }
-        return 126
-    }
+    private let collapsedWidth: CGFloat = 190
+    private let collapsedHeight: CGFloat = 32
+    private let expandedWidth: CGFloat = 700
+    private let expandedHeight: CGFloat = 200
 
-    var collapsedWidth: CGFloat {
-        NotchOverlayView.hardwareNotchWidth(for: NSScreen.main ?? NSScreen.screens[0])
-    }
-    var collapsedHeight: CGFloat {
-        let screen = NSScreen.main ?? NSScreen.screens[0]
-        let inset = screen.safeAreaInsets.top
-        return inset > 0 ? inset : 37
-    }
-
-    let expandedWidth: CGFloat = 680
-    let expandedHeight: CGFloat = 180
+    private var isExpanded: Bool { notchState.isExpanded }
+    private var isSticky: Bool { notchState.isSticky }
 
     var body: some View {
-        let _ = print("[NotchOverlayView] Rendering (isExpanded: \(notchState.isExpanded))")
-        return ZStack(alignment: .top) {
-            NotchShape(cornerRadius: notchState.isExpanded ? 16 : 8)
+        let width = isExpanded ? expandedWidth : (isSticky ? 300 : collapsedWidth)
+        let height = isExpanded ? expandedHeight : (isSticky ? 37 : collapsedHeight)
+        
+        ZStack(alignment: .top) {
+            // Main Notch Background Shape
+            NotchShape(cornerRadius: isExpanded ? 20 : (isSticky ? 12 : 8))
                 .fill(Color.black)
-                .shadow(color: Color.black.opacity(notchState.isExpanded ? 0.5 : 0), radius: 25, x: 0, y: 15)
-                .frame(
-                    width: notchState.isExpanded ? expandedWidth : collapsedWidth,
-                    height: notchState.isExpanded ? expandedHeight : collapsedHeight
-                )
-
-            if notchState.isExpanded {
-                NotchExpandedView()
-                    .frame(width: expandedWidth, height: expandedHeight)
-                    .transition(.asymmetric(
-                        insertion: .opacity.animation(.easeIn(duration: 0.2).delay(0.1)),
-                        removal: .opacity.animation(.easeOut(duration: 0.1))
-                    ))
+                .shadow(color: Color.black.opacity(isExpanded ? 0.6 : 0), radius: 30, x: 0, y: 15)
+                .frame(width: width, height: height)
+            
+            // Content
+            Group {
+                if isExpanded {
+                    NotchExpandedView()
+                        .frame(width: expandedWidth, height: expandedHeight)
+                        .clipShape(NotchShape(cornerRadius: 20))
+                        .transition(.asymmetric(
+                            insertion: .scale(scale: 0.95).combined(with: .opacity).animation(.spring(response: 0.3, dampingFraction: 0.75).delay(0.15)),
+                            removal: .opacity.animation(.easeOut(duration: 0.1))
+                        ))
+                } else if isSticky {
+                    if notchState.stickyType == .timer {
+                        StickyTimerView()
+                    } else if notchState.stickyType == .media {
+                        StickyMediaView()
+                    }
+                } else {
+                    // Static Collapsed Icons
+                    HStack(spacing: 30) {
+                        Image(systemName: "music.note")
+                        Image(systemName: "timer")
+                        Image(systemName: "calendar")
+                        Image(systemName: "cpu")
+                        Image(systemName: "gearshape")
+                    }
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.white.opacity(0.3))
+                    .frame(width: collapsedWidth, height: collapsedHeight)
+                }
             }
         }
-        .frame(width: 740, height: 240, alignment: .top)
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-        .animation(.spring(response: 0.3, dampingFraction: 0.75), value: notchState.isExpanded)
+        .frame(width: 900, height: 400, alignment: .top)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isExpanded)
+        .animation(.spring(response: 0.4, dampingFraction: 0.8), value: isSticky)
+    }
+
+    // Static helper for notch width based on screen
+    static func hardwareNotchWidth(for screen: NSScreen) -> CGFloat {
+        if screen.safeAreaInsets.top > 30 {
+            return 210 // Macbook Pro 14/16 notch
+        }
+        return 180 // Default
+    }
+}
+
+struct StickyTimerView: View {
+    @ObservedObject var timerManager = TimerManager.shared
+    
+    var body: some View {
+        HStack {
+            HStack(spacing: 6) {
+                Image(systemName: "timer")
+            }
+            .foregroundColor(.orange)
+            .font(.system(size: 12, weight: .black))
+            .padding(.leading, 20)
+            
+            Spacer()
+            
+            Text(timerManager.timeString)
+                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                .foregroundColor(.white)
+                .padding(.trailing, 20)
+        }
+        .frame(width: 300, height: 37)
+    }
+}
+
+struct StickyMediaView: View {
+    @ObservedObject var mediaManager = MediaPlayerManager.shared
+    
+    var body: some View {
+        HStack {
+            HStack {
+                if let img = mediaManager.artworkImage {
+                    Image(nsImage: img)
+                        .resizable()
+                        .aspectRatio(contentMode: .fill)
+                        .frame(width: 24, height: 24)
+                        .cornerRadius(4)
+                } else {
+                    Image(systemName: "music.note")
+                        .font(.system(size: 12))
+                }
+            }
+            .padding(.leading, 20)
+            
+            Spacer()
+            
+            VisualizerView(color: .white, isPlaying: mediaManager.isPlaying)
+                .padding(.trailing, 20)
+        }
+        .frame(width: 300, height: 37)
+    }
+}
+
+struct VisualizerView: View {
+    let color: Color
+    let isPlaying: Bool
+    
+    @State private var heights: [CGFloat] = [10, 15, 8, 12, 10]
+    let timer = Timer.publish(every: 0.15, on: .main, in: .common).autoconnect()
+    
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(0..<5) { i in
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(color)
+                    .frame(width: 2, height: isPlaying ? heights[i] : 4)
+            }
+        }
+        .frame(height: 20)
+        .onReceive(timer) { _ in
+            if isPlaying {
+                withAnimation(.easeInOut(duration: 0.15)) {
+                    heights = (0..<5).map { _ in CGFloat.random(in: 4...16) }
+                }
+            }
+        }
     }
 }

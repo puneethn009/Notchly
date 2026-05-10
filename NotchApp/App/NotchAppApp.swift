@@ -1,32 +1,30 @@
 import SwiftUI
 
 struct SettingsView: View {
-    @AppStorage("enableAppleMusic") private var enableAppleMusic: Bool = true
-    @AppStorage("enableSpotify") private var enableSpotify: Bool = true
-    @AppStorage("showNowPlaying") private var showNowPlaying: Bool = true
+    @AppStorage("enableMedia") private var enableMedia: Bool = true
+    @AppStorage("enableTimer") private var enableTimer: Bool = true
+    @AppStorage("enableSystem") private var enableSystem: Bool = true
+    @AppStorage("enableCalendar") private var enableCalendar: Bool = true
+    @AppStorage("enableLauncher") private var enableLauncher: Bool = true
 
     var body: some View {
         TabView {
             Form {
-                Section(header: Text("Startup")) {
-                    Toggle("Launch at login", isOn: .constant(true))
-                        .disabled(true)
+                Section(header: Text("Productivity Modules")) {
+                    Toggle("Media Dashboard", isOn: $enableMedia)
+                    Toggle("Quick Timer / Pomodoro", isOn: $enableTimer)
+                    Toggle("System Monitor", isOn: $enableSystem)
+                    Toggle("Calendar & Events", isOn: $enableCalendar)
+                    Toggle("App Launcher (Dock)", isOn: $enableLauncher)
                 }
             }
             .padding()
-            .tabItem { Label("General", systemImage: "gearshape") }
+            .tabItem { Label("Modules", systemImage: "square.grid.2x2") }
 
             Form {
                 Section(header: Text("Media Sources")) {
-                    Text("Select which applications NotchApp should monitor for Now Playing data.")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .padding(.bottom, 4)
-                    Toggle("Apple Music", isOn: $enableAppleMusic)
-                    Toggle("Spotify", isOn: $enableSpotify)
-                }
-                Section(header: Text("Notch UI")) {
-                    Toggle("Show Now Playing in Notch", isOn: $showNowPlaying)
+                    Toggle("Apple Music", isOn: .constant(true))
+                    Toggle("Spotify", isOn: .constant(true))
                 }
             }
             .padding()
@@ -36,13 +34,13 @@ struct SettingsView: View {
                 Image(systemName: "n.square.fill")
                     .font(.system(size: 64))
                     .foregroundColor(.blue)
-                Text("NotchApp").font(.title.bold())
-                Text("Version 1.0.0").foregroundColor(.secondary)
+                Text("Notchly Productivity Hub").font(.title.bold())
+                Text("Version 1.2.0").foregroundColor(.secondary)
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .tabItem { Label("About", systemImage: "info.circle") }
         }
-        .frame(width: 450, height: 300)
+        .frame(width: 450, height: 350)
     }
 }
 

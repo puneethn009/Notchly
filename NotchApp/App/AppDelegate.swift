@@ -1,69 +1,66 @@
-import AppKit
 import SwiftUI
+import AppKit
 
-
-// Intercepts clicks ONLY inside the actual notch UI bounds.
-// Everything outside passes through to the macOS menu bar below.
 class PassThroughHostingView<Content: View>: NSHostingView<Content> {
-    private var hoverTimer: Timer?
+    private var timer: Timer?
 
-    @MainActor required dynamic init?(coder aDecoder: NSCoder) {
-        super.init(coder: aDecoder)
-        startHoverTracking()
-    }
-
-    @MainActor required init(rootView: Content) {
+    required init(rootView: Content) {
         super.init(rootView: rootView)
-        startHoverTracking()
+        startHoverTimer()
     }
 
-    private func startHoverTracking() {
-        // Run at 60fps (0.016s) to ensure smooth detection
-        hoverTimer = Timer.scheduledTimer(withTimeInterval: 0.016, repeats: true) { [weak self] _ in
+    required init?(coder: NSCoder) {
+        super.init(coder: coder)
+        startHoverTimer()
+    }
+
+    private func startHoverTimer() {
+        timer = Timer.scheduledTimer(withTimeInterval: 0.1, repeats: true) { [weak self] _ in
             self?.checkMousePosition()
         }
-        RunLoop.current.add(hoverTimer!, forMode: .common)
     }
 
     private func checkMousePosition() {
         if let delegate = NSApp.delegate as? AppDelegate,
            let settings = delegate.settingsWindow, 
-           settings.isKeyWindow { return }
+           settings.isKeyWindow { 
+            delegate.syncWindowLevel()
+            return 
+        }
+        
+        if let delegate = NSApp.delegate as? AppDelegate {
+            delegate.syncWindowLevel()
+        }
 
         let mouseLoc = NSEvent.mouseLocation
         let screen = NSScreen.main ?? NSScreen.screens[0]
         
         let notchH = screen.safeAreaInsets.top > 0 ? screen.safeAreaInsets.top : 37.0
         let notchW = NotchOverlayView.hardwareNotchWidth(for: screen)
-        
-        // The screen origin is bottom-left
         let screenMidX = screen.frame.midX
         let screenMaxY = screen.frame.maxY
         
-        // Define the global rect for the hardware notch
-        let notchRect = NSRect(
-            x: screenMidX - (notchW / 2.0),
-            y: screenMaxY - notchH,
-            width: notchW,
-            height: notchH
+        let collapsedRect = NSRect(
+            x: screenMidX - (220.0 / 2.0),
+            y: screenMaxY - 45.0,
+            width: 220.0,
+            height: 50.0
         )
         
         let isExpanded = NotchState.shared.isExpanded
         
         if isExpanded {
-            // When expanded, keep it open as long as the mouse is within the expanded area
             let expandedRect = NSRect(
-                x: screenMidX - (680.0 / 2.0),
-                y: screenMaxY - 180.0,
-                width: 680.0,
-                height: 180.0
+                x: screenMidX - (700.0 / 2.0),
+                y: screenMaxY - 200.0,
+                width: 700.0,
+                height: 200.0
             )
-            if !expandedRect.contains(mouseLoc) {
+            if !expandedRect.contains(mouseLoc) && !TimerManager.shared.isAlarmPlaying {
                 updateExpansion(false)
             }
         } else {
-            // When collapsed, expand only if hitting the hardware notch
-            if notchRect.contains(mouseLoc) {
+            if collapsedRect.contains(mouseLoc) {
                 updateExpansion(true)
             }
         }
@@ -80,19 +77,43 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
     }
 
     override func hitTest(_ point: NSPoint) -> NSView? {
-        let isExpanded = NotchWindowController.shared.isExpanded
+        let isExpanded = NotchState.shared.isExpanded
+        let isSticky = NotchState.shared.isSticky
         let screen = NSScreen.main ?? NSScreen.screens[0]
         let notchH = screen.safeAreaInsets.top > 0 ? screen.safeAreaInsets.top : 37.0
         let notchW = NotchOverlayView.hardwareNotchWidth(for: screen)
 
-        let hitWidth: CGFloat  = isExpanded ? 680 : notchW
-        let hitHeight: CGFloat = isExpanded ? 180 : notchH
+        // Calculate hit area in the 900x400 view (bottom-left origin)
+        var hitWidth: CGFloat = notchW
+        var hitHeight: CGFloat = notchH
+        
+        if isExpanded {
+            hitWidth = 700
+            hitHeight = 200
+        } else if isSticky {
+            hitWidth = 340
+            hitHeight = 44
+        } else {
+            hitWidth = 200
+            hitHeight = 37
+        }
 
-        let x = (740.0 - hitWidth) / 2.0
-        let y = 240.0 - hitHeight
-        let hitRect = NSRect(x: x, y: y, width: hitWidth, height: hitHeight)
+        let x = (900.0 - hitWidth) / 2.0
+        let y = 400.0 - hitHeight
+        
+        // Add a small 2px buffer to the hit area to make it easier to click
+        let hitRect = NSRect(x: x - 2, y: y - 2, width: hitWidth + 4, height: hitHeight + 4)
 
-        return hitRect.contains(point) ? super.hitTest(point) : nil
+        // Bypass if settings is active to allow moving the window
+        let delegate = NSApp.delegate as? AppDelegate
+        if let settings = delegate?.settingsWindow, settings.isVisible && settings.isKeyWindow {
+            return nil
+        }
+        
+        if hitRect.contains(point) {
+            return super.hitTest(point)
+        }
+        return nil
     }
 }
 
@@ -103,18 +124,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func applicationDidFinishLaunching(_ notification: Notification) {
         AppDelegate.shared = self
         setupMenuBar()
-
-        NotificationCenter.default.addObserver(forName: NSNotification.Name("OpenSettings"), object: nil, queue: .main) { [weak self] _ in
-            self?.openSettings(nil)
-        }
-
-        _ = NotchWindowController.shared
-
+        
         if let window = NotchWindowController.shared.window {
             let hostingView = PassThroughHostingView(rootView: NotchOverlayView())
-            hostingView.frame = NSRect(x: 0, y: 0, width: 740, height: 240)
-            // Prevent NSHostingView from resizing itself and triggering layout recursion
-            hostingView.autoresizingMask = [] 
+            hostingView.frame = NSRect(x: 0, y: 0, width: 900, height: 400)
+            hostingView.autoresizingMask = [] // Stay at 900x400
             window.contentView = hostingView
         }
     }
@@ -126,46 +140,48 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     func setupMenuBar() {
         statusItem = NSStatusBar.system.statusItem(withLength: NSStatusItem.squareLength)
         if let button = statusItem.button {
-            button.image = NSImage(systemSymbolName: "menubar.rectangle",
-                                   accessibilityDescription: "NotchApp")
+            button.image = NSImage(systemSymbolName: "menubar.rectangle", accessibilityDescription: "Notchly")
         }
 
         let menu = NSMenu()
-
-        let settingsItem = NSMenuItem(title: "Settings…",
-                                      action: #selector(openSettings),
-                                      keyEquivalent: ",")
-        settingsItem.target = self
-        menu.addItem(settingsItem)
+        menu.addItem(NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ","))
         menu.addItem(NSMenuItem.separator())
-
-        let quitItem = NSMenuItem(title: "Quit NotchApp",
-                                  action: #selector(NSApplication.terminate(_:)),
-                                  keyEquivalent: "q")
-        quitItem.target = NSApp
-        menu.addItem(quitItem)
+        menu.addItem(NSMenuItem(title: "Quit Notchly", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
         statusItem.menu = menu
     }
 
     var settingsWindow: NSWindow? {
-        // Find the SwiftUI settings window if it exists
-        return NSApp.windows.first(where: { $0.title == "NotchApp Settings" || $0.title == "Settings" })
+        return NSApp.windows.first(where: { 
+            $0.title.contains("Settings") || $0.title.contains("Notchly") || $0.title.contains("NotchApp") 
+        })
+    }
+
+    func syncWindowLevel() {
+        DispatchQueue.main.async {
+            let window = NotchWindowController.shared.window
+            if let settings = self.settingsWindow, settings.isVisible && settings.isKeyWindow {
+                window?.level = .normal
+                window?.ignoresMouseEvents = true
+            } else {
+                window?.level = .screenSaver
+                window?.ignoresMouseEvents = false
+            }
+        }
     }
 
     @objc func openSettings(_ sender: Any?) {
-        print("[AppDelegate] openSettings() called")
+        NSApp.activate(ignoringOtherApps: true)
+        let appMenu = NSApp.mainMenu?.item(at: 0)?.submenu
+        let settingsItem = appMenu?.items.first(where: { 
+            $0.action == Selector(("showSettingsWindow:")) || $0.title.contains("Settings")
+        })
         
-        DispatchQueue.main.async {
-            NSApp.activate(ignoringOtherApps: true)
-            
-            // Try macOS 13+ Settings Window
-            if #available(macOS 13.0, *) {
-                NSApp.sendAction(Selector("showSettingsWindow:"), to: nil, from: nil)
-            } else {
-                // Try macOS 12 and older Preferences Window
-                NSApp.sendAction(Selector("showPreferencesWindow:"), to: nil, from: nil)
-            }
+        if let item = settingsItem {
+            item.target?.perform(item.action, with: item)
+        } else {
+            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
         }
+        self.syncWindowLevel()
     }
 }

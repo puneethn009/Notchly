@@ -1,4 +1,6 @@
 import SwiftUI
+import EventKit
+import Combine
 import AppKit
 import IOKit.ps
 
@@ -53,371 +55,109 @@ class BatteryManager {
     }
 }
 
-@Observable
-// Multi-source Now Playing manager.
-// Cascade: MediaRemote (restricted on macOS 14+) → Spotify → Apple Music → Browser mediaSession
-class MediaPlayerManager {
-    var title: String = ""
-    var artist: String = ""
-    var positionStr: String = "0:00"
-    var durationStr: String = "0:00"
-    var progress: Double = 0.0
-    var isPlaying: Bool = false
-    var isRunning: Bool = false
-    var artworkImage: NSImage? = nil
-
-    private var timer: Timer?
-    private var activeSource: String? = nil // "Spotify", "Music", or browser app name
-    private var activeSourceIsBrowser: Bool = false
-    private var activeSourceIsSafari: Bool = false
-    init() {
-        fetchNowPlaying()
-
-        timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
-            self?.fetchNowPlaying()
-        }
-
-        // React instantly when any app starts/stops playing
-        let dc = DistributedNotificationCenter.default()
-        for name in [
-            "kMRMediaRemoteNowPlayingInfoDidChangeNotification",
-            "kMRMediaRemoteNowPlayingApplicationDidChangeNotification",
-            "kMRMediaRemoteNowPlayingApplicationIsPlayingDidChangeNotification"
-        ] {
-            dc.addObserver(forName: NSNotification.Name(name), object: nil, queue: .main) { [weak self] _ in
-                self?.fetchNowPlaying()
-            }
-        }
-    }
-
-    func fetchNowPlaying() {
-        fetchViaScripting()
-    }
-
-    // MARK: - Scripting cascade
-
-    private func fetchViaScripting() {
-        let showNowPlaying = UserDefaults.standard.bool(forKey: "showNowPlaying")
-        if !showNowPlaying {
-            Task { @MainActor in self.isRunning = false; self.isPlaying = false }; return
-        }
-
-        Task { [weak self] in
-            guard let self = self else { return }
-
-            let enableSpotify = UserDefaults.standard.bool(forKey: "enableSpotify")
-            let enableMusic = UserDefaults.standard.bool(forKey: "enableAppleMusic")
-
-            // 1 — Spotify
-            if enableSpotify && self.isRunning("com.spotify.client") {
-                if let info = await self.spotifyInfo() {
-                    await MainActor.run {
-                        self.activeSource = "Spotify"
-                        self.activeSourceIsBrowser = false
-                        self.apply(info)
-                    }; return
-                }
-            }
-
-            // 2 — Apple Music
-            if enableMusic && self.isRunning("com.apple.Music") {
-                if let info = await self.appleMusicInfo() {
-                    await MainActor.run {
-                        self.activeSource = "Music"
-                        self.activeSourceIsBrowser = false
-                        self.apply(info)
-                    }; return
-                }
-            }
-
-            // 3 — Browsers
-            let browsers: [(id: String, name: String, isSafari: Bool)] = [
-                ("com.google.Chrome",           "Google Chrome", false),
-                ("company.thebrowser.Browser",  "Arc",           false),
-                ("com.brave.Browser",           "Brave Browser", false),
-                ("com.microsoft.edgemac",       "Microsoft Edge",false),
-                ("com.operasoftware.Opera",     "Opera",         false),
-                ("org.mozilla.firefox",         "Firefox",       false),
-                ("com.apple.Safari",            "Safari",        true),
-            ]
-            for browser in browsers {
-                if self.isRunning(browser.id) {
-                    if let info = await self.browserSession(app: browser.name, isSafari: browser.isSafari) {
-                        await MainActor.run {
-                            self.activeSource = browser.name
-                            self.activeSourceIsBrowser = true
-                            self.activeSourceIsSafari = browser.isSafari
-                            self.apply(info)
-                        }; return
-                    }
-                }
-            }
-
-            await MainActor.run {
-                self.activeSource = nil
-                self.isRunning = false
-                self.isPlaying = false
-            }
-        }
-    }
-
-    private func isRunning(_ bundleID: String) -> Bool {
-        !NSRunningApplication.runningApplications(withBundleIdentifier: bundleID).isEmpty
-    }
-
-    struct Info { var title: String; var artist: String; var isPlaying: Bool; var duration: Double = 0; var elapsed: Double = 0 }
-
-
-    private func apply(_ i: Info) {
-        title = i.title; artist = i.artist; isPlaying = i.isPlaying; isRunning = true
-        progress = i.duration > 0 ? i.elapsed / i.duration : 0
-        positionStr = formatTime(i.elapsed); durationStr = formatTime(i.duration)
-        print("[NowPlaying] Source: \(activeSource ?? "Unknown") | Playing: \(title)")
-    }
-
-    // MARK: - Spotify
-
-    private func spotifyInfo() async -> Info? {
-        let src = """
-        tell application "Spotify"
-            if it is running then
-                try
-                    if player state is playing or player state is paused then
-                        set t to name of current track
-                        set a to artist of current track
-                        set p to (player state is playing)
-                        set d to duration of current track / 1000.0
-                        set e to player position
-                        return t & "|||" & a & "|||" & (p as string) & "|||" & (d as string) & "|||" & (e as string)
-                    end if
-                on error
-                    return ""
-                end try
-            end if
-        end tell
-        return ""
-        """
-        guard let r = await script(src), !r.isEmpty else { return nil }
-        let p = r.components(separatedBy: "|||")
-        guard p.count == 5 else { return nil }
-        return Info(title: p[0], artist: p[1], isPlaying: p[2] == "true", duration: Double(p[3]) ?? 0, elapsed: Double(p[4]) ?? 0)
-    }
-
-    // MARK: - Apple Music
-
-    private func appleMusicInfo() async -> Info? {
-        let src = """
-        tell application "Music"
-            if it is running then
-                try
-                    set ps to player state
-                    if ps is playing or ps is paused then
-                        if not (exists current track) then return "ERR:no_track"
-                        set cur to current track
-                        set t to name of cur
-                        set a to ""
-                        try
-                            set a to artist of cur
-                        on error
-                            try
-                                set a to album of cur
-                            end try
-                        end try
-                        set p to (ps is playing)
-                        set d to duration of cur
-                        set e to player position
-                        return (t as string) & "|||" & (a as string) & "|||" & (p as string) & "|||" & (d as string) & "|||" & (e as string)
-                    else
-                        return "ERR:not_playing_or_paused"
-                    end if
-                on error errText number errNum
-                    if errNum is -1728 then return "ERR:no_track"
-                    return "ERR:" & errText & "(" & errNum & ")"
-                end try
-            end if
-        end tell
-        return ""
-        """
-        guard let r = await script(src), !r.isEmpty else { return nil }
-        if r.hasPrefix("ERR:") {
-            if r != "ERR:no_track" && r != "ERR:not_playing_or_paused" {
-                print("[NowPlaying] Music script error: \(r)")
-            }
-            return nil
-        }
-        let p = r.components(separatedBy: "|||")
-        guard p.count == 5 else { return nil }
-        return Info(title: p[0], artist: p[1], isPlaying: p[2] == "true", duration: Double(p[3]) ?? 0, elapsed: Double(p[4]) ?? 0)
-    }
-
-    // MARK: - Browser via navigator.mediaSession
-    // Websites (YouTube, Spotify Web, etc.) call navigator.mediaSession.metadata = new MediaMetadata(...)
-    // This is the SAME data that macOS Control Center displays for browser Now Playing.
-
-    private func browserSession(app: String, isSafari: Bool) async -> Info? {
-        let js = #"(function(){var m=window.navigator&&window.navigator.mediaSession;if(!m||!m.metadata||!m.metadata.title)return"";var s=m.playbackState||"none";return m.metadata.title+"|||"+(m.metadata.artist||m.metadata.album||"")+"|||"+s})()"#
-
-        // Escape quotes for AppleScript string literal
-        let escapedJS = js.replacingOccurrences(of: "\"", with: "\\\"")
-
-        let src: String
-        if isSafari {
-            src = """
-            tell application "Safari"
-                if it is running then
-                    try
-                        set r to do JavaScript "\(escapedJS)" in current tab of front window
-                        return r
-                    end try
-                end if
-            end tell
-            return ""
-            """
-        } else {
-            src = """
-            tell application "\(app)"
-                if it is running then
-                    try
-                        set r to execute front window's active tab javascript "\(escapedJS)"
-                        return r
-                    end try
-                end if
-            end tell
-            return ""
-            """
-        }
-        guard let r = await script(src), !r.isEmpty else { return nil }
-        let p = r.components(separatedBy: "|||")
-        guard p.count >= 1, !p[0].isEmpty else { return nil }
-        let playing = p.count >= 3 ? p[2] == "playing" : false
-        return Info(title: p[0], artist: p.count >= 2 ? p[1] : "", isPlaying: playing)
-    }
-
-    // MARK: - Script runner
-    // Uses NSAppleScript so TCC correctly attributes requests to NotchApp's bundle,
-    // triggering the "NotchApp wants to control [App]" permission prompt.
-    // (Using Process+osascript attributes requests to /usr/bin/osascript instead,
-    //  which can cause silent denials on macOS 14+.)
-    private func script(_ source: String) async -> String? {
-        await withCheckedContinuation { cont in
-            DispatchQueue.global(qos: .userInitiated).async {
-                var error: NSDictionary?
-                let result = NSAppleScript(source: source)?.executeAndReturnError(&error)
-                if let err = error {
-                    print("[NowPlaying] AppleScript error: \(err["NSAppleScriptErrorMessage"] ?? err)")
-                    cont.resume(returning: nil)
-                } else {
-                    let str = result?.stringValue?.trimmingCharacters(in: .whitespacesAndNewlines)
-                    cont.resume(returning: str?.isEmpty == false ? str : nil)
-                }
-            }
-        }
-    }
-
-    // MARK: - Utilities
-
-    func formatTime(_ t: Double) -> String {
-        let s = Int(t); return String(format: "%d:%02d", s / 60, s % 60)
-    }
-
-    func playPause() {
-        guard let source = activeSource else { return }
-        let cmd: String
-        if activeSourceIsBrowser {
-            let js = "var v=document.querySelector('video, audio'); if(v) { v.paused ? v.play() : v.pause(); }"
-            let escapedJS = js.replacingOccurrences(of: "\"", with: "\\\"")
-            if activeSourceIsSafari {
-                cmd = "tell application \"Safari\" to do JavaScript \"\(escapedJS)\" in current tab of front window"
-            } else {
-                cmd = "tell application \"\(source)\" to execute front window's active tab javascript \"\(escapedJS)\""
-            }
-        } else {
-            cmd = "tell application \"\(source)\" to playpause"
-        }
-        
-        Task {
-            await script(cmd)
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { self.fetchNowPlaying() }
-        }
-    }
-
-    func nextTrack() {
-        guard let source = activeSource else { return }
-        let cmd: String
-        if activeSourceIsBrowser {
-            // Browsers usually don't have a standardized JS next. Generic key fallback.
-            cmd = "tell application \"System Events\" to key code 124 using command down" 
-        } else {
-            cmd = "tell application \"\(source)\" to next track"
-        }
-        Task { await script(cmd); DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { self.fetchNowPlaying() } }
-    }
-
-    func prevTrack() {
-        guard let source = activeSource else { return }
-        let cmd: String
-        if activeSourceIsBrowser {
-            cmd = "tell application \"System Events\" to key code 123 using command down"
-        } else {
-            cmd = "tell application \"\(source)\" to previous track"
-        }
-        Task { await script(cmd); DispatchQueue.main.asyncAfter(deadline: .now() + 0.3) { self.fetchNowPlaying() } }
-    }
-}
-
-
-
 struct NotchExpandedView: View {
     @Environment(\.openSettings) private var openSettings
     @State private var batteryManager = BatteryManager()
-    @State private var mediaManager = MediaPlayerManager()
+    @StateObject private var mediaManager = MediaPlayerManager.shared
+    @ObservedObject private var timerManager = TimerManager.shared
+    @StateObject private var systemManager = SystemMonitorManager()
+    @StateObject private var calendarManager = CalendarManager()
+    @StateObject private var launcherManager = LauncherManager()
     
     var body: some View {
         VStack(spacing: 0) {
-            // Top Bar
-            HStack {
+            // Top Bar (Now with Navigation + Settings/Battery)
+            HStack(alignment: .center) {
+                // Top-Left: Module Navigation
+                HStack(spacing: 12) {
+                    ForEach(NotchPage.allCases, id: \.self) { page in
+                        Button(action: { 
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                NotchState.shared.selectedPage = page 
+                            }
+                        }) {
+                            Image(systemName: page.rawValue)
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(NotchState.shared.selectedPage == page ? .white : .white.opacity(0.4))
+                                .frame(width: 28, height: 28)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 8)
+                                        .fill(NotchState.shared.selectedPage == page ? Color.white.opacity(0.15) : Color.clear)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+                
                 Spacer()
                 
+                // Top-Right: Settings & Battery
                 HStack(spacing: 16) {
                     if #available(macOS 14.0, *) {
                         SettingsLink {
                             Image(systemName: "gearshape.fill")
-                                .foregroundColor(.white)
+                                .foregroundColor(.white.opacity(0.6))
                         }
                         .buttonStyle(.plain)
                     } else {
                         Button(action: {
-                            if #available(macOS 13.0, *) {
-                                NSApp.sendAction(Selector("showSettingsWindow:"), to: nil, from: nil)
-                            } else {
-                                NSApp.sendAction(Selector("showPreferencesWindow:"), to: nil, from: nil)
-                            }
+                            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
                         }) {
                             Image(systemName: "gearshape.fill")
-                                .foregroundColor(.white)
+                                .foregroundColor(.white.opacity(0.6))
                         }
                         .buttonStyle(.plain)
                     }
                     
                     HStack(spacing: 4) {
                         Text("\(batteryManager.batteryPercentage)%")
-                            .font(.system(size: 12, weight: .medium))
-                            .foregroundColor(.white)
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.white.opacity(0.6))
                         
                         MacBatteryIcon(percentage: batteryManager.batteryPercentage, state: batteryManager.state)
                     }
                 }
-                .font(.system(size: 14))
             }
             .padding(.horizontal, 32)
             .padding(.top, 16)
             
             Spacer()
             
-            // Centered Media Player
-            if mediaManager.isRunning {
+            // Content Switcher
+            ZStack {
+                switch NotchState.shared.selectedPage {
+                case .media:
+                    MediaModuleView(mediaManager: mediaManager)
+                case .timer:
+                    TimerModuleView(timerManager: timerManager)
+                case .system:
+                    SystemModuleView(systemManager: systemManager)
+                case .calendar:
+                    CalendarModuleView(calendarManager: calendarManager)
+                case .launcher:
+                    LauncherModuleView(launcherManager: launcherManager)
+                }
+            }
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.bottom, 16)
+            .transition(.opacity.combined(with: .move(edge: .bottom))) // Better vertical transition
+            
+            Spacer()
+        }
+        .background(Color.clear) // Remove square black background to allow rounded corners to show
+    }
+}
+
+// MARK: - Modules
+
+struct MediaModuleView: View {
+    @ObservedObject var mediaManager: MediaPlayerManager
+    
+    var body: some View {
+        Group {
+            if mediaManager.isRunning || !mediaManager.title.isEmpty {
                 HStack(alignment: .top, spacing: 20) {
-                    // Album Art (real artwork from MediaRemote, fallback to placeholder)
+                    // Album Art
                     ZStack(alignment: .bottomTrailing) {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(LinearGradient(colors: [.purple, .black, .gray], startPoint: .topLeading, endPoint: .bottomTrailing))
@@ -429,24 +169,26 @@ struct NotchExpandedView: View {
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)
                                     } else {
-                                        Path { path in
-                                            path.move(to: CGPoint(x: 10, y: 70))
-                                            path.addCurve(to: CGPoint(x: 90, y: 30), control1: CGPoint(x: 40, y: 100), control2: CGPoint(x: 60, y: 0))
-                                        }.stroke(Color.white.opacity(0.6), lineWidth: 2)
+                                        Image(systemName: "music.note")
+                                            .font(.system(size: 30))
+                                            .foregroundColor(.white.opacity(0.3))
                                     }
                                 }
                             )
                             .clipShape(RoundedRectangle(cornerRadius: 12))
                         
-                        Circle()
-                            .fill(Color.white)
-                            .frame(width: 24, height: 24)
-                            .overlay(
-                                Image(systemName: mediaManager.isPlaying ? "speaker.wave.2.fill" : "speaker.slash.fill")
-                                    .foregroundColor(.pink)
+                        Button(action: { mediaManager.toggleMute() }) {
+                            Circle()
+                                .fill(Color.white)
+                                .frame(width: 24, height: 24)
+                                .overlay(
+                                    Image(systemName: mediaManager.isSystemMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                                    .foregroundColor(mediaManager.isSystemMuted ? .gray : .pink)
                                     .font(.system(size: 12))
-                            )
-                            .offset(x: 8, y: 8)
+                                )
+                        }
+                        .buttonStyle(.plain)
+                        .offset(x: 8, y: 8)
                     }
                     
                     // Track Info
@@ -522,9 +264,456 @@ struct NotchExpandedView: View {
                 }
                 .padding(.bottom, 30)
             }
-            
-            Spacer()
         }
+    }
+}
+
+struct TimerModuleView: View {
+    @ObservedObject var timerManager: TimerManager
+    
+    var body: some View {
+        VStack(spacing: 20) {
+            if timerManager.isAlarmPlaying {
+                VStack(spacing: 20) {
+                    Text("TIME'S UP!")
+                        .font(.system(size: 32, weight: .black))
+                        .foregroundColor(.red)
+                    
+                    Button(action: { timerManager.stopAlarm() }) {
+                        Text("STOP ALARM")
+                            .font(.system(size: 16, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 40)
+                            .padding(.vertical, 14)
+                            .background(Capsule().fill(Color.red))
+                            .shadow(color: .red.opacity(0.4), radius: 10, y: 5)
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else if timerManager.isRunning {
+                VStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .stroke(Color.white.opacity(0.1), lineWidth: 8)
+                            .frame(width: 80, height: 80)
+                        
+                        Circle()
+                            .trim(from: 0, to: CGFloat(timerManager.progress))
+                            .stroke(
+                                LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom),
+                                style: StrokeStyle(lineWidth: 8, lineCap: .round)
+                            )
+                            .frame(width: 80, height: 80)
+                            .rotationEffect(.degrees(-90))
+                            .animation(.linear(duration: 1.0), value: timerManager.timeRemaining)
+                        
+                        Text(timerManager.timeString)
+                            .font(.system(size: 20, weight: .bold, design: .monospaced))
+                            .foregroundColor(.white)
+                    }
+                    
+                    Button(action: { timerManager.stop() }) {
+                        Text("Cancel")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(Color.red.opacity(0.8)))
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
+                VStack(spacing: 16) {
+                    Text("Quick Start")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white)
+                    
+                    HStack(spacing: 12) {
+                        TimerButton(label: "1m", color: .gray) { timerManager.start(minutes: 1) }
+                        TimerButton(label: "5m", color: .blue) { timerManager.start(minutes: 5) }
+                        TimerButton(label: "10m", color: .cyan) { timerManager.start(minutes: 10) }
+                        TimerButton(label: "15m", color: .teal) { timerManager.start(minutes: 15) }
+                        TimerButton(label: "25m", color: .indigo) { timerManager.start(minutes: 25) }
+                        TimerButton(label: "60m", color: .purple) { timerManager.start(minutes: 60) }
+                        TimerButton(label: "90m", color: .pink) { timerManager.start(minutes: 90) }
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct TimerButton: View {
+    let label: String
+    let color: Color
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Text(label)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.white)
+                .frame(width: 50, height: 50)
+                .background(
+                    Circle()
+                        .fill(color.opacity(0.2))
+                        .overlay(Circle().stroke(color.opacity(0.5), lineWidth: 2))
+                )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct SystemModuleView: View {
+    @ObservedObject var systemManager: SystemMonitorManager
+    
+    var body: some View {
+        HStack(spacing: 40) {
+            // Circular Gauges
+            HStack(spacing: 30) {
+                CircularGauge(label: "CPU", value: systemManager.cpuUsage, color: .green)
+                CircularGauge(label: "RAM", value: systemManager.ramUsage, color: .blue)
+            }
+            
+            // Network Info
+            VStack(alignment: .leading, spacing: 15) {
+                NetworkSpeedRow(label: "Download", value: systemManager.downloadSpeed, icon: "arrow.down.circle.fill", color: .cyan)
+                NetworkSpeedRow(label: "Upload", value: systemManager.uploadSpeed, icon: "arrow.up.circle.fill", color: .orange)
+            }
+            .frame(width: 140)
+        }
+        .padding(.horizontal, 20)
+    }
+}
+
+struct CircularGauge: View {
+    let label: String
+    let value: Double
+    let color: Color
+    
+    var body: some View {
+        VStack(spacing: 10) {
+            ZStack {
+                Circle()
+                    .stroke(Color.white.opacity(0.05), lineWidth: 6)
+                Circle()
+                    .trim(from: 0, to: CGFloat(value))
+                    .stroke(
+                        LinearGradient(colors: [color, color.opacity(0.5)], startPoint: .top, endPoint: .bottom),
+                        style: StrokeStyle(lineWidth: 6, lineCap: .round)
+                    )
+                    .rotationEffect(.degrees(-90))
+                    .shadow(color: color.opacity(0.3), radius: 4)
+                
+                VStack(spacing: 0) {
+                    Text("\(Int(value * 100))%")
+                        .font(.system(size: 14, weight: .bold, design: .monospaced))
+                    Text(label)
+                        .font(.system(size: 8, weight: .bold))
+                        .foregroundColor(.gray)
+                }
+            }
+            .frame(width: 64, height: 64)
+        }
+    }
+}
+
+struct NetworkSpeedRow: View {
+    let label: String
+    let value: String
+    let icon: String
+    let color: Color
+    
+    var body: some View {
+        HStack(spacing: 10) {
+            Image(systemName: icon)
+                .foregroundColor(color)
+                .font(.system(size: 14))
+            
+            VStack(alignment: .leading, spacing: 1) {
+                Text(value)
+                    .font(.system(size: 12, weight: .bold, design: .monospaced))
+                    .foregroundColor(.white)
+                Text(label)
+                    .font(.system(size: 8, weight: .medium))
+                    .foregroundColor(.gray)
+            }
+        }
+    }
+}
+
+struct StatRow: View {
+    let label: String
+    let value: Double
+    let color: Color
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            HStack {
+                Text(label)
+                    .font(.system(size: 11, weight: .bold))
+                    .foregroundColor(.gray)
+                Spacer()
+                Text("\(Int(value * 100))%")
+                    .font(.system(size: 11, weight: .medium, design: .monospaced))
+                    .foregroundColor(.white)
+            }
+            
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule()
+                        .fill(Color.white.opacity(0.1))
+                    Capsule()
+                        .fill(
+                            LinearGradient(
+                                colors: [color, color.opacity(0.5)],
+                                startPoint: .leading,
+                                endPoint: .trailing
+                            )
+                        )
+                        .frame(width: geo.size.width * CGFloat(value))
+                }
+            }
+            .frame(height: 6)
+        }
+    }
+}
+
+struct SpeedStat: View {
+    let label: String
+    let value: String
+    let icon: String
+    
+    var body: some View {
+        VStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 12, weight: .bold))
+                .foregroundColor(.gray)
+            Text(value)
+                .font(.system(size: 13, weight: .bold, design: .monospaced))
+                .foregroundColor(.white)
+            Text(label)
+                .font(.system(size: 10))
+                .foregroundColor(.gray.opacity(0.6))
+        }
+    }
+}
+
+struct CalendarModuleView: View {
+    @ObservedObject var calendarManager: CalendarManager
+    
+    var body: some View {
+        VStack(spacing: 16) {
+            if calendarManager.permissionStatus == .notDetermined {
+                VStack(spacing: 16) {
+                    Image(systemName: "calendar.badge.exclamationmark")
+                        .font(.system(size: 40))
+                        .foregroundColor(.blue)
+                    Text("Calendar Access Required")
+                        .font(.headline)
+                    Button(action: { calendarManager.requestAccess() }) {
+                        Text("Grant Access")
+                            .font(.system(size: 14, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 10)
+                            .background(Capsule().fill(Color.blue))
+                    }
+                    .buttonStyle(.plain)
+                }
+            } else {
+                VStack(spacing: 24) {
+                    // Top: Month/Year and Date Strip
+                    HStack(alignment: .top, spacing: 0) {
+                        // Month & Year (Left Aligned)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(calendarManager.selectedDate.formatted(.dateTime.month(.wide)))
+                                .font(.system(size: 24, weight: .black))
+                                .foregroundColor(.white)
+                            Text(calendarManager.selectedDate.formatted(.dateTime.year()))
+                                .font(.system(size: 18, weight: .bold))
+                                .foregroundColor(.white.opacity(0.4))
+                        }
+                        .frame(width: 120, alignment: .leading)
+                        
+                        // Horizontal Date Scroll
+                        ScrollViewReader { proxy in
+                            ScrollView(.horizontal, showsIndicators: false) {
+                                HStack(spacing: 14) {
+                                    ForEach(-7..<14, id: \.self) { offset in
+                                        let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
+                                        DatePill(date: date, isSelected: Calendar.current.isDate(date, inSameDayAs: calendarManager.selectedDate)) {
+                                            withAnimation(.spring(response: 0.3)) {
+                                                calendarManager.fetchEvents(for: date)
+                                            }
+                                        }
+                                        .id(offset)
+                                    }
+                                }
+                                .padding(.vertical, 4)
+                            }
+                            .onAppear { proxy.scrollTo(0, anchor: .center) }
+                        }
+                    }
+                    .padding(.horizontal, 24)
+                    
+                    // Bottom: Events List
+                    ScrollView(.vertical, showsIndicators: false) {
+                        VStack(spacing: 12) {
+                            if calendarManager.eventsForSelectedDate.isEmpty {
+                                VStack(spacing: 12) {
+                                    Image(systemName: "calendar.badge.checkmark")
+                                        .font(.system(size: 32))
+                                        .foregroundColor(.white.opacity(0.3))
+                                        .padding(.top, 20)
+                                    Text("No events today")
+                                        .font(.system(size: 16, weight: .bold))
+                                        .foregroundColor(.white)
+                                    Text("Enjoy your free time!")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(.gray)
+                                }
+                            } else {
+                                ForEach(calendarManager.eventsForSelectedDate, id: \.eventIdentifier) { event in
+                                    HStack(spacing: 16) {
+                                        // Color indicator
+                                        RoundedRectangle(cornerRadius: 2)
+                                            .fill(Color(nsColor: event.calendar.color))
+                                            .frame(width: 4, height: 32)
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
+                                            Text(event.title)
+                                                .font(.system(size: 15, weight: .bold))
+                                                .foregroundColor(.white)
+                                                .lineLimit(1)
+                                            
+                                            HStack(spacing: 4) {
+                                                Image(systemName: "clock")
+                                                    .font(.system(size: 10))
+                                                Text("\(event.startDate.formatted(date: .omitted, time: .shortened)) - \(event.endDate.formatted(date: .omitted, time: .shortened))")
+                                            }
+                                            .font(.system(size: 12, weight: .medium))
+                                            .foregroundColor(.white.opacity(0.5))
+                                        }
+                                        
+                                        Spacer()
+                                        
+                                        if event.location != nil {
+                                            Image(systemName: "location.fill")
+                                                .font(.system(size: 12))
+                                                .foregroundColor(.white.opacity(0.3))
+                                        }
+                                    }
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 12)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 16)
+                                            .fill(Color.white.opacity(0.04))
+                                            .overlay(RoundedRectangle(cornerRadius: 16).stroke(Color.white.opacity(0.08), lineWidth: 0.5))
+                                    )
+                                }
+                            }
+                        }
+                        .padding(.horizontal, 24)
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct DatePill: View {
+    let date: Date
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                Text(date.formatted(.dateTime.weekday(.abbreviated)))
+                    .font(.system(size: 12, weight: .bold))
+                    .foregroundColor(isSelected ? .white : .white.opacity(0.3))
+                
+                ZStack {
+                    if isSelected {
+                        Circle()
+                            .fill(Color.blue)
+                            .frame(width: 32, height: 32)
+                            .shadow(color: .blue.opacity(0.4), radius: 6)
+                    }
+                    Text(date.formatted(.dateTime.day()))
+                        .font(.system(size: 15, weight: .black))
+                        .foregroundColor(.white)
+                }
+            }
+            .padding(.vertical, 10)
+            .padding(.horizontal, 8)
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(isSelected ? Color.blue.opacity(0.15) : Color.clear)
+            )
+        }
+        .buttonStyle(.plain)
+    }
+}
+
+struct LauncherModuleView: View {
+    @ObservedObject var launcherManager: LauncherManager
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("Dock")
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(.white.opacity(0.4))
+                .tracking(2)
+                .textCase(.uppercase)
+            
+            HStack(spacing: 16) {
+                ForEach(launcherManager.apps) { app in
+                    LauncherIcon(app: app, launcherManager: launcherManager)
+                }
+            }
+            .padding(.horizontal, 20)
+            .padding(.vertical, 14)
+            .background(
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(Color.white.opacity(0.06))
+                    .overlay(RoundedRectangle(cornerRadius: 20).stroke(Color.white.opacity(0.12), lineWidth: 0.5))
+            )
+        }
+    }
+}
+
+struct LauncherIcon: View {
+    let app: LauncherApp
+    let launcherManager: LauncherManager
+    @State private var isHovering = false
+    
+    var body: some View {
+        Button(action: { launcherManager.launch(bundleID: app.id) }) {
+            VStack(spacing: 8) {
+                ZStack {
+                    if let icon = launcherManager.icon(for: app.id) {
+                        Image(nsImage: icon)
+                            .resizable()
+                            .frame(width: 48, height: 48)
+                            .cornerRadius(12)
+                            .shadow(color: .black.opacity(isHovering ? 0.4 : 0.2), radius: isHovering ? 10 : 5, y: isHovering ? 5 : 2)
+                    }
+                }
+                .scaleEffect(isHovering ? 1.25 : 1.0)
+                .offset(y: isHovering ? -10 : 0)
+                
+                Text(app.name)
+                    .font(.system(size: 9, weight: .bold))
+                    .foregroundColor(.white)
+                    .opacity(isHovering ? 1.0 : 0.4)
+                    .scaleEffect(isHovering ? 1.1 : 0.9)
+            }
+            .animation(.interactiveSpring(response: 0.35, dampingFraction: 0.65, blendDuration: 0), value: isHovering)
+        }
+        .buttonStyle(.plain)
+        .onHover { h in isHovering = h }
     }
 }
 
