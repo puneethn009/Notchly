@@ -16,6 +16,7 @@ enum ContentType: String, Codable {
     case receipt
     case codeSnippet
     case qrCode
+    case snippet
     case unknown
 }
 
