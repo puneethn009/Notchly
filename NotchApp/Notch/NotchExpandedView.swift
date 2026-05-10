@@ -146,6 +146,7 @@ struct NotchExpandedView: View {
                     removal: .move(edge: slideDirection == .trailing ? .leading : .trailing).combined(with: .opacity)
                 ))
             }
+            .offset(x: shakeOffset)
             .frame(maxWidth: .infinity, maxHeight: .infinity)
             .padding(.bottom, 16)
             
@@ -153,72 +154,75 @@ struct NotchExpandedView: View {
         }
         .background(Color.clear)
         .contentShape(Rectangle()) 
-        .overlay(
-            SwipeGestureView(
-                onSwipeLeft: {
-                    let next = notchState.selectedPage.next()
-                    if next != notchState.selectedPage {
-                        slideDirection = .trailing
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                            notchState.selectedPage = next
-                        }
-                    }
-                },
-                onSwipeRight: {
+        .onAppear {
+            setupSwipeMonitor()
+        }
+        .onDisappear {
+            if let monitor = swipeMonitor {
+                NSEvent.removeMonitor(monitor)
+                swipeMonitor = nil
+            }
+        }
+    }
+    
+    @State private var slideDirection: Edge = .trailing
+    @State private var shakeOffset: CGFloat = 0
+    @State private var swipeMonitor: Any?
+    @State private var hasTriggeredInCurrentGesture = false
+
+    private func setupSwipeMonitor() {
+        swipeMonitor = NSEvent.addLocalMonitorForEvents(matching: .scrollWheel) { event in
+            // Only handle if we are the expanded notch window
+            guard let window = NotchWindowController.shared.window, window.isKeyWindow || window.isVisible else { return event }
+            
+            // Detect swipe phases
+            if event.phase == .began || event.momentumPhase == .began {
+                hasTriggeredInCurrentGesture = false
+            }
+            if event.phase == .ended || event.phase == .cancelled {
+                hasTriggeredInCurrentGesture = false
+            }
+
+            if !hasTriggeredInCurrentGesture && abs(event.scrollingDeltaX) > abs(event.scrollingDeltaY) {
+                let threshold: CGFloat = 20.0
+                
+                if event.scrollingDeltaX > threshold {
+                    // Swipe Right -> Previous
                     let prev = notchState.selectedPage.previous()
                     if prev != notchState.selectedPage {
                         slideDirection = .leading
                         withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
                             notchState.selectedPage = prev
                         }
+                    } else {
+                        shake(direction: 1)
                     }
+                    hasTriggeredInCurrentGesture = true
+                } else if event.scrollingDeltaX < -threshold {
+                    // Swipe Left -> Next
+                    let next = notchState.selectedPage.next()
+                    if next != notchState.selectedPage {
+                        slideDirection = .trailing
+                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                            notchState.selectedPage = next
+                        }
+                    } else {
+                        shake(direction: -1)
+                    }
+                    hasTriggeredInCurrentGesture = true
                 }
-            )
-        )
-    }
-    
-    @State private var slideDirection: Edge = .trailing
-}
-
-// MARK: - Native Swipe Detection
-struct SwipeGestureView: NSViewRepresentable {
-    var onSwipeLeft: () -> Void
-    var onSwipeRight: () -> Void
-    
-    func makeNSView(context: Context) -> NSView {
-        let view = SwipeNSView()
-        view.onSwipeLeft = onSwipeLeft
-        view.onSwipeRight = onSwipeRight
-        return view
-    }
-    
-    func updateNSView(_ nsView: NSView, context: Context) {}
-}
-
-class SwipeNSView: NSView {
-    var onSwipeLeft: (() -> Void)?
-    var onSwipeRight: (() -> Void)?
-    private var hasTriggeredInCurrentGesture = false
-    
-    override func scrollWheel(with event: NSEvent) {
-        // Use phases for modern trackpads to ensure one trigger per 'swipe session'
-        if event.phase == .began || event.momentumPhase == .began {
-            hasTriggeredInCurrentGesture = false
+            }
+            return event
         }
-        
-        if event.phase == .ended || event.phase == .cancelled {
-            hasTriggeredInCurrentGesture = false
-        }
+    }
 
-        if !hasTriggeredInCurrentGesture && abs(event.scrollingDeltaX) > abs(event.scrollingDeltaY) {
-            let threshold: CGFloat = 20.0
-            
-            if event.scrollingDeltaX > threshold {
-                onSwipeRight?()
-                hasTriggeredInCurrentGesture = true
-            } else if event.scrollingDeltaX < -threshold {
-                onSwipeLeft?()
-                hasTriggeredInCurrentGesture = true
+    private func shake(direction: CGFloat) {
+        withAnimation(.spring(response: 0.2, dampingFraction: 0.2, blendDuration: 0)) {
+            shakeOffset = direction * 20
+        }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+            withAnimation(.spring(response: 0.2, dampingFraction: 0.2, blendDuration: 0)) {
+                shakeOffset = 0
             }
         }
     }
