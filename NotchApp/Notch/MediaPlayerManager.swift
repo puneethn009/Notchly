@@ -26,7 +26,16 @@ class MediaPlayerManager: ObservableObject {
     // MARK: Published
     @Published var title: String = ""
     @Published var artist: String = ""
-    @Published var artworkImage: NSImage? = nil
+    @Published var artworkImage: NSImage? = nil {
+        didSet {
+            if let image = artworkImage {
+                self.artworkColors = image.extractGradientColors()
+            } else {
+                self.artworkColors = [.gray.opacity(0.1), .black.opacity(0.4)]
+            }
+        }
+    }
+    @Published var artworkColors: [Color] = [.gray.opacity(0.1), .black.opacity(0.4)]
     @Published var isPlaying: Bool = false
     @Published var isRunning: Bool = false
     @Published var progress: Double = 0.0
@@ -251,7 +260,9 @@ class MediaPlayerManager: ObservableObject {
                 guard let artURL = URL(string: artURLStr) else { return }
                 let (imgData, _) = try await URLSession.shared.data(from: artURL)
                 guard !Task.isCancelled, let img = NSImage(data: imgData) else { return }
-                await MainActor.run { self.artworkImage = img }
+                await MainActor.run { 
+                    self.artworkImage = img 
+                }
             } catch {}
         }
     }
@@ -264,7 +275,9 @@ class MediaPlayerManager: ObservableObject {
             do {
                 let (data, _) = try await URLSession.shared.data(from: u)
                 guard !Task.isCancelled, let img = NSImage(data: data) else { return }
-                await MainActor.run { self.artworkImage = img }
+                await MainActor.run { 
+                    self.artworkImage = img 
+                }
             } catch {}
         }
     }

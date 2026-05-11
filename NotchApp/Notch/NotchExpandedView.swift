@@ -313,6 +313,16 @@ struct MediaModuleView: View {
                                 }
                             )
                             .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .scaleEffect(mediaManager.isPlaying ? 1.0 : 0.85)
+                            .animation(.spring(response: 0.5, dampingFraction: 0.7), value: mediaManager.isPlaying)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(LinearGradient(colors: mediaManager.artworkColors, startPoint: .topLeading, endPoint: .bottomTrailing))
+                                    .blur(radius: mediaManager.isPlaying ? 25 : 0)
+                                    .opacity(mediaManager.isPlaying ? 0.35 : 0.0)
+                                    .scaleEffect(mediaManager.isPlaying ? 1.1 : 0.85)
+                                    .animation(.spring(response: 0.5, dampingFraction: 0.7), value: mediaManager.isPlaying)
+                            )
                             .shadow(color: .black.opacity(0.5), radius: 15, x: 0, y: 8)
                     }
                     
