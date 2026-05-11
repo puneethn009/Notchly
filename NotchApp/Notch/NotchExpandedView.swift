@@ -853,10 +853,13 @@ struct SpeedStat: View {
 
 struct CalendarModuleView: View {
     @ObservedObject var calendarManager: CalendarManager
+    @State private var isDateStripCollapsed = false
+    @State private var dragOffset: CGFloat = 0
     
     var body: some View {
         // Use a ZStack with top alignment to anchor the header permanently
         ZStack(alignment: .top) {
+            // Permission check: Be more inclusive of macOS 14+ states
             if calendarManager.permissionStatus == .notDetermined {
                 VStack(spacing: 12) {
                     Image(systemName: "calendar.badge.exclamationmark")
@@ -868,9 +871,66 @@ struct CalendarModuleView: View {
                         Text("Grant Access")
                             .font(.system(size: 11, weight: .bold))
                             .foregroundColor(.white)
-                            .padding(.horizontal, 16)
-                            .padding(.vertical, 6)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 8)
                             .background(Capsule().fill(Color.blue))
+                    }
+                    .buttonStyle(.plain)
+                    .contentShape(Rectangle())
+                    
+                    Button(action: {
+                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }) {
+                        Text("Already enabled? Open Settings")
+                            .font(.system(size: 9, weight: .bold))
+                            .foregroundColor(.white.opacity(0.3))
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 4)
+                }
+                .padding(.top, 10)
+            } else if calendarManager.reminderPermissionStatus == .notDetermined {
+                VStack(spacing: 12) {
+                    Image(systemName: "list.bullet.rectangle.badge.plus")
+                        .font(.system(size: 30))
+                        .foregroundColor(.green)
+                    Text("Reminders Access Required")
+                        .font(.system(size: 14, weight: .bold))
+                    Button(action: { calendarManager.requestAccess() }) {
+                        Text("Grant Reminders Access")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(Color.green))
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.top, 10)
+            } else if calendarManager.permissionStatus == .denied || calendarManager.reminderPermissionStatus == .denied {
+                VStack(spacing: 12) {
+                    Image(systemName: "hand.raised.fill")
+                        .font(.system(size: 30))
+                        .foregroundColor(.red)
+                    Text("Access Denied")
+                        .font(.system(size: 14, weight: .bold))
+                    Text("Please enable access in Settings")
+                        .font(.system(size: 10))
+                        .foregroundColor(.white.opacity(0.5))
+                    
+                    Button(action: {
+                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars") {
+                            NSWorkspace.shared.open(url)
+                        }
+                    }) {
+                        Text("Open System Settings")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.white)
+                            .padding(.horizontal, 24)
+                            .padding(.vertical, 8)
+                            .background(Capsule().fill(Color.gray.opacity(0.3)))
                     }
                     .buttonStyle(.plain)
                 }
@@ -886,7 +946,7 @@ struct CalendarModuleView: View {
                         Spacer()
                         
                         HStack(spacing: 4) {
-                            SourceTab(icon: "apple.logo", isSelected: SettingsManager.shared.calendarSource == "local") {
+                            SourceTab(icon: "calendar", isSelected: SettingsManager.shared.calendarSource == "local") {
                                 SettingsManager.shared.calendarSource = "local"
                                 calendarManager.refresh()
                             }
@@ -914,27 +974,30 @@ struct CalendarModuleView: View {
                                 .padding(.top, -20)
                         } else {
                             VStack(spacing: 0) {
-                                // Date Strip
-                                ScrollViewReader { proxy in
-                                    ScrollView(.horizontal, showsIndicators: false) {
-                                        HStack(spacing: 18) {
-                                            ForEach(-30..<30, id: \.self) { offset in
-                                                let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
-                                                DatePill(date: date, isSelected: Calendar.current.isDate(date, inSameDayAs: calendarManager.selectedDate)) {
-                                                    withAnimation(.spring(response: 0.3)) {
-                                                        calendarManager.fetchEvents(for: date)
+                                // Date Strip (Collapsible)
+                                if !isDateStripCollapsed {
+                                    ScrollViewReader { proxy in
+                                        ScrollView(.horizontal, showsIndicators: false) {
+                                            HStack(spacing: 18) {
+                                                ForEach(-30..<30, id: \.self) { offset in
+                                                    let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
+                                                    DatePill(date: date, isSelected: Calendar.current.isDate(date, inSameDayAs: calendarManager.selectedDate)) {
+                                                        withAnimation(.spring(response: 0.3)) {
+                                                            calendarManager.fetchEvents(for: date)
+                                                        }
                                                     }
+                                                    .id(offset)
                                                 }
-                                                .id(offset)
                                             }
+                                            .padding(.horizontal, 32)
                                         }
-                                        .padding(.horizontal, 32)
+                                        .onAppear {
+                                            proxy.scrollTo(0, anchor: .center)
+                                        }
                                     }
-                                    .onAppear {
-                                        proxy.scrollTo(0, anchor: .center)
-                                    }
+                                    .padding(.bottom, 6)
+                                    .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .top)), removal: .opacity.combined(with: .move(edge: .top))))
                                 }
-                                .padding(.bottom, 6) // Reduced from 12 to pull agenda up
                                 
                                 // Agenda List
                                 ScrollView(.vertical, showsIndicators: false) {
@@ -948,7 +1011,7 @@ struct CalendarModuleView: View {
                                                     .font(.system(size: 12, weight: .bold))
                                                     .foregroundColor(.white.opacity(0.4))
                                             }
-                                            .padding(.top, 20)
+                                            .padding(.top, isDateStripCollapsed ? 40 : 20)
                                         } else {
                                             ForEach(calendarManager.events) { event in
                                                 CalendarEventRow(event: event)
@@ -956,16 +1019,28 @@ struct CalendarModuleView: View {
                                         }
                                     }
                                     .padding(.horizontal, 32)
-                                    .padding(.bottom, 10) // Reduced from 20 to save space
+                                .padding(.bottom, 10)
                                 }
+                                .frame(maxHeight: isDateStripCollapsed ? 180 : 120)
                                 .overlay(calendarManager.isLoading ? ProgressView().scaleEffect(0.6).padding(.top, 20) : nil)
                             }
+                            .contentShape(Rectangle())
+                            .gesture(
+                                DragGesture()
+                                    .onEnded { gesture in
+                                        if gesture.translation.height < -30 {
+                                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { isDateStripCollapsed = true }
+                                        } else if gesture.translation.height > 30 {
+                                            withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) { isDateStripCollapsed = false }
+                                        }
+                                    }
+                            )
                         }
                     }
                 }
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // Forces entire module to anchor at the top
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
     }
 }
 
@@ -1054,24 +1129,50 @@ struct CalendarEventRow: View {
     
     var body: some View {
         HStack(spacing: 12) {
+            // Source Indicator & Color
             RoundedRectangle(cornerRadius: 2)
-                .fill(event.source == .notion ? Color.black : event.color)
-                .frame(width: 3, height: 24)
+                .fill(event.color)
+                .frame(width: 4, height: 32)
             
-            VStack(alignment: .leading, spacing: 1) {
+            VStack(alignment: .leading, spacing: 2) {
                 Text(event.title)
                     .font(.system(size: 13, weight: .bold))
                     .foregroundColor(.white)
                     .lineLimit(1)
                 
-                HStack(spacing: 4) {
-                    Image(systemName: event.source == .notion ? "n.circle.fill" : "apple.logo")
-                        .font(.system(size: 8))
-                        .foregroundColor(.white.opacity(0.3))
+                HStack(spacing: 8) {
+                    if event.isAllDay {
+                        Text("All-day")
+                            .font(.system(size: 10, weight: .bold))
+                            .foregroundColor(.white.opacity(0.4))
+                    } else {
+                        Text(event.startDate.formatted(date: .omitted, time: .shortened))
+                            .font(.system(size: 10, weight: .medium))
+                            .foregroundColor(.white.opacity(0.4))
+                    }
                     
-                    Text("\(event.startDate.formatted(date: .omitted, time: .shortened))")
-                        .font(.system(size: 10, weight: .medium))
-                        .foregroundColor(.white.opacity(0.4))
+                    if let location = event.location, !location.isEmpty {
+                        Text("•")
+                            .foregroundColor(.white.opacity(0.2))
+                        Image(systemName: "location.fill")
+                            .font(.system(size: 8))
+                            .foregroundColor(.white.opacity(0.3))
+                        Text(location)
+                            .font(.system(size: 10))
+                            .foregroundColor(.white.opacity(0.4))
+                            .lineLimit(1)
+                    }
+                    
+                    if let cal = event.calendarName {
+                        Spacer()
+                        Text(cal.uppercased())
+                            .font(.system(size: 8, weight: .black))
+                            .foregroundColor(event.color.opacity(0.6))
+                            .padding(.horizontal, 6)
+                            .padding(.vertical, 2)
+                            .background(event.color.opacity(0.1))
+                            .cornerRadius(4)
+                    }
                 }
             }
             

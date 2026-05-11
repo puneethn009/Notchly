@@ -278,16 +278,22 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
-				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = YES;
 				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
 				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
 				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
+				ENABLE_RESOURCE_ACCESS_REMINDERS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAccessibilityUsageDescription = "NotchApp needs accessibility access for system-wide keyboard shortcuts.";
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "NotchApp uses Apple Events for app integration features.";
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Notchly needs access to your music to show album art and lyrics.";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Notchly needs full access to your calendar to show events in the notch.";
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "Notchly needs access to your calendar to show events in the notch.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Notchly needs full access to your reminders to show tasks in the notch.";
+				INFOPLIST_KEY_NSRemindersUsageDescription = "Notchly needs access to your reminders to show tasks in the notch.";
 				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "NotchApp needs screen access to create PiP windows for any app.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
@@ -327,16 +333,22 @@
 				ENABLE_HARDENED_RUNTIME = YES;
 				ENABLE_PREVIEWS = YES;
 				ENABLE_RESOURCE_ACCESS_AUDIO_INPUT = NO;
-				ENABLE_RESOURCE_ACCESS_CALENDARS = NO;
+				ENABLE_RESOURCE_ACCESS_CALENDARS = YES;
 				ENABLE_RESOURCE_ACCESS_CAMERA = NO;
 				ENABLE_RESOURCE_ACCESS_CONTACTS = NO;
 				ENABLE_RESOURCE_ACCESS_LOCATION = NO;
 				ENABLE_RESOURCE_ACCESS_PHOTO_LIBRARY = NO;
+				ENABLE_RESOURCE_ACCESS_REMINDERS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_KEY_LSUIElement = YES;
 				INFOPLIST_KEY_NSAccessibilityUsageDescription = "NotchApp needs accessibility access for system-wide keyboard shortcuts.";
 				INFOPLIST_KEY_NSAppleEventsUsageDescription = "NotchApp uses Apple Events for app integration features.";
+				INFOPLIST_KEY_NSAppleMusicUsageDescription = "Notchly needs access to your music to show album art and lyrics.";
+				INFOPLIST_KEY_NSCalendarsFullAccessUsageDescription = "Notchly needs full access to your calendar to show events in the notch.";
+				INFOPLIST_KEY_NSCalendarsUsageDescription = "Notchly needs access to your calendar to show events in the notch.";
 				INFOPLIST_KEY_NSHumanReadableCopyright = "";
+				INFOPLIST_KEY_NSRemindersFullAccessUsageDescription = "Notchly needs full access to your reminders to show tasks in the notch.";
+				INFOPLIST_KEY_NSRemindersUsageDescription = "Notchly needs access to your reminders to show tasks in the notch.";
 				INFOPLIST_KEY_NSScreenCaptureUsageDescription = "NotchApp needs screen access to create PiP windows for any app.";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",

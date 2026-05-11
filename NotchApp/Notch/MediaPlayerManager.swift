@@ -36,11 +36,13 @@ class MediaPlayerManager: ObservableObject {
     private var timer: Timer?
 
     private init() {
-        // Initial detection
-        fetchNowPlaying()
+        // Force Music Automation registration
+        let _ = runScriptSync("tell application \"Music\" to get name")
         
-        // Ultra-high frequency sync for lyrics accuracy (0.2s)
-        timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
+        // Initial detection
+        
+        // Balanced sync for stability (1.0s)
+        timer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             self?.fetchNowPlaying()
         }
 
@@ -78,13 +80,29 @@ class MediaPlayerManager: ObservableObject {
     }
 
     func fetchNowPlaying() {
-        // Check both players via AppleScript for initial state
         Task {
             let settings = SettingsManager.shared
+            var foundInfo = false
+            
             if settings.useAppleMusic, let music = await getMusicInfo() {
                 updateWithInfo(music, source: "Music")
+                foundInfo = true
             } else if settings.useSpotify, let spotify = await getSpotifyInfo() {
                 updateWithInfo(spotify, source: "Spotify")
+                foundInfo = true
+            }
+            
+            if !foundInfo {
+                DispatchQueue.main.async {
+                    if self.isRunning {
+                        self.isRunning = false
+                        self.isPlaying = false
+                        self.title = ""
+                        self.artist = ""
+                        self.artworkImage = nil
+                        self.updateStickyState()
+                    }
+                }
             }
         }
     }
@@ -121,16 +139,17 @@ class MediaPlayerManager: ObservableObject {
                 self.queue = q.map { TrackInfo(title: $0["title"] ?? "", artist: $0["artist"] ?? "") }
             }
             
-            // Handle Artwork
-            if let artUrl = info["artworkUrl"] as? String, 
-               artUrl.hasPrefix("http"), // Ensure valid URL scheme
-               let url = URL(string: artUrl) {
-                self.downloadArtwork(from: url)
-            } else if source == "Music" {
-                self.fetchMusicArtwork()
-            } else if source == "Spotify" && self.artworkImage == nil {
-                 // Fallback if no URL
-                 self.artworkImage = nil
+            // Handle Artwork only if it's missing or track changed
+            if trackChanged || self.artworkImage == nil {
+                if let artUrl = info["artworkUrl"] as? String, 
+                   artUrl.hasPrefix("http"),
+                   let url = URL(string: artUrl) {
+                    self.downloadArtwork(from: url)
+                } else if source == "Music" {
+                    self.fetchMusicArtwork()
+                } else {
+                    self.artworkImage = nil
+                }
             }
             
             // Check mute state
@@ -155,8 +174,7 @@ class MediaPlayerManager: ObservableObject {
         let scriptSource = """
         tell application "Music"
             if (count of artworks of current track) > 0 then
-                set art to artwork 1 of current track
-                return raw data of art
+                return raw data of artwork 1 of current track
             end if
         end tell
         """
@@ -165,7 +183,10 @@ class MediaPlayerManager: ObservableObject {
             var error: NSDictionary?
             let result = script.executeAndReturnError(&error)
             if error == nil {
-                self.artworkImage = NSImage(data: result.data)
+                let data = result.data
+                DispatchQueue.main.async {
+                    self.artworkImage = NSImage(data: data)
+                }
             }
         }
     }
@@ -222,17 +243,27 @@ class MediaPlayerManager: ObservableObject {
     private func getMusicInfo() async -> [String: Any]? {
         let src = """
         tell application "Music"
-            if running then
+            if not running then return "NOT_RUNNING"
+            try
+                -- Check if there is even a track to talk about
+                try
+                    set tName to name of current track
+                on error
+                    return "STANDBY"
+                end try
+                
                 set t to name of current track
                 set a to artist of current track
                 set p to player state is playing
                 set dur to duration of current track
                 set pos to player position
+                
                 set lyr to ""
                 try
                     set lyr to lyrics of current track
                 end try
                 
+                -- Queue logic (Optional)
                 set qNames to ""
                 set qArtists to ""
                 try
@@ -240,10 +271,8 @@ class MediaPlayerManager: ObservableObject {
                     set qTracks to tracks of qPlaylist
                     set trackCount to count of qTracks
                     set currentIndex to (index of current track) + 1
-                    
                     set endRange to currentIndex + 5
                     if endRange > trackCount then set endRange to trackCount
-                    
                     if currentIndex <= trackCount then
                         repeat with i from currentIndex to endRange
                             set trk to item i of qTracks
@@ -254,10 +283,12 @@ class MediaPlayerManager: ObservableObject {
                 end try
                 
                 return t & "|||" & a & "|||" & (p as string) & "|||" & (dur as string) & "|||" & (pos as string) & "|||" & lyr & "|||" & qNames & "|||" & qArtists
-            end if
+            on error
+                return "ERROR"
+            end try
         end tell
         """
-        guard let res = runScriptSync(src) else { return nil }
+        guard let res = runScriptSync(src), res != "NOT_RUNNING", res != "ERROR", res != "STANDBY" else { return nil }
         let parts = res.components(separatedBy: "|||")
         guard parts.count >= 5 else { return nil }
         
