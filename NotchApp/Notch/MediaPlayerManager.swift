@@ -122,7 +122,9 @@ class MediaPlayerManager: ObservableObject {
             }
             
             // Handle Artwork
-            if let artUrl = info["artworkUrl"] as? String, let url = URL(string: artUrl) {
+            if let artUrl = info["artworkUrl"] as? String, 
+               artUrl.hasPrefix("http"), // Ensure valid URL scheme
+               let url = URL(string: artUrl) {
                 self.downloadArtwork(from: url)
             } else if source == "Music" {
                 self.fetchMusicArtwork()
@@ -336,7 +338,9 @@ class MediaPlayerManager: ObservableObject {
     }
 
     private func fetchExternalLyrics(title: String, artist: String) {
-        guard !title.isEmpty && !artist.isEmpty else { return }
+        // Ignore empty or invalid AppleScript "missing value" strings
+        guard !title.isEmpty && !artist.isEmpty && 
+              title != "missing value" && artist != "missing value" else { return }
         
         // Don't re-fetch if we already have these lyrics
         if self.title == title && !self.lyrics.isEmpty { return }
@@ -347,23 +351,27 @@ class MediaPlayerManager: ObservableObject {
         guard let url = URL(string: urlString) else { return }
         
         URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
-            guard let data = data else { return }
-            do {
-                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
-                    let plainLyrics = json["plainLyrics"] as? String ?? ""
-                    let lrcLyrics = json["syncedLyrics"] as? String ?? ""
-                    
-                    DispatchQueue.main.async {
-                        self?.lyrics = plainLyrics
+            guard let self = self, let data = data else { return }
+            
+            // CRITICAL: Check if we are still on the same track before updating
+            DispatchQueue.main.async {
+                guard self.title == title && self.artist == artist else { return }
+                
+                do {
+                    if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                        let plainLyrics = json["plainLyrics"] as? String ?? ""
+                        let lrcLyrics = json["syncedLyrics"] as? String ?? ""
+                        
+                        self.lyrics = plainLyrics
                         if !lrcLyrics.isEmpty {
-                            self?.parseLRC(lrcLyrics)
+                            self.parseLRC(lrcLyrics)
                         } else {
-                            self?.syncedLyrics = []
+                            self.syncedLyrics = []
                         }
                     }
+                } catch {
+                    print("Lyric fetch error: \(error)")
                 }
-            } catch {
-                print("Lyric fetch error: \(error)")
             }
         }.resume()
     }
@@ -410,7 +418,7 @@ class MediaPlayerManager: ObservableObject {
             
             if i < sorted.count - 1 {
                 let nextStart = sorted[i+1].time
-                if nextStart - currentEnd > 6.0 {
+                if nextStart - currentEnd > 4.0 {
                     let midPoint = currentEnd + (nextStart - currentEnd) / 2.0
                     let gapDuration = nextStart - currentEnd
                     finalLines.append(LyricLine(time: midPoint, duration: gapDuration / 2, text: "INSTRUMENTAL_BREAK"))
@@ -421,7 +429,7 @@ class MediaPlayerManager: ObservableObject {
         self.syncedLyrics = finalLines
         
         // Add outro marker if last lyric ends long before song ends
-        if let last = finalLines.last, self.totalDuration - last.time > 6.0 {
+        if let last = finalLines.last, self.totalDuration - last.time > 4.0 {
             let midPoint = last.time + (self.totalDuration - last.time) / 2.0
             let outroDur = self.totalDuration - last.time
             self.syncedLyrics.append(LyricLine(time: midPoint, duration: outroDur / 2, text: "INSTRUMENTAL_BREAK"))

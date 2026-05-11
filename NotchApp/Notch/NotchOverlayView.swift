@@ -7,7 +7,7 @@ struct NotchOverlayView: View {
     @StateObject private var mediaManager = MediaPlayerManager.shared
 
     private let collapsedWidth: CGFloat = 192
-    private let collapsedHeight: CGFloat = 30
+    private let collapsedHeight: CGFloat = 29
     private let expandedWidth: CGFloat = 700
     private let expandedHeight: CGFloat = 200
 
@@ -20,7 +20,7 @@ struct NotchOverlayView: View {
         let isShowingPopup = notchState.isShowingScreenshotPopup && !isExpanded
         let isRunning = mediaManager.isPlaying || timerManager.isRunning || timerManager.isStopwatchRunning
         let width = isExpanded ? expandedWidth : (isShowingPopup ? 280 : (isSticky ? 300 : collapsedWidth))
-        let height = isExpanded ? expandedHeight : (isShowingPopup ? 36 : (isSticky ? 34 : (isRunning ? 31 : collapsedHeight)))
+        let height = isExpanded ? expandedHeight : (isShowingPopup ? 35 : (isSticky ? 33 : (isRunning ? 30 : collapsedHeight)))
         
         ZStack(alignment: .top) {
             // Main Interaction Surface
@@ -79,7 +79,7 @@ struct NotchOverlayView: View {
                         .frame(width: 280, height: 36)
                         .transition(.scale(scale: 0.9).combined(with: .opacity))
                     } else if isSticky {
-                        if notchState.stickyType == .timer {
+                        if timerManager.isRunning || timerManager.isStopwatchRunning || notchState.stickyType == .timer {
                             StickyTimerView()
                         } else if notchState.stickyType == .media {
                             StickyMediaView()

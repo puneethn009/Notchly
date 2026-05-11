@@ -389,7 +389,7 @@ struct MediaModuleView: View {
                             ZStack {
                                 if !mediaManager.syncedLyrics.isEmpty || !mediaManager.lyrics.isEmpty {
                                     ScrollView(.vertical, showsIndicators: false) {
-                                        VStack(alignment: .leading, spacing: 14) {
+                                        VStack(alignment: .leading, spacing: 8) {
                                             if !mediaManager.syncedLyrics.isEmpty {
                                                 ForEach(Array(mediaManager.syncedLyrics.enumerated()), id: \.offset) { index, line in
                                                     if line.text == "INSTRUMENTAL_BREAK" {
