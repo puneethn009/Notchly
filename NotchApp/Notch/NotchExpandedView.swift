@@ -125,8 +125,8 @@ struct NotchExpandedView: View {
             .frame(maxWidth: .infinity)
             .frame(height: 50, alignment: .top)
             
-            // 2. Main Content Area (Dynamic)
-            ZStack {
+            // 2. Main Content Area (Dynamic) - Fixed to Top Alignment
+            ZStack(alignment: .top) {
                 Group {
                     switch NotchState.shared.selectedPage {
                     case .media:
@@ -151,7 +151,7 @@ struct NotchExpandedView: View {
             }
             .offset(x: shakeOffset)
             .frame(maxWidth: .infinity)
-            .frame(height: 140) // Lock height to prevent pushing header
+            .frame(height: 140, alignment: .top) // Force top alignment for everything
             
             Spacer(minLength: 0) // Anchor everything to the top
         }
@@ -274,7 +274,7 @@ struct MediaModuleView: View {
                     ZStack {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(LinearGradient(colors: [.gray.opacity(0.1), .black.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing))
-                            .frame(width: 140, height: 140)
+                            .frame(width: 130, height: 130) // Slightly smaller to guarantee fit
                             .overlay(
                                 Group {
                                     if let img = mediaManager.artworkImage {
@@ -442,10 +442,11 @@ struct MediaModuleView: View {
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
-                .padding(.leading, 32)
-                .padding(.trailing, 48) // Increased from 24 to pull away from right edge
-                .padding(.bottom, 24)
-                .padding(.top, 13)
+                .padding(.leading, 40)
+                .padding(.trailing, 40)
+                .padding(.bottom, 40)
+                .padding(.top, 0)
+                .offset(y: -5)
             } else {
                 VStack(spacing: 12) {
                     Image(systemName: "music.quarternote.3")
@@ -499,8 +500,8 @@ struct TimerModuleView: View {
                     .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.05)))
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.05), lineWidth: 0.5))
                 }
-                .padding(.top, 27)
-                .padding(.bottom, -15)
+                .padding(.top, -10)
+                .padding(.bottom, -8) // Nudged content slightly up
             }
             
             // Fixed Height Content Area to prevent "Up and Down" jumps
@@ -670,7 +671,7 @@ struct SystemModuleView: View {
     @ObservedObject var settings = SettingsManager.shared
     
     var body: some View {
-        VStack(spacing: 20) {
+        VStack(spacing: 12) {
             // Top Row: Core Gauges
             HStack(spacing: 30) {
                 if settings.showCPU { CircularGauge(label: "CPU", value: systemManager.cpuUsage, color: .green) }
@@ -723,6 +724,7 @@ struct SystemModuleView: View {
             }
             .foregroundColor(.white.opacity(0.6))
         }
+        .padding(.top, 15)
     }
     
     private func thermalColor(_ pressure: String) -> Color {
@@ -853,82 +855,207 @@ struct CalendarModuleView: View {
     @ObservedObject var calendarManager: CalendarManager
     
     var body: some View {
-        VStack(spacing: 20) {
+        // Use a ZStack with top alignment to anchor the header permanently
+        ZStack(alignment: .top) {
             if calendarManager.permissionStatus == .notDetermined {
-                VStack(spacing: 16) {
+                VStack(spacing: 12) {
                     Image(systemName: "calendar.badge.exclamationmark")
-                        .font(.system(size: 40))
+                        .font(.system(size: 30))
                         .foregroundColor(.blue)
-                    Text("Calendar Access Required")
-                        .font(.headline)
+                    Text("Access Required")
+                        .font(.system(size: 14, weight: .bold))
                     Button(action: { calendarManager.requestAccess() }) {
                         Text("Grant Access")
-                            .font(.system(size: 14, weight: .bold))
+                            .font(.system(size: 11, weight: .bold))
                             .foregroundColor(.white)
-                            .padding(.horizontal, 24)
-                            .padding(.vertical, 10)
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 6)
                             .background(Capsule().fill(Color.blue))
                     }
                     .buttonStyle(.plain)
                 }
-                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .padding(.top, 10)
             } else {
-                // TOP: Horizontal Date Strip
-                ScrollViewReader { proxy in
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 18) {
-                            ForEach(-30..<30, id: \.self) { offset in
-                                let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
-                                DatePill(date: date, isSelected: Calendar.current.isDate(date, inSameDayAs: calendarManager.selectedDate)) {
-                                    withAnimation(.spring(response: 0.3)) {
-                                        calendarManager.fetchEvents(for: date)
-                                    }
-                                }
-                                .id(offset)
+                VStack(spacing: 0) {
+                    // 1. FIXED HEADER: Anchored at the top of the content area
+                    HStack {
+                        Text("AGENDA")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundColor(.white.opacity(0.3))
+                        
+                        Spacer()
+                        
+                        HStack(spacing: 4) {
+                            SourceTab(icon: "apple.logo", isSelected: SettingsManager.shared.calendarSource == "local") {
+                                SettingsManager.shared.calendarSource = "local"
+                                calendarManager.refresh()
+                            }
+                            SourceTab(icon: "n.circle.fill", isSelected: SettingsManager.shared.calendarSource == "notion") {
+                                SettingsManager.shared.calendarSource = "notion"
+                                calendarManager.refresh()
+                            }
+                            SourceTab(icon: "square.grid.2x2.fill", isSelected: SettingsManager.shared.calendarSource == "both") {
+                                SettingsManager.shared.calendarSource = "both"
+                                calendarManager.refresh()
                             }
                         }
-                        .padding(.horizontal, 32)
-                        .padding(.vertical, 4)
-                    }
-                    .onAppear {
-                        proxy.scrollTo(0, anchor: .center)
-                    }
-                }
-                
-                // BOTTOM: Events Agenda
-                ScrollView(.vertical, showsIndicators: false) {
-                    VStack(spacing: 10) {
-                        if calendarManager.eventsForSelectedDate.isEmpty {
-                            VStack(spacing: 8) {
-                                Image(systemName: "calendar.badge.checkmark")
-                                    .font(.system(size: 24))
-                                    .foregroundColor(.white.opacity(0.2))
-                                Text("No Events")
-                                    .font(.system(size: 14, weight: .bold))
-                                    .foregroundColor(.white.opacity(0.4))
-                            }
-                            .padding(.top, 20)
-                        } else {
-                            ForEach(calendarManager.eventsForSelectedDate, id: \.eventIdentifier) { event in
-                                CalendarEventRow(event: event)
-                            }
-                        }
+                        .background(Capsule().fill(Color.white.opacity(0.05)))
                     }
                     .padding(.horizontal, 32)
+                    .padding(.top, 0) // REMOVED redundant padding to fix bottom overflow
+                    .padding(.bottom, 12)
+                    .background(Color.black.opacity(0.001))
+                    
+                    // 2. DYNAMIC CONTENT: Grows downwards, never pushes the header up
+                    ZStack(alignment: .top) {
+                        if SettingsManager.shared.calendarSource == "notion" && (SettingsManager.shared.notionToken.isEmpty || SettingsManager.shared.notionDatabaseID.isEmpty) {
+                            NotionSetupView(calendarManager: calendarManager)
+                                .transition(.opacity)
+                                .padding(.top, -20)
+                        } else {
+                            VStack(spacing: 0) {
+                                // Date Strip
+                                ScrollViewReader { proxy in
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 18) {
+                                            ForEach(-30..<30, id: \.self) { offset in
+                                                let date = Calendar.current.date(byAdding: .day, value: offset, to: Date())!
+                                                DatePill(date: date, isSelected: Calendar.current.isDate(date, inSameDayAs: calendarManager.selectedDate)) {
+                                                    withAnimation(.spring(response: 0.3)) {
+                                                        calendarManager.fetchEvents(for: date)
+                                                    }
+                                                }
+                                                .id(offset)
+                                            }
+                                        }
+                                        .padding(.horizontal, 32)
+                                    }
+                                    .onAppear {
+                                        proxy.scrollTo(0, anchor: .center)
+                                    }
+                                }
+                                .padding(.bottom, 6) // Reduced from 12 to pull agenda up
+                                
+                                // Agenda List
+                                ScrollView(.vertical, showsIndicators: false) {
+                                    VStack(spacing: 8) {
+                                        if calendarManager.events.isEmpty && !calendarManager.isLoading {
+                                            VStack(spacing: 8) {
+                                                Image(systemName: "calendar.badge.checkmark")
+                                                    .font(.system(size: 20))
+                                                    .foregroundColor(.white.opacity(0.2))
+                                                Text("Clear Agenda")
+                                                    .font(.system(size: 12, weight: .bold))
+                                                    .foregroundColor(.white.opacity(0.4))
+                                            }
+                                            .padding(.top, 20)
+                                        } else {
+                                            ForEach(calendarManager.events) { event in
+                                                CalendarEventRow(event: event)
+                                            }
+                                        }
+                                    }
+                                    .padding(.horizontal, 32)
+                                    .padding(.bottom, 10) // Reduced from 20 to save space
+                                }
+                                .overlay(calendarManager.isLoading ? ProgressView().scaleEffect(0.6).padding(.top, 20) : nil)
+                            }
+                        }
+                    }
                 }
             }
         }
-        .padding(.top, 12)
+        .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top) // Forces entire module to anchor at the top
+    }
+}
+
+struct NotionSetupView: View {
+    @ObservedObject var calendarManager: CalendarManager
+    @State private var token: String = SettingsManager.shared.notionToken
+    @State private var dbId: String = SettingsManager.shared.notionDatabaseID
+    @State private var showManualSetup = false
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            // Restore Premium Centered Layout (Compacted)
+            VStack(spacing: 8) {
+                Image(systemName: "n.circle.fill")
+                    .font(.system(size: 30))
+                    .foregroundColor(.white)
+                
+                Text("Sync with Notion")
+                    .font(.system(size: 14, weight: .bold))
+                
+                Text("Connect your workspace to see your tasks.")
+                    .font(.system(size: 9))
+                    .foregroundColor(.white.opacity(0.4))
+                    .multilineTextAlignment(.center)
+                
+                Button(action: {
+                    if let url = URL(string: "https://www.notion.so/my-integrations") {
+                        NSWorkspace.shared.open(url)
+                    }
+                }) {
+                    Text("CONNECT NOTION")
+                        .font(.system(size: 10, weight: .black))
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 8)
+                        .background(Capsule().fill(Color.white))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.horizontal, 40)
+    }
+}
+
+struct SetupField: View {
+    let label: String
+    @Binding var text: String
+    let placeholder: String
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 4) {
+            Text(label)
+                .font(.system(size: 9, weight: .bold))
+                .foregroundColor(.white.opacity(0.6))
+            
+            TextField(placeholder, text: $text)
+                .textFieldStyle(.plain)
+                .font(.system(size: 12, design: .monospaced))
+                .padding(8)
+                .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.05)))
+                .foregroundColor(.white)
+        }
+    }
+}
+
+struct SourceTab: View {
+    let icon: String
+    let isSelected: Bool
+    let action: () -> Void
+    
+    var body: some View {
+        Button(action: action) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .bold))
+                .foregroundColor(isSelected ? .black : .white.opacity(0.4))
+                .frame(width: 24, height: 20)
+                .background(isSelected ? Color.white : Color.clear)
+                .clipShape(Capsule())
+        }
+        .buttonStyle(.plain)
     }
 }
 
 struct CalendarEventRow: View {
-    let event: EKEvent
+    let event: UnifiedEvent
     
     var body: some View {
         HStack(spacing: 12) {
             RoundedRectangle(cornerRadius: 2)
-                .fill(Color(nsColor: event.calendar.color))
+                .fill(event.source == .notion ? Color.black : event.color)
                 .frame(width: 3, height: 24)
             
             VStack(alignment: .leading, spacing: 1) {
@@ -937,9 +1064,15 @@ struct CalendarEventRow: View {
                     .foregroundColor(.white)
                     .lineLimit(1)
                 
-                Text("\(event.startDate.formatted(date: .omitted, time: .shortened))")
-                    .font(.system(size: 10, weight: .medium))
-                    .foregroundColor(.white.opacity(0.4))
+                HStack(spacing: 4) {
+                    Image(systemName: event.source == .notion ? "n.circle.fill" : "apple.logo")
+                        .font(.system(size: 8))
+                        .foregroundColor(.white.opacity(0.3))
+                    
+                    Text("\(event.startDate.formatted(date: .omitted, time: .shortened))")
+                        .font(.system(size: 10, weight: .medium))
+                        .foregroundColor(.white.opacity(0.4))
+                }
             }
             
             Spacer()

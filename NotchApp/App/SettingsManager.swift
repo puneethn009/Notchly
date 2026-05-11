@@ -29,6 +29,11 @@ class SettingsManager: ObservableObject {
     @AppStorage("showClosedNotchTimerIndicator") var showClosedNotchTimerIndicator: Bool = true
     @AppStorage("showMuteButton") var showMuteButton: Bool = true
     
+    // Calendar Settings
+    @AppStorage("calendarSource") var calendarSource: String = "local" // local, notion, both
+    @AppStorage("notionToken") var notionToken: String = ""
+    @AppStorage("notionDatabaseID") var notionDatabaseID: String = ""
+    
     // Module Toggles
     @AppStorage("enableStopwatch") var enableStopwatch: Bool = true
     @AppStorage("selectedAlarmSound") var selectedAlarmSound: String = "Glass"
