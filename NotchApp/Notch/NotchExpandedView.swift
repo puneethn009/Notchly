@@ -467,39 +467,56 @@ struct TimerModuleView: View {
     
     var body: some View {
         VStack(spacing: 12) {
-            if !timerManager.isRunning && !timerManager.isStopwatchRunning && !timerManager.isAlarmPlaying && SettingsManager.shared.enableStopwatch {
+            // Stabilized Segmented Control Toggle
+            if !timerManager.isAlarmPlaying {
                 HStack(spacing: 0) {
-                    Button(action: { withAnimation { mode = 0 } }) {
-                        Text("TIMER")
-                            .font(.system(size: 9, weight: .black))
-                            .foregroundColor(mode == 0 ? .black : .white.opacity(0.4))
-                            .frame(width: 100, height: 28)
-                            .background(mode == 0 ? Color.white : Color.clear)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
+                    ZStack {
+                        // Sliding background pill
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(Color.white)
+                            .frame(width: 100, height: 26)
+                            .offset(x: mode == 0 ? -52 : 52)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.7), value: mode)
+                        
+                        HStack(spacing: 4) {
+                            Button(action: { mode = 0 }) {
+                                Text("TIMER")
+                                    .font(.system(size: 10, weight: .black))
+                                    .foregroundColor(mode == 0 ? .black : .white.opacity(0.3))
+                                    .frame(width: 100, height: 30)
+                            }
+                            .buttonStyle(.plain)
+                            
+                            Button(action: { mode = 1 }) {
+                                Text("STOPWATCH")
+                                    .font(.system(size: 10, weight: .black))
+                                    .foregroundColor(mode == 1 ? .black : .white.opacity(0.3))
+                                    .frame(width: 100, height: 30)
+                            }
+                            .buttonStyle(.plain)
+                        }
                     }
-                    .buttonStyle(.plain)
-                    
-                    Button(action: { withAnimation { mode = 1 } }) {
-                        Text("STOPWATCH")
-                            .font(.system(size: 9, weight: .black))
-                            .foregroundColor(mode == 1 ? .black : .white.opacity(0.4))
-                            .frame(width: 100, height: 28)
-                            .background(mode == 1 ? Color.white : Color.clear)
-                            .clipShape(RoundedRectangle(cornerRadius: 6))
-                    }
-                    .buttonStyle(.plain)
+                    .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.05)))
+                    .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.05), lineWidth: 0.5))
                 }
-                .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.05)))
-                .padding(.bottom, 8)
+                .padding(.top, 27)
+                .padding(.bottom, -15)
             }
             
-            if timerManager.isStopwatchRunning {
-                StopwatchContent(timerManager: timerManager)
-            } else if mode == 0 || timerManager.isRunning || timerManager.isAlarmPlaying {
-                TimerContent(timerManager: timerManager)
-            } else {
-                StopwatchContent(timerManager: timerManager)
+            // Fixed Height Content Area to prevent "Up and Down" jumps
+            ZStack {
+                if timerManager.isStopwatchRunning || (mode == 1 && !timerManager.isRunning) {
+                    StopwatchContent(timerManager: timerManager)
+                        .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)), removal: .opacity))
+                } else {
+                    TimerContent(timerManager: timerManager)
+                        .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .leading)), removal: .opacity))
+                }
             }
+            .frame(height: 120) // Consistent height prevents layout shift
+            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: mode)
+            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: timerManager.isRunning)
+            .animation(.spring(response: 0.4, dampingFraction: 0.8), value: timerManager.isStopwatchRunning)
         }
     }
 }
@@ -528,7 +545,7 @@ struct TimerContent: View {
                 }
             } else if timerManager.isRunning {
                 // ... (Existing Running UI)
-                VStack(spacing: 8) {
+                VStack(spacing: 2) {
                     Text(timerManager.currentTimerName)
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(.white.opacity(0.6))
