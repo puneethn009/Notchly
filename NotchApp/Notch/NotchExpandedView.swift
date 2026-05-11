@@ -66,8 +66,8 @@ struct NotchExpandedView: View {
     @StateObject private var launcherManager = LauncherManager()
     
     var body: some View {
-        VStack(spacing: 0) {
-            // 1. Top Navigation & Status Bar (Fixed Position)
+        VStack(alignment: .center, spacing: 0) {
+            // 1. Top Navigation & Status Bar (Pinned at top)
             HStack(alignment: .center) {
                 // Navigation Icons
                 HStack(spacing: 8) {
@@ -121,7 +121,7 @@ struct NotchExpandedView: View {
                 }
                 .padding(.trailing, 40)
             }
-            .padding(.top, 20)
+            .padding(.top, 7)
             .frame(maxWidth: .infinity)
             .frame(height: 50, alignment: .top)
             
@@ -150,8 +150,10 @@ struct NotchExpandedView: View {
                 ))
             }
             .offset(x: shakeOffset)
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .padding(.bottom, 10)
+            .frame(maxWidth: .infinity)
+            .frame(height: 140) // Lock height to prevent pushing header
+            
+            Spacer(minLength: 0) // Anchor everything to the top
         }
         .frame(height: 200) // Explicitly match expandedHeight
         .background(Color.clear)
@@ -348,106 +350,61 @@ struct MediaModuleView: View {
                         }
                         .foregroundColor(.white)
                     }
-                    .frame(width: 200)
+                    .frame(width: 170) // Reduced from 200
                     
                     Divider().frame(height: 140).opacity(0.1)
                     
-                    // COLUMN 3: Lyrics / Queue
+                    // COLUMN 3: Lyrics
                     VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 16) {
-                            Button(action: { withAnimation(.spring(response: 0.3)) { showLyrics = true } }) {
-                                Text("LYRICS")
-                                    .font(.system(size: 10, weight: .black))
-                                    .foregroundColor(showLyrics ? .white : .white.opacity(0.2))
-                                    .padding(.bottom, 2)
-                                    .overlay(
-                                        Capsule().fill(showLyrics ? Color.white : Color.clear).frame(height: 3).offset(y: 6),
-                                        alignment: .bottom
-                                    )
-                            }
-                            .buttonStyle(.plain)
+                        HStack(spacing: 8) {
+                            Text("LYRICS")
+                                .font(.system(size: 10, weight: .black))
+                                .foregroundColor(.white.opacity(0.4))
                             
-                            Button(action: { withAnimation(.spring(response: 0.3)) { showLyrics = false } }) {
-                                Text("QUEUE")
-                                    .font(.system(size: 10, weight: .black))
-                                    .foregroundColor(!showLyrics ? .white : .white.opacity(0.2))
-                                    .padding(.bottom, 2)
-                                    .overlay(
-                                        Capsule().fill(!showLyrics ? Color.white : Color.clear).frame(height: 3).offset(y: 6),
-                                        alignment: .bottom
-                                    )
+                            if mediaManager.isPlaying {
+                                WaveformIndicator()
+                                    .transition(.opacity)
                             }
-                            .buttonStyle(.plain)
-                            
-                            Spacer()
                         }
                         .padding(.top, 4)
                         
-                        ZStack {
-                            if showLyrics {
-                                ScrollView(.vertical, showsIndicators: false) {
-                                    VStack(alignment: .leading, spacing: 12) {
-                                        if mediaManager.lyrics.isEmpty {
-                                            VStack(spacing: 8) {
-                                                Image(systemName: "quote.bubble")
-                                                    .font(.system(size: 24))
-                                                    .foregroundColor(.white.opacity(0.05))
-                                                Text("No Lyrics")
-                                                    .font(.system(size: 12, weight: .bold))
-                                                    .foregroundColor(.white.opacity(0.1))
-                                            }
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.top, 30)
-                                        } else {
-                                            Text(mediaManager.lyrics)
+                        ScrollViewReader { proxy in
+                            ScrollView(.vertical, showsIndicators: false) {
+                                VStack(alignment: .leading, spacing: 14) {
+                                    if !mediaManager.syncedLyrics.isEmpty {
+                                        ForEach(Array(mediaManager.syncedLyrics.enumerated()), id: \.offset) { index, line in
+                                            Text(line.text)
                                                 .font(.system(size: 14, weight: .bold))
-                                                .foregroundColor(.white)
-                                                .lineSpacing(6)
+                                                .foregroundColor(mediaManager.currentLyricIndex == index ? .white : .white.opacity(0.3))
+                                                .scaleEffect(mediaManager.currentLyricIndex == index ? 1.05 : 1.0, anchor: .leading)
+                                                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: mediaManager.currentLyricIndex)
+                                                .id(index)
                                         }
-                                    }
-                                    .frame(maxWidth: .infinity, alignment: .leading)
-                                }
-                                .transition(.opacity)
-                            } else {
-                                ScrollView(.vertical, showsIndicators: false) {
-                                    VStack(alignment: .leading, spacing: 6) {
-                                        if mediaManager.queue.isEmpty {
-                                            VStack(spacing: 8) {
-                                                Image(systemName: "list.bullet")
-                                                    .font(.system(size: 24))
-                                                    .foregroundColor(.white.opacity(0.05))
-                                                Text("Empty Queue")
-                                                    .font(.system(size: 12, weight: .bold))
-                                                    .foregroundColor(.white.opacity(0.1))
-                                            }
-                                            .frame(maxWidth: .infinity)
-                                            .padding(.top, 30)
-                                        } else {
-                                            ForEach(mediaManager.queue) { track in
-                                                HStack(spacing: 10) {
-                                                    RoundedRectangle(cornerRadius: 6)
-                                                        .fill(Color.white.opacity(0.03))
-                                                        .frame(width: 34, height: 34)
-                                                        .overlay(Image(systemName: "music.note").font(.system(size: 10)).foregroundColor(.white.opacity(0.1)))
-                                                    
-                                                    VStack(alignment: .leading, spacing: 0) {
-                                                        Text(track.title)
-                                                            .font(.system(size: 11, weight: .bold))
-                                                            .foregroundColor(.white)
-                                                            .lineLimit(1)
-                                                        Text(track.artist)
-                                                            .font(.system(size: 10, weight: .medium))
-                                                            .foregroundColor(.white.opacity(0.3))
-                                                            .lineLimit(1)
-                                                    }
-                                                }
-                                                .padding(6)
-                                                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.02)))
-                                            }
+                                    } else if !mediaManager.lyrics.isEmpty {
+                                        Text(mediaManager.lyrics)
+                                            .font(.system(size: 14, weight: .bold))
+                                            .foregroundColor(.white)
+                                            .lineSpacing(6)
+                                    } else {
+                                        VStack(spacing: 8) {
+                                            Image(systemName: "quote.bubble")
+                                                .font(.system(size: 24))
+                                                .foregroundColor(.white.opacity(0.05))
+                                            Text("Fetching Lyrics...")
+                                                .font(.system(size: 12, weight: .bold))
+                                                .foregroundColor(.white.opacity(0.1))
                                         }
+                                        .frame(maxWidth: .infinity)
+                                        .padding(.top, 30)
                                     }
                                 }
-                                .transition(.opacity)
+                                .frame(maxWidth: .infinity, alignment: .leading)
+                                .padding(.vertical, 40) // Allow scrolling space
+                            }
+                            .onChange(of: mediaManager.currentLyricIndex) { newIndex in
+                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                    proxy.scrollTo(newIndex, anchor: .center)
+                                }
                             }
                         }
                     }
@@ -1083,5 +1040,26 @@ struct MacBatteryIcon: View {
                 .fill(Color.white.opacity(0.5))
                 .frame(width: 1.5, height: 4)
         }
+    }
+}
+
+struct WaveformIndicator: View {
+    @State private var isAnimating = false
+    
+    var body: some View {
+        HStack(spacing: 2) {
+            ForEach(0..<3) { i in
+                RoundedRectangle(cornerRadius: 1)
+                    .fill(Color.blue)
+                    .frame(width: 2, height: isAnimating ? 10 : 4)
+                    .animation(
+                        Animation.easeInOut(duration: Double.random(in: 0.4...0.8))
+                            .repeatForever(autoreverses: true)
+                            .delay(Double(i) * 0.1),
+                        value: isAnimating
+                    )
+            }
+        }
+        .onAppear { isAnimating = true }
     }
 }

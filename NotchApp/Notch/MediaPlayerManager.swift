@@ -14,7 +14,15 @@ class MediaPlayerManager: ObservableObject {
     @Published var artworkImage: NSImage? = nil
     @Published var activeSource: String? = nil
     @Published var lyrics: String = ""
+    @Published var syncedLyrics: [LyricLine] = []
+    @Published var currentLyricIndex: Int = 0
     @Published var queue: [TrackInfo] = []
+    
+    struct LyricLine: Identifiable {
+        let id = UUID()
+        let time: Double
+        let text: String
+    }
     
     struct TrackInfo: Identifiable {
         let id = UUID()
@@ -51,6 +59,12 @@ class MediaPlayerManager: ObservableObject {
         let state = userInfo["Player State"] as? String ?? userInfo["playback state"] as? String ?? ""
         
         DispatchQueue.main.async {
+            if newTitle != self.title || newArtist != self.artist {
+                self.lyrics = ""
+                self.syncedLyrics = []
+                self.currentLyricIndex = 0
+            }
+            
             self.title = newTitle
             self.artist = newArtist
             self.isPlaying = (state == "Playing")
@@ -75,8 +89,12 @@ class MediaPlayerManager: ObservableObject {
     
     private func updateWithInfo(_ info: [String: Any], source: String) {
         DispatchQueue.main.async {
-            self.title = info["title"] as? String ?? ""
-            self.artist = info["artist"] as? String ?? ""
+            let newTitle = info["title"] as? String ?? ""
+            let newArtist = info["artist"] as? String ?? ""
+            let trackChanged = (newTitle != self.title || newArtist != self.artist)
+            
+            self.title = newTitle
+            self.artist = newArtist
             self.isPlaying = info["isPlaying"] as? Bool ?? false
             self.progress = info["progress"] as? Double ?? 0.0
             self.positionStr = info["position"] as? String ?? "0:00"
@@ -85,7 +103,17 @@ class MediaPlayerManager: ObservableObject {
             self.isRunning = !self.title.isEmpty
             self.updateStickyState()
             
-            self.lyrics = info["lyrics"] as? String ?? ""
+            // Sync lyrics position if we have time data
+            if let posSeconds = info["posSeconds"] as? Double {
+                self.updateLyricsPosition(currentTime: posSeconds)
+            }
+            
+            if let newLyrics = info["lyrics"] as? String, !newLyrics.isEmpty {
+                self.lyrics = newLyrics
+            } else if trackChanged {
+                self.lyrics = ""
+            }
+            
             if let q = info["queue"] as? [[String: String]] {
                 self.queue = q.map { TrackInfo(title: $0["title"] ?? "", artist: $0["artist"] ?? "") }
             }
@@ -200,17 +228,27 @@ class MediaPlayerManager: ObservableObject {
                     set lyr to lyrics of current track
                 end try
                 
-                set qNames to {}
-                set qArtists to {}
+                set qNames to ""
+                set qArtists to ""
                 try
-                    set qTracks to items 1 thru 10 of tracks of current playlist
-                    repeat with trk in qTracks
-                        copy (name of trk as string) to end of qNames
-                        copy (artist of trk as string) to end of qArtists
-                    end repeat
+                    set qPlaylist to current playlist
+                    set qTracks to tracks of qPlaylist
+                    set trackCount to count of qTracks
+                    set currentIndex to (index of current track) + 1
+                    
+                    set endRange to currentIndex + 5
+                    if endRange > trackCount then set endRange to trackCount
+                    
+                    if currentIndex <= trackCount then
+                        repeat with i from currentIndex to endRange
+                            set trk to item i of qTracks
+                            set qNames to qNames & (name of trk as string) & "###"
+                            set qArtists to qArtists & (artist of trk as string) & "###"
+                        end repeat
+                    end if
                 end try
                 
-                return t & "|||" & a & "|||" & (p as string) & "|||" & (dur as string) & "|||" & (pos as string) & "|||" & lyr & "|||" & (qNames as string) & "|||" & (qArtists as string)
+                return t & "|||" & a & "|||" & (p as string) & "|||" & (dur as string) & "|||" & (pos as string) & "|||" & lyr & "|||" & qNames & "|||" & qArtists
             end if
         end tell
         """
@@ -223,8 +261,8 @@ class MediaPlayerManager: ObservableObject {
         
         var q: [[String: String]] = []
         if parts.count >= 8 {
-            let names = parts[6].components(separatedBy: ", ")
-            let artists = parts[7].components(separatedBy: ", ")
+            let names = parts[6].components(separatedBy: "###").filter { !$0.isEmpty }
+            let artists = parts[7].components(separatedBy: "###").filter { !$0.isEmpty }
             for i in 0..<min(names.count, artists.count) {
                 q.append(["title": names[i], "artist": artists[i]])
             }
@@ -237,6 +275,7 @@ class MediaPlayerManager: ObservableObject {
             "progress": pos / dur,
             "duration": formatTime(dur),
             "position": formatTime(pos),
+            "posSeconds": pos,
             "lyrics": parts.count > 5 ? parts[5] : "",
             "queue": q
         ]
@@ -262,15 +301,97 @@ class MediaPlayerManager: ObservableObject {
         
         let dur = Double(parts[3]) ?? 1.0
         let pos = Double(parts[4]) ?? 0.0
+        
+        let title = parts[0]
+        let artist = parts[1]
+        
+        // Fetch lyrics externally since Spotify doesn't provide them
+        fetchExternalLyrics(title: title, artist: artist)
+        
         return [
-            "title": parts[0],
-            "artist": parts[1],
+            "title": title,
+            "artist": artist,
             "isPlaying": parts[2] == "true",
             "progress": pos / dur,
             "duration": formatTime(dur),
             "position": formatTime(pos),
+            "posSeconds": pos,
             "artworkUrl": parts.count > 5 ? parts[5] : ""
         ]
+    }
+
+    private func fetchExternalLyrics(title: String, artist: String) {
+        guard !title.isEmpty && !artist.isEmpty else { return }
+        
+        // Don't re-fetch if we already have these lyrics
+        if self.title == title && !self.lyrics.isEmpty { return }
+        
+        let urlString = "https://lrclib.net/api/get?artist_name=\(artist)&track_name=\(title)"
+            .addingPercentEncoding(withAllowedCharacters: .urlQueryAllowed) ?? ""
+        
+        guard let url = URL(string: urlString) else { return }
+        
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            guard let data = data else { return }
+            do {
+                if let json = try JSONSerialization.jsonObject(with: data) as? [String: Any] {
+                    let plainLyrics = json["plainLyrics"] as? String ?? ""
+                    let lrcLyrics = json["syncedLyrics"] as? String ?? ""
+                    
+                    DispatchQueue.main.async {
+                        self?.lyrics = plainLyrics
+                        if !lrcLyrics.isEmpty {
+                            self?.parseLRC(lrcLyrics)
+                        } else {
+                            self?.syncedLyrics = []
+                        }
+                    }
+                }
+            } catch {
+                print("Lyric fetch error: \(error)")
+            }
+        }.resume()
+    }
+
+    private func parseLRC(_ lrc: String) {
+        var lines: [LyricLine] = []
+        let pattern = "\\[(\\d+):(\\d+\\.?\\d*)\\](.*)"
+        let regex = try? NSRegularExpression(pattern: pattern, options: [])
+        
+        let nsString = lrc as NSString
+        let matches = regex?.matches(in: lrc, options: [], range: NSRange(location: 0, length: nsString.length)) ?? []
+        
+        for match in matches {
+            if match.numberOfRanges >= 4 {
+                let min = Double(nsString.substring(with: match.range(at: 1))) ?? 0
+                let sec = Double(nsString.substring(with: match.range(at: 2))) ?? 0
+                let text = nsString.substring(with: match.range(at: 3)).trimmingCharacters(in: .whitespaces)
+                
+                let totalSeconds = min * 60 + sec
+                lines.append(LyricLine(time: totalSeconds, text: text))
+            }
+        }
+        
+        self.syncedLyrics = lines.sorted { $0.time < $1.time }
+    }
+
+    private func updateLyricsPosition(currentTime: Double) {
+        guard !syncedLyrics.isEmpty else { return }
+        
+        var index = 0
+        for (i, line) in syncedLyrics.enumerated() {
+            if line.time <= currentTime {
+                index = i
+            } else {
+                break
+            }
+        }
+        
+        if self.currentLyricIndex != index {
+            DispatchQueue.main.async {
+                self.currentLyricIndex = index
+            }
+        }
     }
 
     private func runScriptSync(_ s: String) -> String? {
