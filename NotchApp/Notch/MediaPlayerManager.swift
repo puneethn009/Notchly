@@ -13,6 +13,14 @@ class MediaPlayerManager: ObservableObject {
     @Published var isMuted: Bool = false
     @Published var artworkImage: NSImage? = nil
     @Published var activeSource: String? = nil
+    @Published var lyrics: String = ""
+    @Published var queue: [TrackInfo] = []
+    
+    struct TrackInfo: Identifiable {
+        let id = UUID()
+        let title: String
+        let artist: String
+    }
     
     static let shared = MediaPlayerManager()
     private var timer: Timer?
@@ -77,10 +85,54 @@ class MediaPlayerManager: ObservableObject {
             self.isRunning = !self.title.isEmpty
             self.updateStickyState()
             
+            self.lyrics = info["lyrics"] as? String ?? ""
+            if let q = info["queue"] as? [[String: String]] {
+                self.queue = q.map { TrackInfo(title: $0["title"] ?? "", artist: $0["artist"] ?? "") }
+            }
+            
+            // Handle Artwork
+            if let artUrl = info["artworkUrl"] as? String, let url = URL(string: artUrl) {
+                self.downloadArtwork(from: url)
+            } else if source == "Music" {
+                self.fetchMusicArtwork()
+            } else if source == "Spotify" && self.artworkImage == nil {
+                 // Fallback if no URL
+                 self.artworkImage = nil
+            }
+            
             // Check mute state
             let script = "output volume of (get volume settings)"
             if let volStr = self.runScriptSync(script), let vol = Int(volStr) {
                 self.isMuted = (vol == 0)
+            }
+        }
+    }
+    
+    private func downloadArtwork(from url: URL) {
+        URLSession.shared.dataTask(with: url) { [weak self] data, _, _ in
+            if let data = data, let image = NSImage(data: data) {
+                DispatchQueue.main.async {
+                    self?.artworkImage = image
+                }
+            }
+        }.resume()
+    }
+    
+    private func fetchMusicArtwork() {
+        let scriptSource = """
+        tell application "Music"
+            if (count of artworks of current track) > 0 then
+                set art to artwork 1 of current track
+                return raw data of art
+            end if
+        end tell
+        """
+        
+        if let script = NSAppleScript(source: scriptSource) {
+            var error: NSDictionary?
+            let result = script.executeAndReturnError(&error)
+            if error == nil {
+                self.artworkImage = NSImage(data: result.data)
             }
         }
     }
@@ -143,23 +195,50 @@ class MediaPlayerManager: ObservableObject {
                 set p to player state is playing
                 set dur to duration of current track
                 set pos to player position
-                return t & "|||" & a & "|||" & (p as string) & "|||" & (dur as string) & "|||" & (pos as string)
+                set lyr to ""
+                try
+                    set lyr to lyrics of current track
+                end try
+                
+                set qNames to {}
+                set qArtists to {}
+                try
+                    set qTracks to items 1 thru 10 of tracks of current playlist
+                    repeat with trk in qTracks
+                        copy (name of trk as string) to end of qNames
+                        copy (artist of trk as string) to end of qArtists
+                    end repeat
+                end try
+                
+                return t & "|||" & a & "|||" & (p as string) & "|||" & (dur as string) & "|||" & (pos as string) & "|||" & lyr & "|||" & (qNames as string) & "|||" & (qArtists as string)
             end if
         end tell
         """
         guard let res = runScriptSync(src) else { return nil }
         let parts = res.components(separatedBy: "|||")
-        guard parts.count == 5 else { return nil }
+        guard parts.count >= 5 else { return nil }
         
         let dur = Double(parts[3]) ?? 1.0
         let pos = Double(parts[4]) ?? 0.0
+        
+        var q: [[String: String]] = []
+        if parts.count >= 8 {
+            let names = parts[6].components(separatedBy: ", ")
+            let artists = parts[7].components(separatedBy: ", ")
+            for i in 0..<min(names.count, artists.count) {
+                q.append(["title": names[i], "artist": artists[i]])
+            }
+        }
+        
         return [
             "title": parts[0],
             "artist": parts[1],
             "isPlaying": parts[2] == "true",
             "progress": pos / dur,
             "duration": formatTime(dur),
-            "position": formatTime(pos)
+            "position": formatTime(pos),
+            "lyrics": parts.count > 5 ? parts[5] : "",
+            "queue": q
         ]
     }
 
@@ -172,13 +251,14 @@ class MediaPlayerManager: ObservableObject {
                 set p to player state is playing
                 set dur to (duration of current track) / 1000
                 set pos to player position
-                return t & "|||" & a & "|||" & (p as string) & "|||" & (dur as string) & "|||" & (pos as string)
+                set art to artwork url of current track
+                return t & "|||" & a & "|||" & (p as string) & "|||" & (dur as string) & "|||" & (pos as string) & "|||" & art
             end if
         end tell
         """
         guard let res = runScriptSync(src) else { return nil }
         let parts = res.components(separatedBy: "|||")
-        guard parts.count == 5 else { return nil }
+        guard parts.count >= 5 else { return nil }
         
         let dur = Double(parts[3]) ?? 1.0
         let pos = Double(parts[4]) ?? 0.0
@@ -188,7 +268,8 @@ class MediaPlayerManager: ObservableObject {
             "isPlaying": parts[2] == "true",
             "progress": pos / dur,
             "duration": formatTime(dur),
-            "position": formatTime(pos)
+            "position": formatTime(pos),
+            "artworkUrl": parts.count > 5 ? parts[5] : ""
         ]
     }
 

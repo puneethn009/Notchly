@@ -67,9 +67,9 @@ struct NotchExpandedView: View {
     
     var body: some View {
         VStack(spacing: 0) {
-            // Top Bar (Now with Navigation + Settings/Battery)
+            // 1. Top Navigation & Status Bar (Fixed Position)
             HStack(alignment: .center) {
-                // ... (Navigation content)
+                // Navigation Icons
                 HStack(spacing: 12) {
                     ForEach(NotchPage.allCases, id: \.self) { page in
                         Button(action: { 
@@ -89,10 +89,11 @@ struct NotchExpandedView: View {
                         .buttonStyle(.plain)
                     }
                 }
+                .padding(.leading, 32)
                 
                 Spacer()
                 
-                // Top-Right: Settings & Battery
+                // Status Icons (Settings & Battery)
                 HStack(spacing: 16) {
                     if #available(macOS 14.0, *) {
                         SettingsLink {
@@ -118,12 +119,13 @@ struct NotchExpandedView: View {
                         MacBatteryIcon(percentage: batteryManager.batteryPercentage, state: batteryManager.state)
                     }
                 }
+                .padding(.trailing, 24)
             }
-            .padding(.horizontal, 32)
-            .padding(.top, 16)
-            .frame(height: 50, alignment: .top) // Forced top alignment
+            .padding(.top, 20)
+            .frame(maxWidth: .infinity)
+            .frame(height: 50, alignment: .top)
             
-            // Content Switcher
+            // 2. Main Content Area (Dynamic)
             ZStack {
                 Group {
                     switch NotchState.shared.selectedPage {
@@ -148,13 +150,33 @@ struct NotchExpandedView: View {
                 ))
             }
             .offset(x: shakeOffset)
-            .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .center)
-            .padding(.top, 10) 
-            .padding(.bottom, 16)
+            .frame(maxWidth: .infinity, maxHeight: .infinity)
+            .padding(.bottom, 10)
         }
         .frame(height: 200) // Explicitly match expandedHeight
         .background(Color.clear)
-        .contentShape(Rectangle()) 
+        .contentShape(Rectangle())
+        .gesture(
+            DragGesture(minimumDistance: 30)
+                .onEnded { value in
+                    let pages = NotchPage.allCases
+                    guard let currentIndex = pages.firstIndex(of: notchState.selectedPage) else { return }
+                    
+                    if value.translation.width > 50 {
+                        // Swipe Right -> Previous Page
+                        let prevIndex = (currentIndex - 1 + pages.count) % pages.count
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            notchState.selectedPage = pages[prevIndex]
+                        }
+                    } else if value.translation.width < -50 {
+                        // Swipe Left -> Next Page
+                        let nextIndex = (currentIndex + 1) % pages.count
+                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                            notchState.selectedPage = pages[nextIndex]
+                        }
+                    }
+                }
+        )
         .overlay {
             if let pendingURL = notchState.pendingScreenshotURL {
                 ScreenshotNamingView(url: pendingURL)
@@ -240,16 +262,17 @@ struct NotchExpandedView: View {
 
 struct MediaModuleView: View {
     @ObservedObject var mediaManager: MediaPlayerManager
+    @State private var showLyrics = true
     
     var body: some View {
         Group {
             if mediaManager.isRunning || !mediaManager.title.isEmpty {
-                HStack(alignment: .top, spacing: 20) {
-                    // Album Art
-                    ZStack(alignment: .bottomTrailing) {
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(LinearGradient(colors: [.purple, .black, .gray], startPoint: .topLeading, endPoint: .bottomTrailing))
-                            .frame(width: 100, height: 100)
+                HStack(spacing: 24) {
+                    // COLUMN 1: Large Artwork
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(LinearGradient(colors: [.gray.opacity(0.1), .black.opacity(0.4)], startPoint: .topLeading, endPoint: .bottomTrailing))
+                            .frame(width: 140, height: 140)
                             .overlay(
                                 Group {
                                     if let img = mediaManager.artworkImage {
@@ -258,93 +281,192 @@ struct MediaModuleView: View {
                                             .aspectRatio(contentMode: .fill)
                                     } else {
                                         Image(systemName: "music.note")
-                                            .font(.system(size: 30))
-                                            .foregroundColor(.white.opacity(0.3))
+                                            .font(.system(size: 40))
+                                            .foregroundColor(.white.opacity(0.1))
                                     }
                                 }
                             )
-                            .clipShape(RoundedRectangle(cornerRadius: 12))
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
+                            .shadow(color: .black.opacity(0.5), radius: 15, x: 0, y: 8)
                     }
                     
-                    // Track Info
-                    VStack(alignment: .leading, spacing: 6) {
-                        Text(mediaManager.title)
-                            .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
-                            .lineLimit(1)
-                        Text(mediaManager.artist)
-                            .font(.system(size: 14, weight: .medium))
-                            .foregroundColor(.gray)
-                            .lineLimit(1)
+                    // COLUMN 2: Info & Controls
+                    VStack(alignment: .leading, spacing: 14) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(mediaManager.title)
+                                .font(.system(size: 15, weight: .bold))
+                                .foregroundColor(.white)
+                                .lineLimit(1)
+                            Text(mediaManager.artist)
+                                .font(.system(size: 13, weight: .medium))
+                                .foregroundColor(.white.opacity(0.5))
+                                .lineLimit(1)
+                        }
                         
-                        Spacer()
-                        
-                        // Progress Bar
-                        VStack(spacing: 8) {
+                        // Progress
+                        VStack(spacing: 6) {
                             GeometryReader { geo in
                                 ZStack(alignment: .leading) {
                                     Capsule()
-                                        .fill(Color.white.opacity(0.2))
-                                        .frame(height: 4)
+                                        .fill(Color.white.opacity(0.1))
+                                        .frame(height: 5)
                                     Capsule()
                                         .fill(Color.white)
-                                        .frame(width: max(0, geo.size.width * CGFloat(mediaManager.progress)), height: 4)
+                                        .frame(width: max(0, geo.size.width * CGFloat(mediaManager.progress)), height: 5)
                                 }
                             }
-                            .frame(height: 4)
+                            .frame(height: 5)
                             
                             HStack {
-                                Text(mediaManager.positionStr)
+                                Text(mediaManager.positionStr).font(.system(size: 10, weight: .bold, design: .monospaced))
                                 Spacer()
-                                Text(mediaManager.durationStr)
+                                Text(mediaManager.durationStr).font(.system(size: 10, weight: .bold, design: .monospaced))
                             }
-                            .font(.system(size: 11, weight: .medium, design: .monospaced))
-                            .foregroundColor(.gray)
+                            .foregroundColor(.white.opacity(0.3))
                         }
-                        
-                        Spacer()
                         
                         // Controls
                         HStack(spacing: 24) {
-                            if SettingsManager.shared.showMuteButton {
-                                Button(action: { mediaManager.toggleMute() }) {
-                                    Image(systemName: mediaManager.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                                }.buttonStyle(.plain)
-                            }
-                            
-                            Spacer()
-                            
                             Button(action: { mediaManager.prevTrack() }) {
-                                Image(systemName: "backward.fill")
+                                Image(systemName: "backward.fill").font(.system(size: 18))
                             }.buttonStyle(.plain)
                             
                             Button(action: { mediaManager.playPause() }) {
                                 Image(systemName: mediaManager.isPlaying ? "pause.fill" : "play.fill")
-                                    .font(.system(size: 24))
+                                    .font(.system(size: 28))
                             }.buttonStyle(.plain)
                             
                             Button(action: { mediaManager.nextTrack() }) {
-                                Image(systemName: "forward.fill")
+                                Image(systemName: "forward.fill").font(.system(size: 18))
                             }.buttonStyle(.plain)
+                            
+                            Button(action: { mediaManager.toggleMute() }) {
+                                Image(systemName: mediaManager.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                                    .font(.system(size: 14))
+                                    .foregroundColor(.white.opacity(0.4))
+                            }.buttonStyle(.plain)
+                        }
+                        .foregroundColor(.white)
+                    }
+                    .frame(width: 200)
+                    
+                    Divider().frame(height: 140).opacity(0.1)
+                    
+                    // COLUMN 3: Lyrics / Queue
+                    VStack(alignment: .leading, spacing: 10) {
+                        HStack(spacing: 16) {
+                            Button(action: { withAnimation(.spring(response: 0.3)) { showLyrics = true } }) {
+                                Text("LYRICS")
+                                    .font(.system(size: 10, weight: .black))
+                                    .foregroundColor(showLyrics ? .white : .white.opacity(0.2))
+                                    .padding(.bottom, 2)
+                                    .overlay(
+                                        Capsule().fill(showLyrics ? Color.white : Color.clear).frame(height: 3).offset(y: 6),
+                                        alignment: .bottom
+                                    )
+                            }
+                            .buttonStyle(.plain)
+                            
+                            Button(action: { withAnimation(.spring(response: 0.3)) { showLyrics = false } }) {
+                                Text("QUEUE")
+                                    .font(.system(size: 10, weight: .black))
+                                    .foregroundColor(!showLyrics ? .white : .white.opacity(0.2))
+                                    .padding(.bottom, 2)
+                                    .overlay(
+                                        Capsule().fill(!showLyrics ? Color.white : Color.clear).frame(height: 3).offset(y: 6),
+                                        alignment: .bottom
+                                    )
+                            }
+                            .buttonStyle(.plain)
                             
                             Spacer()
                         }
-                        .foregroundColor(.white)
-                        .font(.system(size: 16))
+                        .padding(.top, 4)
+                        
+                        ZStack {
+                            if showLyrics {
+                                ScrollView(.vertical, showsIndicators: false) {
+                                    VStack(alignment: .leading, spacing: 12) {
+                                        if mediaManager.lyrics.isEmpty {
+                                            VStack(spacing: 8) {
+                                                Image(systemName: "quote.bubble")
+                                                    .font(.system(size: 24))
+                                                    .foregroundColor(.white.opacity(0.05))
+                                                Text("No Lyrics")
+                                                    .font(.system(size: 12, weight: .bold))
+                                                    .foregroundColor(.white.opacity(0.1))
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.top, 30)
+                                        } else {
+                                            Text(mediaManager.lyrics)
+                                                .font(.system(size: 14, weight: .bold))
+                                                .foregroundColor(.white)
+                                                .lineSpacing(6)
+                                        }
+                                    }
+                                    .frame(maxWidth: .infinity, alignment: .leading)
+                                }
+                                .transition(.opacity)
+                            } else {
+                                ScrollView(.vertical, showsIndicators: false) {
+                                    VStack(alignment: .leading, spacing: 6) {
+                                        if mediaManager.queue.isEmpty {
+                                            VStack(spacing: 8) {
+                                                Image(systemName: "list.bullet")
+                                                    .font(.system(size: 24))
+                                                    .foregroundColor(.white.opacity(0.05))
+                                                Text("Empty Queue")
+                                                    .font(.system(size: 12, weight: .bold))
+                                                    .foregroundColor(.white.opacity(0.1))
+                                            }
+                                            .frame(maxWidth: .infinity)
+                                            .padding(.top, 30)
+                                        } else {
+                                            ForEach(mediaManager.queue) { track in
+                                                HStack(spacing: 10) {
+                                                    RoundedRectangle(cornerRadius: 6)
+                                                        .fill(Color.white.opacity(0.03))
+                                                        .frame(width: 34, height: 34)
+                                                        .overlay(Image(systemName: "music.note").font(.system(size: 10)).foregroundColor(.white.opacity(0.1)))
+                                                    
+                                                    VStack(alignment: .leading, spacing: 0) {
+                                                        Text(track.title)
+                                                            .font(.system(size: 11, weight: .bold))
+                                                            .foregroundColor(.white)
+                                                            .lineLimit(1)
+                                                        Text(track.artist)
+                                                            .font(.system(size: 10, weight: .medium))
+                                                            .foregroundColor(.white.opacity(0.3))
+                                                            .lineLimit(1)
+                                                    }
+                                                }
+                                                .padding(6)
+                                                .background(RoundedRectangle(cornerRadius: 10).fill(Color.white.opacity(0.02)))
+                                            }
+                                        }
+                                    }
+                                }
+                                .transition(.opacity)
+                            }
+                        }
                     }
-                    .frame(width: 240, height: 100)
+                    .frame(maxWidth: .infinity, maxHeight: .infinity)
+                }
+                .padding(.leading, 32)
+                .padding(.trailing, 24)
+                .padding(.bottom, 24)
+                .padding(.top, 13)
+            } else {
+                VStack(spacing: 12) {
+                    Image(systemName: "music.quarternote.3")
+                        .font(.system(size: 40))
+                        .foregroundColor(.white.opacity(0.05))
+                    Text("No Media Playing")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white.opacity(0.15))
                 }
                 .padding(.bottom, 20)
-            } else {
-                VStack(spacing: 8) {
-                    Image(systemName: "music.note.list")
-                        .font(.system(size: 32))
-                        .foregroundColor(.gray)
-                    Text("No Media Playing")
-                        .font(.system(size: 14, weight: .medium))
-                        .foregroundColor(.gray)
-                }
-                .padding(.bottom, 30)
             }
         }
     }
