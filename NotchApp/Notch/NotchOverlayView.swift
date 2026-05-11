@@ -16,11 +16,25 @@ struct NotchOverlayView: View {
     private var isExpanded: Bool { notchState.isExpanded }
     private var isSticky: Bool { notchState.isSticky }
 
+    private var notchWidth: CGFloat {
+        if isExpanded { return expandedWidth }
+        if notchState.isShowingScreenshotPopup { return 280 }
+        if isSticky { return 300 }
+        return collapsedWidth
+    }
+    
+    private var notchHeight: CGFloat {
+        if isExpanded { return expandedHeight }
+        if notchState.isShowingScreenshotPopup { return 35 }
+        if isSticky { return 33 }
+        if mediaManager.isPlaying || timerManager.isRunning { return 30 }
+        return collapsedHeight
+    }
+
     var body: some View {
         let isShowingPopup = notchState.isShowingScreenshotPopup && !isExpanded
-        let isRunning = mediaManager.isPlaying || timerManager.isRunning || timerManager.isStopwatchRunning
-        let width = isExpanded ? expandedWidth : (isShowingPopup ? 280 : (isSticky ? 300 : collapsedWidth))
-        let height = isExpanded ? expandedHeight : (isShowingPopup ? 35 : (isSticky ? 33 : (isRunning ? 30 : collapsedHeight)))
+        let width = notchWidth
+        let height = notchHeight
         
         ZStack(alignment: .top) {
             // Main Interaction Surface
