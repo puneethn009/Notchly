@@ -23,99 +23,110 @@ struct NotchOverlayView: View {
         let height = isExpanded ? expandedHeight : (isShowingPopup ? 36 : (isSticky ? 34 : (isRunning ? 31 : collapsedHeight)))
         
         ZStack(alignment: .top) {
-            // Main Notch Background Shape
-            NotchShape(cornerRadius: currentRadius)
-                .fill(Color.black)
-                .shadow(color: Color.black.opacity((isExpanded || notchState.isHovering || isShowingPopup) ? 0.5 : 0), radius: isExpanded ? 20 : 8, x: 0, y: isExpanded ? 10 : 4)
-                .frame(width: width, height: height)
-                .onAppear {
-                    currentRadius = isExpanded ? 20 : (isSticky ? 12 : 6)
-                }
-                .onChange(of: isExpanded) { expanded in
-                    withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45)) {
-                        currentRadius = expanded ? 20 : (isSticky ? 12 : 6)
+            // Main Interaction Surface
+            ZStack(alignment: .top) {
+                // Background
+                NotchShape(cornerRadius: currentRadius)
+                    .fill(Color.black)
+                    .shadow(color: Color.black.opacity((isExpanded || notchState.isHovering || isShowingPopup) ? 0.5 : 0), radius: isExpanded ? 20 : 8, x: 0, y: isExpanded ? 10 : 4)
+                    .onAppear {
+                        currentRadius = isExpanded ? 20 : (isSticky ? 12 : 6)
                     }
-                }
-                .onChange(of: isSticky) { sticky in
-                    withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45)) {
-                        currentRadius = isExpanded ? 20 : (sticky ? 12 : 6)
-                    }
-                }
-            
-            // Content
-            Group {
-                if isExpanded {
-                    NotchExpandedView()
-                        .frame(width: expandedWidth, height: expandedHeight)
-                        .clipShape(NotchShape(cornerRadius: 20))
-                        .transition(.asymmetric(
-                            insertion: .scale(scale: 0.95).combined(with: .opacity).animation(.spring(response: 0.3, dampingFraction: 0.75).delay(0.2)),
-                            removal: .opacity.animation(.easeOut(duration: 0.1))
-                        ))
-                } else if isShowingPopup {
-                    HStack(spacing: 12) {
-                        Image(systemName: "camera.viewfinder")
-                            .foregroundColor(.blue)
-                            .font(.system(size: 14, weight: .bold))
-                        
-                        Text("New Screenshot Captured")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(.white)
-                        
-                        Spacer()
-                        
-                        if let url = notchState.lastCapturedScreenshotURL,
-                           let image = NSImage(contentsOf: url) {
-                            Image(nsImage: image)
-                                .resizable()
-                                .aspectRatio(contentMode: .fill)
-                                .frame(width: 34, height: 22)
-                                .clipShape(RoundedRectangle(cornerRadius: 4))
-                                .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.white.opacity(0.2), lineWidth: 0.5))
+                    .onChange(of: isExpanded) { expanded in
+                        withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45)) {
+                            currentRadius = expanded ? 20 : (isSticky ? 12 : 6)
                         }
                     }
-                    .padding(.horizontal, 16)
-                    .frame(width: 280, height: 36)
-                    .onAppear { print("[UI] Showing Screenshot Popup for: \(notchState.lastCapturedScreenshotURL?.lastPathComponent ?? "nil")") }
-                    .transition(.scale(scale: 0.9).combined(with: .opacity))
-                } else if isSticky {
-                    if notchState.stickyType == .timer {
-                        StickyTimerView()
-                    } else if notchState.stickyType == .media {
-                        StickyMediaView()
+                    .onChange(of: isSticky) { sticky in
+                        withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45)) {
+                            currentRadius = isExpanded ? 20 : (sticky ? 12 : 6)
+                        }
                     }
-                } else {
-                    // Static Collapsed Icons
-                    HStack(spacing: 25) {
-                        ZStack {
-                            if SettingsManager.shared.showClosedNotchMusicIndicator && mediaManager.isPlaying {
-                                VisualizerView(color: .blue, isPlaying: true)
-                                    .scaleEffect(0.5)
-                            } else {
-                                Image(systemName: "music.note")
+                
+                // Content
+                Group {
+                    if isExpanded {
+                        NotchExpandedView()
+                            .frame(width: expandedWidth, height: expandedHeight)
+                            .clipShape(NotchShape(cornerRadius: 20))
+                            .transition(.asymmetric(
+                                insertion: .scale(scale: 0.95).combined(with: .opacity).animation(.spring(response: 0.3, dampingFraction: 0.75).delay(0.2)),
+                                removal: .opacity.animation(.easeOut(duration: 0.1))
+                            ))
+                    } else if isShowingPopup {
+                        HStack(spacing: 12) {
+                            Image(systemName: "camera.viewfinder")
+                                .foregroundColor(.blue)
+                                .font(.system(size: 14, weight: .bold))
+                            
+                            Text("New Screenshot Captured")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.white)
+                            
+                            Spacer()
+                            
+                            if let url = notchState.lastCapturedScreenshotURL,
+                               let image = NSImage(contentsOf: url) {
+                                Image(nsImage: image)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 34, height: 22)
+                                    .clipShape(RoundedRectangle(cornerRadius: 4))
+                                    .overlay(RoundedRectangle(cornerRadius: 4).stroke(Color.white.opacity(0.2), lineWidth: 0.5))
                             }
                         }
-                        .frame(width: 14)
-                        
-                        ZStack {
-                            if SettingsManager.shared.showClosedNotchTimerIndicator && (timerManager.isRunning || timerManager.isStopwatchRunning) {
-                                Image(systemName: "timer")
-                                    .foregroundColor(.orange)
-                            } else {
-                                Image(systemName: "timer")
-                                    .foregroundColor(.white.opacity(0.3))
-                            }
+                        .padding(.horizontal, 16)
+                        .frame(width: 280, height: 36)
+                        .transition(.scale(scale: 0.9).combined(with: .opacity))
+                    } else if isSticky {
+                        if notchState.stickyType == .timer {
+                            StickyTimerView()
+                        } else if notchState.stickyType == .media {
+                            StickyMediaView()
                         }
-                        .frame(width: 14)
-                        
-                        Image(systemName: "calendar")
-                        Image(systemName: "cpu")
-                        Image(systemName: "gearshape")
+                    } else {
+                        // Static Collapsed Icons
+                        HStack(spacing: 25) {
+                            ZStack {
+                                if SettingsManager.shared.showClosedNotchMusicIndicator && mediaManager.isPlaying {
+                                    VisualizerView(color: .blue, isPlaying: true)
+                                        .scaleEffect(0.5)
+                                } else {
+                                    Image(systemName: "music.note")
+                                }
+                            }
+                            .frame(width: 14)
+                            
+                            ZStack {
+                                if SettingsManager.shared.showClosedNotchTimerIndicator && (timerManager.isRunning || timerManager.isStopwatchRunning) {
+                                    Image(systemName: "timer")
+                                        .foregroundColor(.orange)
+                                } else {
+                                    Image(systemName: "timer")
+                                        .foregroundColor(.white.opacity(0.3))
+                                }
+                            }
+                            .frame(width: 14)
+                            
+                            Image(systemName: "calendar")
+                            Image(systemName: "cpu")
+                            Image(systemName: "gearshape")
+                        }
+                        .font(.system(size: 11, weight: .bold))
+                        .foregroundColor(.white.opacity(0.3))
+                        .frame(width: collapsedWidth, height: 30)
+                        .offset(y: -1)
                     }
-                    .font(.system(size: 11, weight: .bold))
-                    .foregroundColor(.white.opacity(0.3))
-                    .frame(width: collapsedWidth, height: 30)
-                    .offset(y: -1)
+                }
+            }
+            .frame(width: width, height: height)
+            .contentShape(NotchShape(cornerRadius: currentRadius))
+            .onHover { hovering in
+                notchState.isHovering = hovering
+                if hovering && !isExpanded {
+                    withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45)) {
+                        notchState.isExpanded = true
+                    }
                 }
             }
         }
@@ -140,10 +151,7 @@ struct StickyTimerView: View {
     var body: some View {
         HStack {
             HStack(spacing: 8) {
-                Image(systemName: "timer")
-                Text(timerManager.currentTimerName.uppercased())
-                    .font(.system(size: 9, weight: .black))
-                    .tracking(1)
+                Image(systemName: timerManager.isRunning ? "timer" : "stopwatch")
             }
             .foregroundColor(.orange)
             .padding(.leading, 20)

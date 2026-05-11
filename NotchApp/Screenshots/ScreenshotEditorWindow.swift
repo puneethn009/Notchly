@@ -83,8 +83,9 @@ struct CanvasAnnotation: Identifiable, Equatable {
     // For movement
     var offset: CGSize = .zero
     var cornerRadius: Double = 0
+    var rotation: Double = 0
     
-    init(id: UUID = UUID(), tool: CanvasTool, color: Color, points: [CGPoint] = [], text: String = "", lineWidth: CGFloat = 3, opacity: Double = 1.0, arrowStyle: ArrowStyle = .straight, shapeType: ShapeType = .rectangle, isSolid: Bool = false, isDashed: Bool = false, fontName: String = "Helvetica", fontSize: CGFloat = 18, isBold: Bool = false, isItalic: Bool = false, isUnderlined: Bool = false, offset: CGSize = .zero, image: NSImage? = nil, cornerRadius: Double = 0) {
+    init(id: UUID = UUID(), tool: CanvasTool, color: Color, points: [CGPoint] = [], text: String = "", lineWidth: CGFloat = 3, opacity: Double = 1.0, arrowStyle: ArrowStyle = .straight, shapeType: ShapeType = .rectangle, isSolid: Bool = false, isDashed: Bool = false, fontName: String = "Helvetica", fontSize: CGFloat = 18, isBold: Bool = false, isItalic: Bool = false, isUnderlined: Bool = false, offset: CGSize = .zero, image: NSImage? = nil, cornerRadius: Double = 0, rotation: Double = 0) {
         self.id = id
         self.tool = tool
         self.color = color
@@ -104,6 +105,7 @@ struct CanvasAnnotation: Identifiable, Equatable {
         self.offset = offset
         self.image = image
         self.cornerRadius = cornerRadius
+        self.rotation = rotation
     }
     
     static func == (lhs: CanvasAnnotation, rhs: CanvasAnnotation) -> Bool {
@@ -125,7 +127,8 @@ struct CanvasAnnotation: Identifiable, Equatable {
         lhs.isUnderlined == rhs.isUnderlined &&
         lhs.offset == rhs.offset &&
         lhs.image == rhs.image &&
-        lhs.cornerRadius == rhs.cornerRadius
+        lhs.cornerRadius == rhs.cornerRadius &&
+        lhs.rotation == rhs.rotation
     }
 }
 
@@ -256,6 +259,13 @@ class ScreenshotEditorState {
         }
     }
     
+    func startEditingText(id: UUID) {
+        if let ann = annotations.first(where: { $0.id == id }), ann.tool == .text {
+            editingAnnotationID = id
+            selectedAnnotationID = id
+        }
+    }
+    
     func addImageSticker(image: NSImage) {
         let imgSize = image.size
         let aspect = imgSize.width / imgSize.height
@@ -276,12 +286,18 @@ class ScreenshotEditorState {
         }
     }
     
-    func resizeAnnotation(_ id: UUID, handleIndex: Int, translation: CGSize, in size: CGSize) {
+    func resizeAnnotation(_ id: UUID, handleIndex: Int, translation: CGSize, in size: CGSize, isShiftPressed: Bool = false) {
         guard let idx = annotations.firstIndex(where: { $0.id == id }) else { return }
         guard let start = initialResizePoints, start.count >= 2 else { return }
         
-        let dx = translation.width / size.width
-        let dy = translation.height / size.height
+        var dx = translation.width / size.width
+        var dy = translation.height / size.height
+        
+        if isShiftPressed {
+            let maxDelta = max(abs(dx), abs(dy))
+            dx = dx > 0 ? maxDelta : -maxDelta
+            dy = dy > 0 ? maxDelta : -maxDelta
+        }
         
         let minX = min(start[0].x, start[1].x); let maxX = max(start[0].x, start[1].x)
         let minY = min(start[0].y, start[1].y); let maxY = max(start[0].y, start[1].y)
@@ -313,7 +329,13 @@ class ScreenshotEditorState {
         if newMaxX - newMinX < 0.02 { newMaxX = newMinX + 0.02 }
         if newMaxY - newMinY < 0.02 { newMaxY = newMinY + 0.02 }
         
+        
         annotations[idx].points = [CGPoint(x: newMinX, y: newMinY), CGPoint(x: newMaxX, y: newMaxY)]
+    }
+    
+    func rotateAnnotation(_ id: UUID, degrees: Double) {
+        guard let idx = annotations.firstIndex(where: { $0.id == id }) else { return }
+        annotations[idx].rotation = degrees
     }
     
     func startDrawing(at point: CGPoint, in size: CGSize) {
@@ -601,12 +623,16 @@ struct ScreenshotEditorView: View {
                                                 DragGesture(minimumDistance: 3, coordinateSpace: .local)
                                                     .onChanged { value in
                                                         if state.selectedTool == .cursor {
-                                                            if state.selectedAnnotationID == nil {
-                                                                state.selectAnnotation(at: value.startLocation, in: geo.size)
+                                                            let clickedID = state.findAnnotation(at: value.startLocation, in: geo.size)
+                                                            if clickedID != state.selectedAnnotationID {
+                                                                state.selectedAnnotationID = clickedID
                                                                 if let id = state.selectedAnnotationID, let index = state.annotations.firstIndex(where: { $0.id == id }) {
                                                                     dragStartAnnotationOffset = state.annotations[index].offset
                                                                 }
+                                                            } else if let id = state.selectedAnnotationID, let index = state.annotations.firstIndex(where: { $0.id == id }) {
+                                                                dragStartAnnotationOffset = state.annotations[index].offset
                                                             }
+                                                            
                                                             if let id = state.selectedAnnotationID, let index = state.annotations.firstIndex(where: { $0.id == id }) {
                                                                 state.annotations[index].offset = CGSize(
                                                                     width: dragStartAnnotationOffset.width + value.translation.width,
@@ -631,21 +657,20 @@ struct ScreenshotEditorView: View {
                                                         }
                                                     }
                                             )
-                                            .highPriorityGesture(
+                                            .simultaneousGesture(
                                                 SpatialTapGesture(count: 2)
                                                     .onEnded { event in
                                                         if let id = state.findAnnotation(at: event.location, in: geo.size) {
-                                                            if let index = state.annotations.firstIndex(where: { $0.id == id }), state.annotations[index].tool == .text {
-                                                                state.selectedTool = .text
-                                                                state.editingAnnotationID = id
-                                                            }
+                                                            state.startEditingText(id: id)
                                                         }
                                                     }
                                             )
                                             .simultaneousGesture(
                                                 SpatialTapGesture(count: 1)
                                                     .onEnded { event in
-                                                        if state.selectedTool == .text {
+                                                        if state.selectedTool == .cursor {
+                                                            state.selectAnnotation(at: event.location, in: geo.size)
+                                                        } else if state.selectedTool == .text {
                                                             if let id = state.findAnnotation(at: event.location, in: geo.size) {
                                                                 if let index = state.annotations.firstIndex(where: { $0.id == id }), state.annotations[index].tool == .text {
                                                                     state.editingAnnotationID = id
@@ -667,16 +692,21 @@ struct ScreenshotEditorView: View {
                                             if let selectedID = state.selectedAnnotationID, 
                                                let index = state.annotations.firstIndex(where: { $0.id == selectedID }) {
                                                 let ann = state.annotations[index]
-                                                if ann.tool == .sticker || ann.tool == .shape || ann.tool == .arrow {
+                                                if ann.tool == .sticker || ann.tool == .shape || ann.tool == .arrow || ann.tool == .text {
                                                     let first = ann.points.first ?? .zero
                                                     let last = ann.points.last ?? .zero
+                                                    
+                                                    let isTextTap = ann.tool == .text && abs(first.x - last.x) < 0.005
+                                                    let boxWidth = isTextTap ? (CGFloat(max(ann.text.count, 5)) * ann.fontSize * 0.6) : max(abs(first.x - last.x) * geo.size.width, 20)
+                                                    let boxHeight = isTextTap ? (ann.fontSize * 1.5) : max(abs(first.y - last.y) * geo.size.height, 20)
+                                                    
                                                     let rect = CGRect(
                                                         x: (min(first.x, last.x) * geo.size.width) + ann.offset.width,
                                                         y: (min(first.y, last.y) * geo.size.height) + ann.offset.height,
-                                                        width: max(abs(first.x - last.x) * geo.size.width, 20),
-                                                        height: max(abs(first.y - last.y) * geo.size.height, 20)
+                                                        width: boxWidth,
+                                                        height: boxHeight
                                                     )
-                                                    AnnotationSelectionOverlay(rect: rect, annotation: ann, state: state)
+                                                    AnnotationSelectionOverlay(rect: rect, annotation: ann, state: state, viewportSize: geo.size)
                                                 }
                                             }
                                             
@@ -1028,67 +1058,64 @@ struct ScreenshotEditorView: View {
         
         let strokeStyle = StrokeStyle(lineWidth: annotation.lineWidth, lineCap: .round, lineJoin: .round, dash: annotation.isDashed ? [annotation.lineWidth * 2, annotation.lineWidth] : [])
         
-        switch annotation.tool {
-        case .pen, .highlighter, .marker:
-            path.addLines(scaledPoints)
-            context.stroke(path, with: .color(annotation.color.opacity(annotation.opacity)), style: strokeStyle)
+        context.drawLayer { ctx in
+            // Apply rotation
+            let minX = scaledPoints.map { $0.x }.min() ?? 0
+            let maxX = scaledPoints.map { $0.x }.max() ?? 0
+            let minY = scaledPoints.map { $0.y }.min() ?? 0
+            let maxY = scaledPoints.map { $0.y }.max() ?? 0
+            let center = CGPoint(x: (minX + maxX)/2, y: (minY + maxY)/2)
+            ctx.translateBy(x: center.x, y: center.y)
+            ctx.rotate(by: .degrees(annotation.rotation))
+            ctx.translateBy(x: -center.x, y: -center.y)
             
-        case .arrow:
-            drawCurvedArrow(in: context, annotation: annotation, size: size)
-            
-        case .shape:
-            drawShape(in: context, annotation: annotation, size: size)
-            
-        case .text:
-            let first = scaledPoints.first ?? .zero
-            let last = scaledPoints.last ?? .zero
-            let isTap = abs(first.x - last.x) < 0.002
-            let rect = CGRect(
-                x: min(first.x, last.x),
-                y: min(first.y, last.y),
-                width: isTap ? 200 : max(abs(first.x - last.x), 40),
-                height: isTap ? (annotation.fontSize * 1.8) : max(abs(first.y - last.y), 20)
-            )
-            
-            // Show reference box while drawing or if empty
-            if annotation.text.isEmpty || state.editingAnnotationID == annotation.id {
-                let dashedStyle = StrokeStyle(lineWidth: 1, dash: [4, 4])
-                context.stroke(Path(rect), with: .color(annotation.color.opacity(0.3)), style: dashedStyle)
-            }
-            
-            if !annotation.text.isEmpty && state.editingAnnotationID != annotation.id {
-                let font = Font.custom(annotation.fontName, size: annotation.fontSize)
-                    .weight(annotation.isBold ? .bold : .regular)
+            switch annotation.tool {
+            case .pen, .highlighter, .marker:
+                var p = Path()
+                p.addLines(scaledPoints)
+                ctx.stroke(p, with: .color(annotation.color.opacity(annotation.opacity)), style: strokeStyle)
                 
-                context.draw(
-                    Text(annotation.text)
-                        .font(font)
-                        .italic(annotation.isItalic)
-                        .underline(annotation.isUnderlined)
-                        .foregroundColor(annotation.color),
-                    in: rect.insetBy(dx: 4, dy: 4) // Small inset to match TextField's internal margin
-                )
-            }
-            
-        case .sticker:
-            if let image = annotation.image {
+            case .arrow:
+                drawCurvedArrow(in: ctx, annotation: annotation, size: size)
+                
+            case .shape:
+                drawShape(in: ctx, annotation: annotation, size: size)
+                
+            case .text:
+                if state.editingAnnotationID == annotation.id { return }
                 let first = scaledPoints.first ?? .zero
                 let last = scaledPoints.last ?? .zero
-                let rect = CGRect(x: min(first.x, last.x), y: min(first.y, last.y), width: max(abs(first.x - last.x), 20), height: max(abs(first.y - last.y), 20))
+                let isTap = abs(first.x - last.x) < 0.002
+                let rect = CGRect(
+                    x: min(first.x, last.x),
+                    y: min(first.y, last.y),
+                    width: isTap ? 200 : max(abs(first.x - last.x), 40),
+                    height: isTap ? (annotation.fontSize * 1.8) : max(abs(first.y - last.y), 20)
+                )
                 
-                context.drawLayer { ctx in
-                    let clipPath = Path(roundedRect: rect, cornerRadius: annotation.cornerRadius)
-                    ctx.clip(to: clipPath)
-                    ctx.draw(Image(nsImage: image), in: rect)
-                }
+                let font = Font.custom(annotation.fontName, size: annotation.fontSize)
+                let resolved = ctx.resolve(Text(annotation.text).font(font).foregroundColor(annotation.color).fontWeight(annotation.isBold ? .bold : .regular).italic(annotation.isItalic))
+                ctx.draw(resolved, in: rect)
                 
-                if state.selectedAnnotationID == annotation.id {
-                    let clipPath = Path(roundedRect: rect, cornerRadius: annotation.cornerRadius)
-                    context.stroke(clipPath, with: .color(.blue.opacity(0.5)), lineWidth: 2)
+            case .sticker:
+                if let image = annotation.image {
+                    let first = scaledPoints.first ?? .zero
+                    let last = scaledPoints.last ?? .zero
+                    let rect = CGRect(x: min(first.x, last.x), y: min(first.y, last.y), width: max(abs(first.x - last.x), 20), height: max(abs(first.y - last.y), 20))
+                    
+                    ctx.drawLayer { sctx in
+                        let clipPath = Path(roundedRect: rect, cornerRadius: annotation.cornerRadius)
+                        sctx.clip(to: clipPath)
+                        sctx.draw(Image(nsImage: image), in: rect)
+                    }
+                    
+                    if state.selectedAnnotationID == annotation.id {
+                        let clipPath = Path(roundedRect: rect, cornerRadius: annotation.cornerRadius)
+                        ctx.stroke(clipPath, with: .color(.blue.opacity(0.5)), lineWidth: 2)
+                    }
                 }
+            default: break
             }
-            
-        default: break
         }
     }
     
@@ -1662,13 +1689,13 @@ struct AnnotationSelectionOverlay: View {
     let rect: CGRect
     let annotation: CanvasAnnotation
     let state: ScreenshotEditorState
+    let viewportSize: CGSize
     
     var body: some View {
         ZStack {
             Rectangle()
                 .stroke(Color.blue, lineWidth: 1.5)
                 .frame(width: rect.width, height: rect.height)
-                .position(x: rect.midX, y: rect.midY)
             
             Button(action: { state.annotations.removeAll(where: { $0.id == annotation.id }); state.selectedAnnotationID = nil }) {
                 Image(systemName: "trash.fill")
@@ -1679,26 +1706,53 @@ struct AnnotationSelectionOverlay: View {
                     .shadow(radius: 4)
             }
             .buttonStyle(.plain)
-            .position(x: rect.maxX + 12, y: rect.minY - 12)
+            .position(x: rect.width + 12, y: -12)
             
             Group {
-                handle(at: rect.origin, index: 0) // TL
-                handle(at: CGPoint(x: rect.midX, y: rect.minY), index: 1) // TC
-                handle(at: CGPoint(x: rect.maxX, y: rect.minY), index: 2) // TR
-                handle(at: CGPoint(x: rect.minX, y: rect.midY), index: 3) // ML
-                handle(at: CGPoint(x: rect.maxX, y: rect.midY), index: 4) // MR
-                handle(at: CGPoint(x: rect.minX, y: rect.maxY), index: 5) // BL
-                handle(at: CGPoint(x: rect.midX, y: rect.maxY), index: 6) // BC
-                handle(at: CGPoint(x: rect.maxX, y: rect.maxY), index: 7) // BR
+                handle(at: .zero, index: 0) // TL
+                handle(at: CGPoint(x: rect.width/2, y: 0), index: 1) // TC
+                handle(at: CGPoint(x: rect.width, y: 0), index: 2) // TR
+                handle(at: CGPoint(x: 0, y: rect.height/2), index: 3) // ML
+                handle(at: CGPoint(x: rect.width, y: rect.height/2), index: 4) // MR
+                handle(at: CGPoint(x: 0, y: rect.height), index: 5) // BL
+                handle(at: CGPoint(x: rect.width/2, y: rect.height), index: 6) // BC
+                handle(at: CGPoint(x: rect.width, y: rect.height), index: 7) // BR
+                
+                // Rotation Handle
+                rotationHandle(at: CGPoint(x: rect.width/2, y: -30))
             }
         }
+        .frame(width: rect.width, height: rect.height)
+        .position(x: rect.midX, y: rect.midY)
+        .rotationEffect(.degrees(annotation.rotation))
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+    }
+    private func rotationHandle(at point: CGPoint) -> some View {
+        VStack(spacing: 0) {
+            Rectangle().fill(Color.blue).frame(width: 1, height: 18)
+            Image(systemName: "arrow.counterclockwise.circle.fill")
+                .font(.system(size: 16))
+                .foregroundColor(.blue)
+                .background(Circle().fill(Color.white))
+        }
+        .position(x: point.x, y: point.y + 9)
+        .gesture(
+            DragGesture()
+                .onChanged { value in
+                    let center = CGPoint(x: rect.width/2, y: rect.height/2)
+                    let current = value.location
+                    let radians = atan2(current.y - center.y, current.x - center.x)
+                    state.rotateAnnotation(annotation.id, degrees: Double(radians * 180 / .pi) + 90)
+                }
+        )
     }
     
     private func handle(at point: CGPoint, index: Int) -> some View {
         Circle()
             .fill(Color.white)
             .overlay(Circle().stroke(Color.blue, lineWidth: 1))
-            .frame(width: 10, height: 10)
+            .frame(width: 12, height: 12)
+            .contentShape(Rectangle())
             .position(point)
             .gesture(
                 DragGesture(minimumDistance: 0)
@@ -1706,7 +1760,8 @@ struct AnnotationSelectionOverlay: View {
                         if state.initialResizePoints == nil {
                             state.startResize(id: annotation.id)
                         }
-                        state.resizeAnnotation(annotation.id, handleIndex: index, translation: value.translation, in: CGSize(width: 1200, height: 800))
+                        let isShift = NSEvent.modifierFlags.contains(.shift)
+                        state.resizeAnnotation(annotation.id, handleIndex: index, translation: value.translation, in: viewportSize, isShiftPressed: isShift)
                     }
                     .onEnded { _ in
                         state.initialResizePoints = nil

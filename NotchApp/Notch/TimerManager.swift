@@ -36,7 +36,12 @@ class TimerManager: ObservableObject {
     var stopwatchShortString: String {
         let hours = Int(stopwatchTime) / 3600
         let minutes = (Int(stopwatchTime) % 3600) / 60
-        return String(format: "%02d:%02d", hours, minutes)
+        let seconds = Int(stopwatchTime) % 60
+        if hours > 0 {
+            return String(format: "%02d:%02d:%02d", hours, minutes, seconds)
+        } else {
+            return String(format: "%02d:%02d", minutes, seconds)
+        }
     }
     
     var progress: Double {
@@ -58,6 +63,9 @@ class TimerManager: ObservableObject {
         
         NotchState.shared.stickyType = .timer
         NotchState.shared.isSticky = true
+        withAnimation(.spring()) {
+            NotchState.shared.isExpanded = false
+        }
         
         startGlobalTimer()
     }
@@ -89,6 +97,9 @@ class TimerManager: ObservableObject {
         isStopwatchRunning = true
         NotchState.shared.stickyType = .timer // Reuse timer sticky for now or add .stopwatch
         NotchState.shared.isSticky = true
+        withAnimation(.spring()) {
+            NotchState.shared.isExpanded = false
+        }
         
         startGlobalTimer()
     }
