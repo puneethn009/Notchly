@@ -70,7 +70,7 @@ struct NotchExpandedView: View {
             // 1. Top Navigation & Status Bar (Fixed Position)
             HStack(alignment: .center) {
                 // Navigation Icons
-                HStack(spacing: 12) {
+                HStack(spacing: 8) {
                     ForEach(NotchPage.allCases, id: \.self) { page in
                         Button(action: { 
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
@@ -119,7 +119,7 @@ struct NotchExpandedView: View {
                         MacBatteryIcon(percentage: batteryManager.batteryPercentage, state: batteryManager.state)
                     }
                 }
-                .padding(.trailing, 24)
+                .padding(.trailing, 40)
             }
             .padding(.top, 20)
             .frame(maxWidth: .infinity)
