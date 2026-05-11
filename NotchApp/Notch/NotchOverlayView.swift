@@ -103,10 +103,12 @@ struct NotchOverlayView: View {
                         HStack(spacing: 25) {
                             ZStack {
                                 if SettingsManager.shared.showClosedNotchMusicIndicator && mediaManager.isPlaying {
-                                    VisualizerView(color: .blue, isPlaying: true)
+                                    VisualizerView(isPlaying: true)
                                         .scaleEffect(0.5)
                                 } else {
                                     Image(systemName: "music.note")
+                                        .foregroundColor(mediaManager.primaryArtworkColor)
+                                        .shadow(color: mediaManager.primaryArtworkColor.opacity(0.9), radius: 8)
                                 }
                             }
                             .frame(width: 14)
@@ -191,18 +193,20 @@ struct StickyMediaView: View {
                     Image(nsImage: img)
                         .resizable()
                         .aspectRatio(contentMode: .fill)
-                        .frame(width: 24, height: 24)
+                        .frame(width: 20, height: 20)
                         .cornerRadius(4)
+                        .offset(y: -1) // Move 1 more pixel down
                 } else {
                     Image(systemName: "music.note")
-                        .font(.system(size: 12))
+                        .font(.system(size: 10))
+                        .offset(y: 0)
                 }
             }
             .padding(.leading, 20)
             
             Spacer()
             
-            VisualizerView(color: .white, isPlaying: mediaManager.isPlaying)
+            VisualizerView(isPlaying: mediaManager.isPlaying)
                 .padding(.trailing, 20)
         }
         .frame(width: 300, height: 32)
@@ -210,7 +214,6 @@ struct StickyMediaView: View {
 }
 
 struct VisualizerView: View {
-    let color: Color
     let isPlaying: Bool
     
     @State private var heights: [CGFloat] = [10, 15, 8, 12, 10]
@@ -220,7 +223,7 @@ struct VisualizerView: View {
         HStack(spacing: 2) {
             ForEach(0..<5) { i in
                 RoundedRectangle(cornerRadius: 1)
-                    .fill(color)
+                    .fill(MediaPlayerManager.shared.primaryArtworkColor)
                     .frame(width: 2, height: isPlaying ? heights[i] : 4)
             }
         }

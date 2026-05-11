@@ -29,14 +29,24 @@ class MediaPlayerManager: ObservableObject {
     @Published var artworkImage: NSImage? = nil {
         didSet {
             if let image = artworkImage {
-                self.artworkColors = image.extractGradientColors()
+                let colors = image.extractGradientColors()
+                self.artworkColors = colors
+                let primary = colors[0]
+                // If the color is too dark, use white instead
+                self.primaryArtworkColor = primary.isTooDark ? .white : primary
             } else {
                 self.artworkColors = [.gray.opacity(0.1), .black.opacity(0.4)]
+                self.primaryArtworkColor = .white
             }
         }
     }
     @Published var artworkColors: [Color] = [.gray.opacity(0.1), .black.opacity(0.4)]
-    @Published var isPlaying: Bool = false
+    @Published var primaryArtworkColor: Color = .white
+    @Published var isPlaying: Bool = false {
+        didSet {
+            updateStickyState()
+        }
+    }
     @Published var isRunning: Bool = false
     @Published var progress: Double = 0.0
     @Published var positionStr: String = "0:00"
@@ -60,6 +70,7 @@ class MediaPlayerManager: ObservableObject {
     private var progressTimer: Timer?
     private var lyricsTask: Task<Void, Never>?
     private var artworkTask: Task<Void, Never>?
+    private var ytmTimer: Timer?
 
     private init() {}
 
@@ -70,6 +81,8 @@ class MediaPlayerManager: ObservableObject {
         Task { await fetchSpotifyState() }
         startProgressTimer()
         startSyncTimer()
+        startYTMTracker()
+        refreshMuteState()
     }
 
     // MARK: - Distributed Notifications (no MRMediaRemote, no XPC blocks)
@@ -373,10 +386,7 @@ class MediaPlayerManager: ObservableObject {
                                 self.lastTimestamp = Date()
                                 self.updateProgress(pos: actualPos, dur: self.totalDuration)
 
-                                if !self.syncedLyrics.isEmpty {
-                                    let idx = self.syncedLyrics.lastIndex { $0.time <= actualPos } ?? 0
-                                    if idx != self.currentLyricIndex { self.currentLyricIndex = idx }
-                                }
+                                self.updateLyricIndex(for: actualPos)
                             }
                         }
                     }
@@ -392,11 +402,15 @@ class MediaPlayerManager: ObservableObject {
             let pos = min(self.lastElapsedTime + Date().timeIntervalSince(self.lastTimestamp), self.totalDuration)
             DispatchQueue.main.async {
                 self.updateProgress(pos: pos, dur: self.totalDuration)
-                if !self.syncedLyrics.isEmpty {
-                    let idx = self.syncedLyrics.lastIndex { $0.time <= pos } ?? 0
-                    if idx != self.currentLyricIndex { self.currentLyricIndex = idx }
-                }
+                self.updateLyricIndex(for: pos)
             }
+        }
+    }
+
+    private func updateLyricIndex(for pos: Double) {
+        if !self.syncedLyrics.isEmpty {
+            let idx = self.syncedLyrics.lastIndex { $0.time <= pos } ?? 0
+            if idx != self.currentLyricIndex { self.currentLyricIndex = idx }
         }
     }
 
@@ -409,14 +423,17 @@ class MediaPlayerManager: ObservableObject {
     // MARK: - Playback Controls (AppleScript — proven to work)
     func playPause() { Task {
         if activeSource == "Spotify" { await AS.run("tell application \"Spotify\" to playpause") }
+        else if activeSource == "YouTubeMusic" { await sendYTMCommand("track-play-pause") }
         else { await AS.run("tell application \"Music\" to playpause") }
     }}
     func nextTrack() { Task {
         if activeSource == "Spotify" { await AS.run("tell application \"Spotify\" to next track") }
+        else if activeSource == "YouTubeMusic" { await sendYTMCommand("track-next") }
         else { await AS.run("tell application \"Music\" to next track") }
     }}
     func prevTrack() { Task {
         if activeSource == "Spotify" { await AS.run("tell application \"Spotify\" to previous track") }
+        else if activeSource == "YouTubeMusic" { await sendYTMCommand("track-previous") }
         else { await AS.run("tell application \"Music\" to previous track") }
     }}
     func toggleMute() { Task {
@@ -424,13 +441,141 @@ class MediaPlayerManager: ObservableObject {
         refreshMuteState()
     }}
     func refreshMuteState() { Task {
-        if let r = await AS.run("output volume of (get volume settings)"), let v = Int(r.stringValue ?? "") {
+        if let r = await AS.run("output volume of (get volume settings)") {
+            let v = r.int32Value
             await MainActor.run { self.isMuted = v == 0 }
         }
     }}
 
+    // MARK: - YouTube Music (ytmdesktop.app) Integration
+    private func startYTMTracker() {
+        ytmTimer?.invalidate()
+        ytmTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
+            Task { await self?.fetchYTMState() }
+        }
+    }
+
+    private func fetchYTMState() async {
+        guard let url = URL(string: "http://localhost:9863/query") else { return }
+        var request = URLRequest(url: url)
+        request.timeoutInterval = 1.0
+
+        do {
+            let (data, response) = try await URLSession.shared.data(for: request)
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else { return }
+
+            if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
+               let player = json["player"] as? [String: Any],
+               let track = player["track"] as? [String: Any] {
+                
+                let isPaused = player["isPaused"] as? Bool ?? true
+                let position = player["seekbarCurrentPosition"] as? Double ?? 0
+                let title = track["title"] as? String ?? ""
+                let artist = track["author"] as? String ?? ""
+                let duration = track["duration"] as? Double ?? 0
+                let coverUrl = track["cover"] as? String ?? ""
+
+                await MainActor.run {
+                    // Only take over if Apple Music / Spotify are not actively playing
+                    if self.activeSource != "YouTubeMusic" && self.isPlaying {
+                        if self.activeSource == "Music" || self.activeSource == "Spotify" {
+                            if !isPaused { return } // Yield to native players
+                        }
+                    }
+
+                    if !title.isEmpty {
+                        self.activeSource = "YouTubeMusic"
+                        self.isRunning = true
+                        
+                        if title != self.title || artist != self.artist {
+                            self.title = title
+                            self.artist = artist
+                            self.totalDuration = duration
+                            self.durationStr = self.fmt(duration)
+                            self.fetchLyrics(title: title, artist: artist)
+                            
+                            if let artUrl = URL(string: coverUrl) {
+                                self.artworkTask?.cancel()
+                                self.artworkTask = Task {
+                                    if let (data, _) = try? await URLSession.shared.data(from: artUrl), let img = NSImage(data: data) {
+                                        await MainActor.run { self.artworkImage = img }
+                                    }
+                                }
+                            }
+                        }
+                        
+                        self.isPlaying = !isPaused
+                        
+                        // Handle sync (allow 2 second drift)
+                        let expectedPos = self.lastElapsedTime + Date().timeIntervalSince(self.lastTimestamp)
+                        let drift = abs(expectedPos - position)
+                        if drift > 2.0 || !self.isPlaying {
+                            self.lastElapsedTime = position
+                            self.lastTimestamp = Date()
+                            self.updateProgress(pos: position, dur: self.totalDuration)
+                            self.updateLyricIndex(for: position)
+                        }
+                    }
+                }
+            }
+        } catch {
+            // YTM Not running or remote control disabled
+            await MainActor.run {
+                if self.activeSource == "YouTubeMusic" {
+                    self.isPlaying = false
+                    self.isRunning = false
+                }
+            }
+        }
+    }
+
+    private func sendYTMCommand(_ command: String) async {
+        guard let url = URL(string: "http://localhost:9863/query/command") else { return }
+        var request = URLRequest(url: url)
+        request.httpMethod = "POST"
+        request.setValue("application/json", forHTTPHeaderField: "Content-Type")
+        let body = ["command": command]
+        request.httpBody = try? JSONSerialization.data(withJSONObject: body)
+        _ = try? await URLSession.shared.data(for: request)
+    }
+
+    private func updateStickyState() {
+        DispatchQueue.main.async {
+            if self.isPlaying {
+                // If a timer is already running, don't override it (timer takes priority)
+                if !TimerManager.shared.isRunning && !TimerManager.shared.isStopwatchRunning {
+                    NotchState.shared.stickyType = .media
+                    if !NotchState.shared.isSticky {
+                        withAnimation(.spring()) {
+                            NotchState.shared.isSticky = true
+                        }
+                    }
+                }
+            } else {
+                // If we are the one currently occupying the sticky slot, release it
+                if NotchState.shared.stickyType == .media {
+                    withAnimation(.spring()) {
+                        NotchState.shared.isSticky = false
+                    }
+                }
+            }
+        }
+    }
+
     private func fmt(_ s: Double) -> String {
         guard s.isFinite, s >= 0 else { return "0:00" }
         let i = Int(s); return String(format: "%d:%02d", i / 60, i % 60)
+    }
+}
+
+extension Color {
+    var isTooDark: Bool {
+        let nsColor = NSColor(self)
+        var hue: CGFloat = 0
+        var sat: CGFloat = 0
+        var brg: CGFloat = 0
+        var alpha: CGFloat = 0
+        nsColor.getHue(&hue, saturation: &sat, brightness: &brg, alpha: &alpha)
+        return brg < 0.35 // Threshold for "too dark"
     }
 }

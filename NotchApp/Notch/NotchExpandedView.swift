@@ -269,7 +269,7 @@ struct MediaModuleView: View {
     var body: some View {
         Group {
             if mediaManager.isRunning || !mediaManager.title.isEmpty {
-                HStack(spacing: 24) {
+                HStack(spacing: 36) {
                     // COLUMN 1: Large Artwork
                     ZStack {
                         RoundedRectangle(cornerRadius: 16)
@@ -323,6 +323,7 @@ struct MediaModuleView: View {
                                     .scaleEffect(mediaManager.isPlaying ? 1.1 : 0.85)
                                     .animation(.spring(response: 0.5, dampingFraction: 0.7), value: mediaManager.isPlaying)
                             )
+                            .shadow(color: mediaManager.primaryArtworkColor.opacity(0.6), radius: 30)
                             .shadow(color: .black.opacity(0.5), radius: 15, x: 0, y: 8)
                     }
                     
@@ -331,7 +332,7 @@ struct MediaModuleView: View {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(mediaManager.title)
                                 .font(.system(size: 15, weight: .bold))
-                                .foregroundColor(.white)
+                                .foregroundColor(mediaManager.primaryArtworkColor)
                                 .lineLimit(1)
                             Text(mediaManager.artist)
                                 .font(.system(size: 13, weight: .medium))
@@ -358,7 +359,7 @@ struct MediaModuleView: View {
                                 Spacer()
                                 Text(mediaManager.durationStr).font(.system(size: 10, weight: .bold, design: .monospaced))
                             }
-                            .foregroundColor(.white.opacity(0.3))
+                            .foregroundColor(mediaManager.primaryArtworkColor.opacity(0.6))
                         }
                         
                         // Controls
@@ -379,7 +380,7 @@ struct MediaModuleView: View {
                             Button(action: { mediaManager.toggleMute() }) {
                                 Image(systemName: mediaManager.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
                                     .font(.system(size: 14))
-                                    .foregroundColor(.white.opacity(0.4))
+                                    .foregroundColor(mediaManager.primaryArtworkColor.opacity(0.7))
                             }.buttonStyle(.plain)
                         }
                         .foregroundColor(.white)
@@ -458,17 +459,108 @@ struct MediaModuleView: View {
                 .padding(.top, 0)
                 .offset(y: -5)
             } else {
-                VStack(spacing: 12) {
-                    Image(systemName: "music.quarternote.3")
-                        .font(.system(size: 40))
-                        .foregroundColor(.white.opacity(0.05))
-                    Text("No Media Playing")
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white.opacity(0.15))
+                HStack(alignment: .center, spacing: 20) {
+                    ZStack {
+                        Circle()
+                            .fill(Color.purple.opacity(0.2))
+                            .frame(width: 80, height: 80)
+                            .blur(radius: 20)
+                        
+                        Image(systemName: "music.note.list")
+                            .font(.system(size: 48, weight: .bold))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.purple, .pink, .orange],
+                                    startPoint: .topLeading,
+                                    endPoint: .bottomTrailing
+                                )
+                            )
+                            .opacity(0.8)
+                            .shadow(color: .purple.opacity(0.8), radius: 25)
+                            .shadow(color: .purple.opacity(0.4), radius: 40)
+                    }
+                    
+                    VStack(alignment: .leading, spacing: 4) {
+                        Text("Ready to Play")
+                            .font(.system(size: 20, weight: .black))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [.purple, .pink, .orange],
+                                    startPoint: .leading,
+                                    endPoint: .trailing
+                                )
+                            )
+                            .opacity(0.9)
+                            .shadow(color: .pink.opacity(0.8), radius: 20)
+                            .shadow(color: .pink.opacity(0.4), radius: 35)
+                        Text("Pick a source to begin")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.white.opacity(0.4)) // Brighter
+                            .tracking(0.5)
+                    }
+                    
+                    Spacer()
+                    
+                    HStack(spacing: 30) {
+                        MediaAppLaunchButton(name: "Music", bundleID: "com.apple.Music", icon: "apple.logo", color: .pink)
+                        MediaAppLaunchButton(name: "Spotify", bundleID: "com.spotify.client", icon: "music.note", color: .green)
+                    }
                 }
-                .padding(.bottom, 20)
+                .padding(.horizontal, 60)
+                .padding(.top, 15)
             }
         }
+    }
+}
+
+struct MediaAppLaunchButton: View {
+    let name: String
+    let bundleID: String
+    let icon: String
+    let color: Color
+    @State private var isHovering = false
+    
+    var body: some View {
+        Button(action: {
+            if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
+                NSWorkspace.shared.openApplication(at: url, configuration: .init())
+            }
+        }) {
+            VStack(spacing: 10) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 20)
+                        .fill(color.opacity(isHovering ? 0.2 : 0.1))
+                        .frame(width: 80, height: 80)
+                    
+                    if let appIcon = getIcon() {
+                        Image(nsImage: appIcon)
+                            .resizable()
+                            .frame(width: 54, height: 54)
+                            .cornerRadius(14)
+                    } else {
+                        Image(systemName: icon)
+                            .font(.system(size: 32, weight: .bold))
+                            .foregroundColor(color.opacity(0.8))
+                    }
+                }
+                .shadow(color: color.opacity(isHovering ? 0.4 : 0), radius: 10)
+                .scaleEffect(isHovering ? 1.15 : 1.0)
+                
+                Text(name.uppercased())
+                    .font(.system(size: 9, weight: .black))
+                    .foregroundColor(.white.opacity(isHovering ? 0.7 : 0.3))
+                    .tracking(1)
+            }
+        }
+        .buttonStyle(.plain)
+        .onHover { h in withAnimation(.spring(response: 0.3)) { isHovering = h } }
+    }
+    
+    private func getIcon() -> NSImage? {
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
+            return NSWorkspace.shared.icon(forFile: url.path)
+        }
+        return nil
     }
 }
 
@@ -479,7 +571,7 @@ struct TimerModuleView: View {
     var body: some View {
         VStack(spacing: 12) {
             // Stabilized Segmented Control Toggle
-            if !timerManager.isAlarmPlaying {
+            if !timerManager.isAlarmPlaying && !timerManager.isRunning && !timerManager.isStopwatchRunning {
                 HStack(spacing: 0) {
                     ZStack {
                         // Sliding background pill
@@ -556,10 +648,10 @@ struct TimerContent: View {
                 }
             } else if timerManager.isRunning {
                 // ... (Existing Running UI)
-                VStack(spacing: 2) {
+                VStack(spacing: 10) {
                     Text(timerManager.currentTimerName)
-                        .font(.system(size: 14, weight: .bold))
-                        .foregroundColor(.white.opacity(0.6))
+                        .font(.system(size: 13, weight: .bold))
+                        .foregroundColor(.white.opacity(0.5))
                     
                     ZStack {
                         Circle()
@@ -888,17 +980,6 @@ struct CalendarModuleView: View {
                     .buttonStyle(.plain)
                     .contentShape(Rectangle())
                     
-                    Button(action: {
-                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars") {
-                            NSWorkspace.shared.open(url)
-                        }
-                    }) {
-                        Text("Already enabled? Open Settings")
-                            .font(.system(size: 9, weight: .bold))
-                            .foregroundColor(.white.opacity(0.3))
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 4)
                 }
                 .padding(.top, 10)
             } else if calendarManager.reminderPermissionStatus == .notDetermined {
@@ -1353,7 +1434,8 @@ struct SyncedLyricLine: View {
             // Foreground (Highlighted with Gradient Mask)
             Text(text)
                 .font(.system(size: 14, weight: .bold))
-                .foregroundColor(.white)
+                .foregroundColor(MediaPlayerManager.shared.primaryArtworkColor)
+                .shadow(color: MediaPlayerManager.shared.primaryArtworkColor.opacity(0.8), radius: 8)
                 .mask(
                     LinearGradient(
                         stops: [
