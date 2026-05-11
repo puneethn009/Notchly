@@ -282,9 +282,33 @@ struct MediaModuleView: View {
                                             .resizable()
                                             .aspectRatio(contentMode: .fill)
                                     } else {
-                                        Image(systemName: "music.note")
-                                            .font(.system(size: 40))
-                                            .foregroundColor(.white.opacity(0.1))
+                                        ZStack {
+                                            LinearGradient(
+                                                colors: [
+                                                    Color(red: 0.1, green: 0.1, blue: 0.2),
+                                                    Color(red: 0.2, green: 0.1, blue: 0.3)
+                                                ],
+                                                startPoint: .topLeading,
+                                                endPoint: .bottomTrailing
+                                            )
+                                            
+                                            // Stylized background pattern
+                                            Circle()
+                                                .fill(Color.white.opacity(0.03))
+                                                .frame(width: 200, height: 200)
+                                                .offset(x: 40, y: -40)
+                                            
+                                            Image(systemName: "music.note.list")
+                                                .font(.system(size: 48, weight: .bold))
+                                                .foregroundStyle(
+                                                    .linearGradient(
+                                                        colors: [.white.opacity(0.6), .white.opacity(0.2)],
+                                                        startPoint: .topLeading,
+                                                        endPoint: .bottomTrailing
+                                                    )
+                                                )
+                                                .shadow(color: .black.opacity(0.3), radius: 10)
+                                        }
                                     }
                                 }
                             )
@@ -362,47 +386,56 @@ struct MediaModuleView: View {
                             .padding(.top, 4)
                         
                         ScrollViewReader { proxy in
-                            ScrollView(.vertical, showsIndicators: false) {
-                                VStack(alignment: .leading, spacing: 14) {
-                                    if !mediaManager.syncedLyrics.isEmpty {
-                                        ForEach(Array(mediaManager.syncedLyrics.enumerated()), id: \.offset) { index, line in
-                                            if line.text == "INSTRUMENTAL_BREAK" {
-                                                WaveformIndicator()
-                                                    .frame(height: 20)
-                                                    .id(index)
+                            ZStack {
+                                if !mediaManager.syncedLyrics.isEmpty || !mediaManager.lyrics.isEmpty {
+                                    ScrollView(.vertical, showsIndicators: false) {
+                                        VStack(alignment: .leading, spacing: 14) {
+                                            if !mediaManager.syncedLyrics.isEmpty {
+                                                ForEach(Array(mediaManager.syncedLyrics.enumerated()), id: \.offset) { index, line in
+                                                    if line.text == "INSTRUMENTAL_BREAK" {
+                                                        WaveformIndicator()
+                                                            .frame(height: 12)
+                                                            .id(index)
+                                                    } else {
+                                                        SyncedLyricLine(
+                                                            text: line.text,
+                                                            isActive: mediaManager.currentLyricIndex == index,
+                                                            duration: line.duration
+                                                        )
+                                                        .id(index)
+                                                    }
+                                                }
                                             } else {
-                                                Text(line.text)
+                                                Text(mediaManager.lyrics)
                                                     .font(.system(size: 14, weight: .bold))
-                                                    .foregroundColor(mediaManager.currentLyricIndex == index ? .white : .white.opacity(0.3))
-                                                    .scaleEffect(mediaManager.currentLyricIndex == index ? 1.05 : 1.0, anchor: .leading)
-                                                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: mediaManager.currentLyricIndex)
-                                                    .id(index)
+                                                    .foregroundColor(.white)
+                                                    .lineSpacing(6)
                                             }
                                         }
-                                    } else if !mediaManager.lyrics.isEmpty {
-                                        Text(mediaManager.lyrics)
-                                            .font(.system(size: 14, weight: .bold))
-                                            .foregroundColor(.white)
-                                            .lineSpacing(6)
-                                    } else {
-                                        VStack(spacing: 8) {
-                                            Image(systemName: "quote.bubble")
-                                                .font(.system(size: 24))
-                                                .foregroundColor(.white.opacity(0.05))
-                                            Text("Fetching Lyrics...")
-                                                .font(.system(size: 12, weight: .bold))
-                                                .foregroundColor(.white.opacity(0.1))
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                        .padding(.vertical, 40)
+                                        .onAppear {
+                                            proxy.scrollTo(mediaManager.currentLyricIndex, anchor: .center)
                                         }
-                                        .frame(maxWidth: .infinity)
-                                        .padding(.top, 30)
                                     }
-                                }
-                                .frame(maxWidth: .infinity, alignment: .leading)
-                                .padding(.vertical, 40) // Allow scrolling space
-                            }
-                            .onChange(of: mediaManager.currentLyricIndex) { newIndex in
-                                withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
-                                    proxy.scrollTo(newIndex, anchor: .center)
+                                    .onChange(of: mediaManager.currentLyricIndex) { newIndex in
+                                        withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
+                                            proxy.scrollTo(newIndex, anchor: .center)
+                                        }
+                                    }
+                                } else {
+                                    // Centered Loading State
+                                    VStack(spacing: 12) {
+                                        ProgressView()
+                                            .progressViewStyle(CircularProgressViewStyle(tint: .white.opacity(0.2)))
+                                            .scaleEffect(0.8)
+                                        
+                                        Text("Fetching Lyrics...")
+                                            .font(.system(size: 11, weight: .bold))
+                                            .foregroundColor(.white.opacity(0.2))
+                                            .kerning(1)
+                                    }
+                                    .frame(maxWidth: .infinity, maxHeight: .infinity)
                                 }
                             }
                         }
@@ -1038,6 +1071,60 @@ struct MacBatteryIcon: View {
             RoundedRectangle(cornerRadius: 1)
                 .fill(Color.white.opacity(0.5))
                 .frame(width: 1.5, height: 4)
+        }
+    }
+}
+
+struct SyncedLyricLine: View {
+    let text: String
+    let isActive: Bool
+    let duration: Double
+    
+    @State private var progress: CGFloat = 0
+    
+    var body: some View {
+        ZStack(alignment: .leading) {
+            // Background (dimmed)
+            Text(text)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.white.opacity(0.15))
+            
+            // Foreground (Highlighted with Gradient Mask)
+            Text(text)
+                .font(.system(size: 14, weight: .bold))
+                .foregroundColor(.white)
+                .mask(
+                    LinearGradient(
+                        stops: [
+                            .init(color: .white, location: 0),
+                            .init(color: .white, location: progress),
+                            .init(color: .clear, location: progress),
+                            .init(color: .clear, location: 1)
+                        ],
+                        startPoint: .topLeading, // Diagonal flow for wrapped lines
+                        endPoint: .bottomTrailing
+                    )
+                )
+        }
+        .scaleEffect(isActive ? 1.02 : 1.0, anchor: .leading)
+        .onChange(of: isActive) { active in
+            if active {
+                progress = 0
+                // Use 80% of duration to stay slightly ahead and feel snappier
+                withAnimation(.linear(duration: duration * 0.8)) {
+                    progress = 1.0
+                }
+            } else {
+                progress = 0
+            }
+        }
+        .onAppear {
+            if isActive {
+                progress = 0
+                withAnimation(.linear(duration: duration * 0.8)) {
+                    progress = 1.0
+                }
+            }
         }
     }
 }

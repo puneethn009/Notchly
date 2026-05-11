@@ -7,6 +7,7 @@ class MediaPlayerManager: ObservableObject {
     @Published var artist: String = ""
     @Published var positionStr: String = "0:00"
     @Published var durationStr: String = "0:00"
+    @Published var totalDuration: Double = 0
     @Published var progress: Double = 0.0
     @Published var isPlaying: Bool = false
     @Published var isRunning: Bool = false
@@ -21,6 +22,7 @@ class MediaPlayerManager: ObservableObject {
     struct LyricLine: Identifiable {
         let id = UUID()
         let time: Double
+        let duration: Double // Calculated duration for animation
         let text: String
     }
     
@@ -37,8 +39,8 @@ class MediaPlayerManager: ObservableObject {
         // Initial detection
         fetchNowPlaying()
         
-        // Periodic sync for progress bar
-        timer = Timer.scheduledTimer(withTimeInterval: 2.0, repeats: true) { [weak self] _ in
+        // Ultra-high frequency sync for lyrics accuracy (0.2s)
+        timer = Timer.scheduledTimer(withTimeInterval: 0.2, repeats: true) { [weak self] _ in
             self?.fetchNowPlaying()
         }
 
@@ -97,6 +99,7 @@ class MediaPlayerManager: ObservableObject {
             self.artist = newArtist
             self.isPlaying = info["isPlaying"] as? Bool ?? false
             self.progress = info["progress"] as? Double ?? 0.0
+            self.totalDuration = info["durSeconds"] as? Double ?? 0
             self.positionStr = info["position"] as? String ?? "0:00"
             self.durationStr = info["duration"] as? String ?? "0:00"
             self.activeSource = source
@@ -274,6 +277,7 @@ class MediaPlayerManager: ObservableObject {
             "isPlaying": parts[2] == "true",
             "progress": pos / dur,
             "duration": formatTime(dur),
+            "durSeconds": dur,
             "position": formatTime(pos),
             "posSeconds": pos,
             "lyrics": parts.count > 5 ? parts[5] : "",
@@ -304,9 +308,18 @@ class MediaPlayerManager: ObservableObject {
         
         let title = parts[0]
         let artist = parts[1]
+        let isAd = (title.lowercased() == "advertisement" || artist.lowercased() == "spotify" || (Double(parts[3]) ?? 0) < 40 && title.contains("Ad"))
         
-        // Fetch lyrics externally since Spotify doesn't provide them
-        fetchExternalLyrics(title: title, artist: artist)
+        if isAd {
+            DispatchQueue.main.async {
+                self.lyrics = "Advertisement"
+                self.syncedLyrics = []
+                self.artworkImage = nil
+            }
+        } else {
+            // Fetch lyrics externally since Spotify doesn't provide them
+            fetchExternalLyrics(title: title, artist: artist)
+        }
         
         return [
             "title": title,
@@ -314,9 +327,11 @@ class MediaPlayerManager: ObservableObject {
             "isPlaying": parts[2] == "true",
             "progress": pos / dur,
             "duration": formatTime(dur),
+            "durSeconds": dur,
             "position": formatTime(pos),
             "posSeconds": pos,
-            "artworkUrl": parts.count > 5 ? parts[5] : ""
+            "artworkUrl": isAd ? "" : (parts.count > 5 ? parts[5] : ""),
+            "isAd": isAd
         ]
     }
 
@@ -354,7 +369,7 @@ class MediaPlayerManager: ObservableObject {
     }
 
     private func parseLRC(_ lrc: String) {
-        var lines: [LyricLine] = []
+        var lines: [(time: Double, text: String)] = []
         let pattern = "\\[(\\d+):(\\d+\\.?\\d*)\\](.*)"
         let regex = try? NSRegularExpression(pattern: pattern, options: [])
         
@@ -368,7 +383,7 @@ class MediaPlayerManager: ObservableObject {
                 let text = nsString.substring(with: match.range(at: 3)).trimmingCharacters(in: .whitespaces)
                 
                 let totalSeconds = min * 60 + sec
-                lines.append(LyricLine(time: totalSeconds, text: text))
+                lines.append((time: totalSeconds, text: text))
             }
         }
         
@@ -377,24 +392,40 @@ class MediaPlayerManager: ObservableObject {
         
         // Add intro marker if first lyric is delayed > 3s
         if let first = sorted.first, first.time > 3.0 {
-            finalLines.append(LyricLine(time: 0.0, text: "INSTRUMENTAL_BREAK"))
+            finalLines.append(LyricLine(time: 0.0, duration: first.time, text: "INSTRUMENTAL_BREAK"))
         }
         
         // Insert instrumental markers for gaps > 6 seconds
         for i in 0..<sorted.count {
-            finalLines.append(sorted[i])
+            let currentEnd = sorted[i].time
+            let duration: Double
             if i < sorted.count - 1 {
-                let currentEnd = sorted[i].time
+                duration = sorted[i+1].time - currentEnd
+            } else {
+                duration = 5.0 // Default for last line
+            }
+            
+            let line = LyricLine(time: currentEnd, duration: duration, text: sorted[i].text)
+            finalLines.append(line)
+            
+            if i < sorted.count - 1 {
                 let nextStart = sorted[i+1].time
                 if nextStart - currentEnd > 6.0 {
-                    // Place it at the midpoint of the gap
                     let midPoint = currentEnd + (nextStart - currentEnd) / 2.0
-                    finalLines.append(LyricLine(time: midPoint, text: "INSTRUMENTAL_BREAK"))
+                    let gapDuration = nextStart - currentEnd
+                    finalLines.append(LyricLine(time: midPoint, duration: gapDuration / 2, text: "INSTRUMENTAL_BREAK"))
                 }
             }
         }
         
         self.syncedLyrics = finalLines
+        
+        // Add outro marker if last lyric ends long before song ends
+        if let last = finalLines.last, self.totalDuration - last.time > 6.0 {
+            let midPoint = last.time + (self.totalDuration - last.time) / 2.0
+            let outroDur = self.totalDuration - last.time
+            self.syncedLyrics.append(LyricLine(time: midPoint, duration: outroDur / 2, text: "INSTRUMENTAL_BREAK"))
+        }
     }
 
     private func updateLyricsPosition(currentTime: Double) {
