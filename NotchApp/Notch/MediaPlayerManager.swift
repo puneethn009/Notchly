@@ -372,7 +372,29 @@ class MediaPlayerManager: ObservableObject {
             }
         }
         
-        self.syncedLyrics = lines.sorted { $0.time < $1.time }
+        var finalLines: [LyricLine] = []
+        let sorted = lines.sorted { $0.time < $1.time }
+        
+        // Add intro marker if first lyric is delayed > 3s
+        if let first = sorted.first, first.time > 3.0 {
+            finalLines.append(LyricLine(time: 0.0, text: "INSTRUMENTAL_BREAK"))
+        }
+        
+        // Insert instrumental markers for gaps > 6 seconds
+        for i in 0..<sorted.count {
+            finalLines.append(sorted[i])
+            if i < sorted.count - 1 {
+                let currentEnd = sorted[i].time
+                let nextStart = sorted[i+1].time
+                if nextStart - currentEnd > 6.0 {
+                    // Place it at the midpoint of the gap
+                    let midPoint = currentEnd + (nextStart - currentEnd) / 2.0
+                    finalLines.append(LyricLine(time: midPoint, text: "INSTRUMENTAL_BREAK"))
+                }
+            }
+        }
+        
+        self.syncedLyrics = finalLines
     }
 
     private func updateLyricsPosition(currentTime: Double) {

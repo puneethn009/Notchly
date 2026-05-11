@@ -350,35 +350,34 @@ struct MediaModuleView: View {
                         }
                         .foregroundColor(.white)
                     }
-                    .frame(width: 170) // Reduced from 200
+                    .frame(width: 140) // Reduced from 170 to shift lyrics left
                     
                     Divider().frame(height: 140).opacity(0.1)
                     
                     // COLUMN 3: Lyrics
                     VStack(alignment: .leading, spacing: 10) {
-                        HStack(spacing: 8) {
-                            Text("LYRICS")
-                                .font(.system(size: 10, weight: .black))
-                                .foregroundColor(.white.opacity(0.4))
-                            
-                            if mediaManager.isPlaying {
-                                WaveformIndicator()
-                                    .transition(.opacity)
-                            }
-                        }
-                        .padding(.top, 4)
+                        Text("LYRICS")
+                            .font(.system(size: 10, weight: .black))
+                            .foregroundColor(.white.opacity(0.4))
+                            .padding(.top, 4)
                         
                         ScrollViewReader { proxy in
                             ScrollView(.vertical, showsIndicators: false) {
                                 VStack(alignment: .leading, spacing: 14) {
                                     if !mediaManager.syncedLyrics.isEmpty {
                                         ForEach(Array(mediaManager.syncedLyrics.enumerated()), id: \.offset) { index, line in
-                                            Text(line.text)
-                                                .font(.system(size: 14, weight: .bold))
-                                                .foregroundColor(mediaManager.currentLyricIndex == index ? .white : .white.opacity(0.3))
-                                                .scaleEffect(mediaManager.currentLyricIndex == index ? 1.05 : 1.0, anchor: .leading)
-                                                .animation(.spring(response: 0.3, dampingFraction: 0.7), value: mediaManager.currentLyricIndex)
-                                                .id(index)
+                                            if line.text == "INSTRUMENTAL_BREAK" {
+                                                WaveformIndicator()
+                                                    .frame(height: 20)
+                                                    .id(index)
+                                            } else {
+                                                Text(line.text)
+                                                    .font(.system(size: 14, weight: .bold))
+                                                    .foregroundColor(mediaManager.currentLyricIndex == index ? .white : .white.opacity(0.3))
+                                                    .scaleEffect(mediaManager.currentLyricIndex == index ? 1.05 : 1.0, anchor: .leading)
+                                                    .animation(.spring(response: 0.3, dampingFraction: 0.7), value: mediaManager.currentLyricIndex)
+                                                    .id(index)
+                                            }
                                         }
                                     } else if !mediaManager.lyrics.isEmpty {
                                         Text(mediaManager.lyrics)
@@ -411,7 +410,7 @@ struct MediaModuleView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 }
                 .padding(.leading, 32)
-                .padding(.trailing, 24)
+                .padding(.trailing, 48) // Increased from 24 to pull away from right edge
                 .padding(.bottom, 24)
                 .padding(.top, 13)
             } else {
