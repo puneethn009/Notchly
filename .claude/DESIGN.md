@@ -1,7 +1,8 @@
-# DESIGN.md — NotchApp UI & Visual Design Guide
+# DESIGN.md — Notchly UI & Visual Design Guide
 
 > Apple macOS Tahoe 26 + Liquid Glass design standards.
-> Claude Code must read this alongside CLAUDE.md before writing any UI code.
+> Read alongside CLAUDE.md before writing any UI code.
+> Last updated: May 2026
 
 ---
 
@@ -225,13 +226,15 @@ All spacing is multiples of 4:
 32pt  — between large groups
 ```
 
-### Notch Panel Dimensions
+### Notch Panel Dimensions (actual values from NotchOverlayView.swift)
 ```
-Collapsed height:   37pt  (matches physical notch)
-Collapsed width:    200pt (centered over notch)
-Expanded height:    300pt (smooth spring to this)
-Expanded width:     380pt (expands outward symmetrically)
-Panel corner radius: 20pt (expanded) / 0pt (collapsed, flush with notch)
+Collapsed height:   29pt  (matches physical notch)
+Collapsed width:    192pt (centered over notch)
+Sticky width:       300pt (media playing / timer running, no hover)
+Screenshot popup:   280 × 35pt (thumbnail shown in bar)
+Expanded height:    200pt (smooth spring)
+Expanded width:     700pt (expands outward symmetrically)
+Outer corner radius: tunable via NotchShape.swift (reduced from default)
 Content padding:    16pt all sides
 ```
 
@@ -738,7 +741,8 @@ var animation: Animation {
 | Use arbitrary corner radii | Use the `Radius` token enum |
 | Animate with `.easeInOut` | Always use `.spring()` |
 | Show all actions at once | Prioritize top 4, scroll for more |
-| Use `NSVisualEffectView` directly in SwiftUI | Use `.ultraThinMaterial` modifier |
+| Use `NSVisualEffectView` directly in SwiftUI | Use `VisualEffectView.swift` NSViewRepresentable wrapper |
+| Set `vev.frame = vev.bounds` before SwiftUI layout | bounds=0×0 at init — let SwiftUI size it via ZStack |
 | Make PiP window activating | `.nonactivatingPanel` only — never steal focus |
 | Custom alert dialogs | Native SwiftUI `.alert()` modifier |
 | Fixed window sizes in Settings | `frame(minWidth:maxWidth:)` with flexibility |
