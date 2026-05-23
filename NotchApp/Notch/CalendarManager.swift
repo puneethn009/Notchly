@@ -31,7 +31,11 @@ class CalendarManager: ObservableObject {
     
     init() {
         checkPermission()
-        if permissionStatus == .authorized || permissionStatus == .fullAccess {
+        var hasAccess = permissionStatus.rawValue == 3
+        if #available(macOS 14.0, *) {
+            if permissionStatus == .fullAccess { hasAccess = true }
+        }
+        if hasAccess {
             refresh()
         }
     }
@@ -74,10 +78,10 @@ class CalendarManager: ObservableObject {
         } else {
             eventStore.requestAccess(to: .event) { [weak self] granted, _ in
                 DispatchQueue.main.async {
-                    self?.permissionStatus = granted ? .authorized : .denied
+                    self?.permissionStatus = granted ? EKAuthorizationStatus(rawValue: 3)! : .denied
                     self?.eventStore.requestAccess(to: .reminder) { rGranted, _ in
                         DispatchQueue.main.async {
-                            self?.reminderPermissionStatus = rGranted ? .authorized : .denied
+                            self?.reminderPermissionStatus = rGranted ? EKAuthorizationStatus(rawValue: 3)! : .denied
                             self?.checkPermission()
                             if granted || rGranted { self?.refresh() }
                         }
@@ -109,9 +113,9 @@ class CalendarManager: ObservableObject {
     private func fetchLocalEvents(for date: Date) {
         var isAuthorized = false
         if #available(macOS 14.0, *) {
-            isAuthorized = (permissionStatus == .fullAccess || permissionStatus == .authorized)
+            isAuthorized = (permissionStatus == .fullAccess || permissionStatus.rawValue == 3)
         } else {
-            isAuthorized = (permissionStatus == .authorized)
+            isAuthorized = (permissionStatus.rawValue == 3)
         }
         
         guard isAuthorized else { return }
@@ -148,9 +152,9 @@ class CalendarManager: ObservableObject {
     private func fetchLocalReminders(for date: Date) {
         let isAuthorized: Bool
         if #available(macOS 14.0, *) {
-            isAuthorized = (reminderPermissionStatus == .fullAccess || reminderPermissionStatus == .authorized)
+            isAuthorized = (reminderPermissionStatus == .fullAccess || reminderPermissionStatus.rawValue == 3)
         } else {
-            isAuthorized = (reminderPermissionStatus == .authorized)
+            isAuthorized = (reminderPermissionStatus.rawValue == 3)
         }
         
         guard isAuthorized else { return }
@@ -188,6 +192,8 @@ class CalendarManager: ObservableObject {
     private func fetchNotionEvents(for date: Date) {
         let token = SettingsManager.shared.notionToken
         let dbId = SettingsManager.shared.notionDatabaseID
+        let datePropName = SettingsManager.shared.notionDateProperty
+        let titlePropName = SettingsManager.shared.notionTitleProperty
         
         guard !token.isEmpty && !dbId.isEmpty else { return }
         
@@ -209,10 +215,9 @@ class CalendarManager: ObservableObject {
         request.addValue("application/json", forHTTPHeaderField: "Content-Type")
         
         // Query filter: find entries where the Date property equals our selected date
-        // Note: This assumes the database has a property named "Date"
         let body: [String: Any] = [
             "filter": [
-                "property": "Date",
+                "property": datePropName,
                 "date": [
                     "equals": dateString
                 ]
@@ -233,13 +238,13 @@ class CalendarManager: ObservableObject {
                     let notionEvents = results.compactMap { result -> UnifiedEvent? in
                         let properties = result["properties"] as? [String: Any]
                         
-                        // Parse Title (Assuming a property named "Name")
-                        let nameProp = properties?["Name"] as? [String: Any]
+                        // Parse Title
+                        let nameProp = properties?[titlePropName] as? [String: Any]
                         let titleArray = nameProp?["title"] as? [[String: Any]]
                         let title = titleArray?.first?["plain_text"] as? String ?? "Untitled"
                         
                         // Parse Date
-                        let dateProp = properties?["Date"] as? [String: Any]
+                        let dateProp = properties?[datePropName] as? [String: Any]
                         let dateData = dateProp?["date"] as? [String: Any]
                         let startStr = dateData?["start"] as? String ?? ""
                         

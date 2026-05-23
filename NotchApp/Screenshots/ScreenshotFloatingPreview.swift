@@ -18,7 +18,7 @@ class ScreenshotPreviewController: NSObject {
         let hostingView = NSHostingView(rootView: previewView)
         
         let panel = NSPanel(
-            contentRect: NSRect(x: 0, y: 0, width: 224, height: 164),
+            contentRect: NSRect(x: 0, y: 0, width: 224, height: 200),
             styleMask: [.borderless, .nonactivatingPanel],
             backing: .buffered,
             defer: false

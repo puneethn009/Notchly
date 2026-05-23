@@ -58,7 +58,7 @@ class ScreenshotMonitor {
         )
         
         if let stream = stream {
-            FSEventStreamScheduleWithRunLoop(stream, CFRunLoopGetCurrent(), CFRunLoopMode.defaultMode.rawValue)
+            FSEventStreamSetDispatchQueue(stream, DispatchQueue.main)
             FSEventStreamStart(stream)
             logger.info("Started monitoring Desktop for screenshots")
         }
@@ -67,6 +67,7 @@ class ScreenshotMonitor {
     func stop() {
         if let stream = stream {
             FSEventStreamStop(stream)
+            FSEventStreamSetDispatchQueue(stream, nil)
             FSEventStreamInvalidate(stream)
             FSEventStreamRelease(stream)
             self.stream = nil
@@ -90,9 +91,18 @@ class ScreenshotMonitor {
         let url = URL(fileURLWithPath: path)
         let filename = url.lastPathComponent
         
-        // Match both "Screenshot" and localizations like "Screen Shot"
-        let isScreenshot = filename.hasPrefix("Screenshot") || filename.hasPrefix("Screen Shot")
+        // Match both "Screenshot" and localizations like "Screen Shot", or check metadata
+        let isScreenshotName = filename.hasPrefix("Screenshot") || filename.hasPrefix("Screen Shot")
         let hasValidExtension = ["png", "jpg", "jpeg"].contains(url.pathExtension.lowercased())
+        
+        var isScreenshot = isScreenshotName
+        if !isScreenshot && hasValidExtension {
+            // Check extended attribute for non-English localizations
+            let attrSize = getxattr(path, "com.apple.metadata:kMDItemIsScreenCapture", nil, 0, 0, 0)
+            if attrSize > 0 {
+                isScreenshot = true
+            }
+        }
         
         guard isScreenshot && hasValidExtension else { return }
         

@@ -23,7 +23,7 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
 
     private func checkMousePosition() {
         let mouseLoc = NSEvent.mouseLocation
-        let screen = NSScreen.main ?? NSScreen.screens[0]
+        let screen = NSScreen.screens.first { $0.frame.origin == .zero } ?? NSScreen.main ?? NSScreen.screens[0]
         let screenMidX = screen.frame.midX
         let screenMaxY = screen.frame.maxY
         
@@ -148,6 +148,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 MediaPlayerManager.shared.start()
             }
+            
+            // Open the Notchly Hub as the main app window
+            NotchlyHubWindowController.shared.show()
         }
     }
 
@@ -187,9 +190,30 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         })
         
         if let item = settingsItem {
-            item.target?.perform(item.action, with: item)
+            _ = item.target?.perform(item.action, with: item)
         } else {
             NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
         }
+    }
+
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        if !flag {
+            NotchlyHubWindowController.shared.show()
+        }
+        return true
+    }
+
+    private func openEditorCanvas() {
+        let container = PersistenceController.shared.container
+        let context = container.mainContext
+        
+        var targetURL = URL(fileURLWithPath: "/dev/null") // fallback
+        
+        let descriptor = FetchDescriptor<ScreenshotItem>(sortBy: [SortDescriptor(\.capturedAt, order: .reverse)])
+        if let latestItem = try? context.fetch(descriptor).first {
+            targetURL = URL(fileURLWithPath: latestItem.filePath)
+        }
+        
+        ScreenshotEditorWindowController.shared.open(with: targetURL)
     }
 }

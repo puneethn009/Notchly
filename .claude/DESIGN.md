@@ -762,3 +762,137 @@ var animation: Animation {
 
 *Follow Apple Human Interface Guidelines: https://developer.apple.com/design/human-interface-guidelines/*
 *Liquid Glass reference: https://developer.apple.com/design/whats-new/*
+
+---
+
+## Notchly Hub Window — Implemented Design (May 2026)
+
+The Hub is a resizable full-size window (default 1100×700) with Apple Liquid Glass aesthetics.
+
+### Window Layering
+```
+Layer 0: Desktop wallpaper (blurred + sampled through NSVisualEffectView)
+Layer 1: NSVisualEffectView .hudWindow material — root glass layer (full window)
+Layer 2: Sidebar (220pt wide) — Color.black.opacity(0.18) dark glass overlay
+Layer 3: Main content — Color.clear (glass shows through)
+Layer 4: Cards, toggles, thumbnails — subtle white-opacity fills on glass
+```
+
+### Sidebar Design
+```swift
+VStack { ... }
+    .frame(width: 220)
+    .background(Color.black.opacity(0.18))   // dark tint over glass
+    .overlay(
+        HStack {
+            Spacer()
+            Rectangle()
+                .fill(Color.white.opacity(0.06))
+                .frame(width: 1)             // hairline divider, right edge
+        }
+    )
+```
+
+### Nav Row Design (Full-Row Clickable)
+```swift
+// IMPORTANT: Use ZStack + Color.clear pattern — not Button — for macOS full-row taps
+ZStack(alignment: .leading) {
+    Color.clear
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+        .onTapGesture { currentTab = tab }
+
+    HStack(spacing: 12) {
+        Image(systemName: tab.icon)
+            .font(.system(size: 14, weight: .bold))
+            .frame(width: 20)
+            .foregroundColor(currentTab == tab ? .white : .white.opacity(0.5))
+        Text(tab.rawValue)
+            .font(.system(size: 13, weight: .semibold, design: .rounded))
+            .foregroundColor(currentTab == tab ? .white : .white.opacity(0.7))
+            .lineLimit(1)
+        Spacer()
+        if currentTab == tab {
+            Circle().fill(Color.blue).frame(width: 5, height: 5)
+        }
+    }
+    .padding(.horizontal, 16)
+    .padding(.vertical, 10)
+    .allowsHitTesting(false)
+}
+.fixedSize(horizontal: false, vertical: true)   // ← critical: prevents row height expansion
+.frame(maxWidth: .infinity)
+.background(
+    RoundedRectangle(cornerRadius: 10, style: .continuous)
+        .fill(isActive ? Color.white.opacity(0.08) : Color.clear)
+)
+```
+
+### Toggle Card Design (ToggleCard)
+```swift
+// Glass card — monochrome, no neon borders
+VStack(alignment: .leading, spacing: 14) {
+    HStack(alignment: .top) {
+        // Icon badge — tinted glass square
+        ZStack {
+            RoundedRectangle(cornerRadius: 10)
+                .fill(iconColor.opacity(0.09))
+                .frame(width: 38, height: 38)
+                .overlay(
+                    RoundedRectangle(cornerRadius: 10)
+                        .stroke(iconColor.opacity(0.15), lineWidth: 1)
+                )
+            Image(systemName: icon)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(iconColor)
+        }
+        Spacer()
+        Toggle("", isOn: $isOn).toggleStyle(.switch).labelsHidden().controlSize(.small)
+    }
+    VStack(alignment: .leading, spacing: 4) {
+        Text(title).font(.system(size: 15, weight: .semibold, design: .rounded)).foregroundColor(.white)
+        Text(subtitle).font(.system(size: 11)).foregroundColor(.white.opacity(0.45)).lineLimit(2)
+    }
+}
+.padding(20)
+.background(RoundedRectangle(cornerRadius: 14).fill(cardBackground))
+.overlay(RoundedRectangle(cornerRadius: 14).stroke(cardBorderColor, lineWidth: 1))
+.shadow(color: Color.black.opacity(shadowOpacity), radius: shadowRadius, x: 0, y: shadowY)
+
+// State-driven computed properties (avoid inline ternaries for compiler performance):
+private var cardBackground: Color {
+    isHovered ? Color.white.opacity(0.06) : isOn ? Color.white.opacity(0.04) : Color.white.opacity(0.015)
+}
+private var cardBorderColor: Color {
+    isHovered ? Color.white.opacity(0.18) : isOn ? Color.white.opacity(0.12) : Color.white.opacity(0.06)
+}
+```
+
+### Screenshot Grid Card Design
+```swift
+// Permanent glass backing — not just on hover
+.background(
+    RoundedRectangle(cornerRadius: 12)
+        .fill(isHovered ? Color.white.opacity(0.04) : Color.white.opacity(0.015))
+)
+.overlay(
+    RoundedRectangle(cornerRadius: 12)
+        .stroke(isHovered ? Color.white.opacity(0.14) : Color.white.opacity(0.06), lineWidth: 1)
+)
+.shadow(color: Color.black.opacity(isHovered ? 0.16 : 0.08), radius: isHovered ? 10 : 4, x: 0, y: isHovered ? 5 : 2)
+```
+
+### Hub Anti-Patterns
+```
+❌ Never use NSVisualEffectView manually in AppKit before SwiftUI layout runs
+   (bounds = 0×0 at init → hosting view gets zero frame → invisible window)
+❌ Never use Button+.buttonStyle(.plain) for full-row taps in macOS sidebar
+   (only icon pixels respond, text and spacer areas are dead zones)
+❌ Never use maxHeight: .infinity on Color.clear inside a ZStack in a VStack
+   (causes rows to expand and fill entire available height)
+❌ Never use fixed .frame(width:height:) on the root SwiftUI view of a resizable window
+   (prevents resize and fullscreen — use minWidth/maxWidth instead)
+❌ Never stack neon/saturated borders on module cards
+   (use unified white-opacity borders for professional glass aesthetics)
+```
+

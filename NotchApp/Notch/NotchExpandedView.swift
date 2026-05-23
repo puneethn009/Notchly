@@ -64,6 +64,20 @@ struct NotchExpandedView: View {
     @StateObject private var systemManager = SystemMonitorManager()
     @StateObject private var calendarManager = CalendarManager()
     @StateObject private var launcherManager = LauncherManager()
+    @StateObject private var settings = SettingsManager.shared
+    
+    private var activePages: [NotchPage] {
+        settings.activeNotchPages
+    }
+    
+    private func ensureSelectedPageIsValid() {
+        let pages = activePages
+        if !pages.contains(notchState.selectedPage) {
+            if let first = pages.first {
+                notchState.selectedPage = first
+            }
+        }
+    }
     
     var body: some View {
         VStack(alignment: .center, spacing: 0) {
@@ -71,7 +85,7 @@ struct NotchExpandedView: View {
             HStack(alignment: .center) {
                 // Navigation Icons
                 HStack(spacing: 8) {
-                    ForEach(NotchPage.allCases, id: \.self) { page in
+                    ForEach(activePages, id: \.self) { page in
                         Button(action: { 
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                 notchState.selectedPage = page 
@@ -89,7 +103,7 @@ struct NotchExpandedView: View {
                         .buttonStyle(.plain)
                     }
                 }
-                .padding(.leading, 32)
+                .padding(.leading, 45)
                 
                 Spacer()
                 
@@ -121,7 +135,7 @@ struct NotchExpandedView: View {
                 }
                 .padding(.trailing, 40)
             }
-            .padding(.top, 7)
+            .padding(.top, 3)
             .frame(maxWidth: .infinity)
             .frame(height: 50, alignment: .top)
             
@@ -161,7 +175,7 @@ struct NotchExpandedView: View {
         .gesture(
             DragGesture(minimumDistance: 30)
                 .onEnded { value in
-                    let pages = NotchPage.allCases
+                    let pages = activePages
                     guard let currentIndex = pages.firstIndex(of: notchState.selectedPage) else { return }
                     
                     if value.translation.width > 50 {
@@ -188,6 +202,10 @@ struct NotchExpandedView: View {
         }
         .onAppear {
             setupSwipeMonitor()
+            ensureSelectedPageIsValid()
+        }
+        .onChange(of: settings.activeNotchPages) { _ in
+            ensureSelectedPageIsValid()
         }
         .onDisappear {
             if let monitor = swipeMonitor {
@@ -217,29 +235,25 @@ struct NotchExpandedView: View {
 
             if !hasTriggeredInCurrentGesture && abs(event.scrollingDeltaX) > abs(event.scrollingDeltaY) {
                 let threshold: CGFloat = 20.0
+                let pages = activePages
+                guard let currentIndex = pages.firstIndex(of: notchState.selectedPage) else { return event }
                 
                 if event.scrollingDeltaX > threshold {
                     // Swipe Right -> Previous
-                    let prev = notchState.selectedPage.previous()
-                    if prev != notchState.selectedPage {
-                        slideDirection = .leading
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                            notchState.selectedPage = prev
-                        }
-                    } else {
-                        shake(direction: 1)
+                    let prevIndex = (currentIndex - 1 + pages.count) % pages.count
+                    let prev = pages[prevIndex]
+                    slideDirection = .leading
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        notchState.selectedPage = prev
                     }
                     hasTriggeredInCurrentGesture = true
                 } else if event.scrollingDeltaX < -threshold {
                     // Swipe Left -> Next
-                    let next = notchState.selectedPage.next()
-                    if next != notchState.selectedPage {
-                        slideDirection = .trailing
-                        withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
-                            notchState.selectedPage = next
-                        }
-                    } else {
-                        shake(direction: -1)
+                    let nextIndex = (currentIndex + 1) % pages.count
+                    let next = pages[nextIndex]
+                    slideDirection = .trailing
+                    withAnimation(.spring(response: 0.35, dampingFraction: 0.8)) {
+                        notchState.selectedPage = next
                     }
                     hasTriggeredInCurrentGesture = true
                 }
@@ -318,13 +332,13 @@ struct MediaModuleView: View {
                             .background(
                                 RoundedRectangle(cornerRadius: 16)
                                     .fill(LinearGradient(colors: mediaManager.artworkColors, startPoint: .topLeading, endPoint: .bottomTrailing))
-                                    .blur(radius: mediaManager.isPlaying ? 25 : 0)
-                                    .opacity(mediaManager.isPlaying ? 0.35 : 0.0)
-                                    .scaleEffect(mediaManager.isPlaying ? 1.1 : 0.85)
+                                    .blur(radius: mediaManager.isPlaying ? 20 : 0)
+                                    .opacity(mediaManager.isPlaying ? 0.12 : 0.0)
+                                    .scaleEffect(mediaManager.isPlaying ? 1.05 : 0.85)
                                     .animation(.spring(response: 0.5, dampingFraction: 0.7), value: mediaManager.isPlaying)
                             )
-                            .shadow(color: mediaManager.primaryArtworkColor.opacity(0.6), radius: 30)
-                            .shadow(color: .black.opacity(0.5), radius: 15, x: 0, y: 8)
+                            .shadow(color: mediaManager.primaryArtworkColor.opacity(0.25), radius: 15)
+                            .shadow(color: .black.opacity(0.4), radius: 10, x: 0, y: 6)
                     }
                     
                     // COLUMN 2: Info & Controls
@@ -429,7 +443,7 @@ struct MediaModuleView: View {
                                             proxy.scrollTo(mediaManager.currentLyricIndex, anchor: .center)
                                         }
                                     }
-                                    .onChange(of: mediaManager.currentLyricIndex) { newIndex in
+                                    .onChange(of: mediaManager.currentLyricIndex) { _, newIndex in
                                         withAnimation(.spring(response: 0.4, dampingFraction: 0.8)) {
                                             proxy.scrollTo(newIndex, anchor: .center)
                                         }
@@ -1450,7 +1464,7 @@ struct SyncedLyricLine: View {
                 )
         }
         .scaleEffect(isActive ? 1.02 : 1.0, anchor: .leading)
-        .onChange(of: isActive) { active in
+        .onChange(of: isActive) { _, active in
             if active {
                 progress = 0
                 // Use 80% of duration to stay slightly ahead and feel snappier

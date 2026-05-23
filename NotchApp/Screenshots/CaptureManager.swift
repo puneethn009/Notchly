@@ -3,8 +3,8 @@ import AppKit
 import KeyboardShortcuts
 
 extension KeyboardShortcuts.Name {
-    static let takeFullScreen = Self("takeFullScreen")
-    static let takeSelection = Self("takeSelection")
+    static let takeFullScreen = Self("takeFullScreen", default: .init(.three, modifiers: [.option, .shift]))
+    static let takeSelection = Self("takeSelection", default: .init(.four, modifiers: [.option, .shift]))
 }
 
 class CaptureManager {
@@ -86,6 +86,12 @@ class CaptureManager {
         task.launchPath = "/usr/bin/defaults"
         task.arguments = ["write", "com.apple.screencapture", "show-thumbnail", "-bool", "FALSE"]
         task.launch()
+        
+        let locTask = Process()
+        locTask.launchPath = "/usr/bin/defaults"
+        let desktopPath = FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent("Desktop").path
+        locTask.arguments = ["write", "com.apple.screencapture", "location", desktopPath]
+        locTask.launch()
         
         // Restart SystemUIServer to apply (optional, but recommended)
         let killTask = Process()

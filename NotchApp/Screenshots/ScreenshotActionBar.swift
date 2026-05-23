@@ -40,10 +40,13 @@ struct ScreenshotActionBar: View {
             }
             
             ActionButton(icon: "trash.fill", label: "Delete", color: .red) {
-                // Delete from disk
-                try? FileManager.default.removeItem(atPath: item.filePath)
-                // Delete from DB is handled by the caller or via environment
-                NotificationCenter.default.post(name: NSNotification.Name("DeleteScreenshot"), object: item)
+                // Move to Trash
+                NSWorkspace.shared.recycle([URL(fileURLWithPath: item.filePath)]) { _, _ in
+                    DispatchQueue.main.async {
+                        // Delete from DB is handled by the caller or via environment
+                        NotificationCenter.default.post(name: NSNotification.Name("DeleteScreenshot"), object: item)
+                    }
+                }
             }
         }
         .padding(.vertical, 12)

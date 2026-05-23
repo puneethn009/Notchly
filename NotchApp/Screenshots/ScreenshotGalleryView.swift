@@ -123,9 +123,12 @@ struct ScreenshotGalleryView: View {
     }
     
     private func deleteItem(_ item: ScreenshotItem) {
-        try? FileManager.default.removeItem(atPath: item.filePath)
-        modelContext.delete(item)
-        try? modelContext.save()
+        NSWorkspace.shared.recycle([URL(fileURLWithPath: item.filePath)]) { _, _ in
+            DispatchQueue.main.async {
+                modelContext.delete(item)
+                try? modelContext.save()
+            }
+        }
     }
 }
 
@@ -197,7 +200,7 @@ struct ScreenshotThumbnail: View {
                 startWiggling()
             }
         }
-        .onChange(of: isWiggling) { wiggling in
+        .onChange(of: isWiggling) { _, wiggling in
             if wiggling {
                 startWiggling()
             } else {

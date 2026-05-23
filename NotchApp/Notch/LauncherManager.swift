@@ -22,7 +22,9 @@ class LauncherManager: ObservableObject {
     }
     
     func launch(bundleID: String) {
-        NSWorkspace.shared.launchApplication(withBundleIdentifier: bundleID, options: [], additionalEventParamDescriptor: nil, launchIdentifier: nil)
+        if let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) {
+            NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration()) { _, _ in }
+        }
     }
     
     func icon(for bundleID: String) -> NSImage? {

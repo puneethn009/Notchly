@@ -33,10 +33,31 @@ class SettingsManager: ObservableObject {
     @AppStorage("calendarSource") var calendarSource: String = "local" // local, notion, both
     @AppStorage("notionToken") var notionToken: String = ""
     @AppStorage("notionDatabaseID") var notionDatabaseID: String = ""
+    @AppStorage("notionDateProperty") var notionDateProperty: String = "Date"
+    @AppStorage("notionTitleProperty") var notionTitleProperty: String = "Name"
     
     // Module Toggles
     @AppStorage("enableStopwatch") var enableStopwatch: Bool = true
     @AppStorage("selectedAlarmSound") var selectedAlarmSound: String = "Glass"
+    
+    // Notch Pages Module Toggles
+    @AppStorage("showNotchMusic") var showNotchMusic: Bool = true
+    @AppStorage("showNotchTimer") var showNotchTimer: Bool = true
+    @AppStorage("showNotchSystem") var showNotchSystem: Bool = true
+    @AppStorage("showNotchCalendar") var showNotchCalendar: Bool = true
+    @AppStorage("showNotchLauncher") var showNotchLauncher: Bool = true
+    @AppStorage("showNotchScreenshots") var showNotchScreenshots: Bool = true
+    
+    var activeNotchPages: [NotchPage] {
+        var pages: [NotchPage] = []
+        if showNotchMusic { pages.append(.media) }
+        if showNotchTimer { pages.append(.timer) }
+        if showNotchSystem { pages.append(.system) }
+        if showNotchCalendar { pages.append(.calendar) }
+        if showNotchLauncher { pages.append(.launcher) }
+        if showNotchScreenshots { pages.append(.screenshots) }
+        return pages.isEmpty ? [.media] : pages
+    }
     
     // Performance Settings
     @AppStorage("showCPU") var showCPU: Bool = true

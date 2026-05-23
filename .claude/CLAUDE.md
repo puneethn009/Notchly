@@ -1,21 +1,25 @@
 # CLAUDE.md — NotchApp Project Intelligence
 
-> This file tells Claude Code everything it needs to know about this project.
+> This file tells AI agents everything they need to know about this project.
 > Read this fully before writing a single line of code.
+> Last updated: May 2026
 
 ---
 
 ## What This App Is
 
-A native macOS menu bar / notch app that provides:
-- **Screenshot Intelligence** — intercept screenshots before they hit the Desktop, analyze with AI, show dynamic actions
-- **Universal Clipboard Manager** — track, categorize, and search everything copied
-- **Interactive Notch Layer** — expandable notch UI that hovers, expands on hover, shows quick actions
-- **PiP for Any Window** — floating always-on-top mini windows for any app
-- **Quick Notes + Pins** — lightweight note-taking from the notch
-- **Notification Intelligence** — interactive notch-based notification previews
+A native macOS menu bar / notch app called **Notchly** that provides:
+- **Interactive Notch Layer** — expandable notch UI that hovers, expands on hover, shows live modules
+- **Music Player** — live artwork, playback controls, synced lyrics for Apple Music / Spotify / YouTube Music Desktop / TIDAL
+- **Screenshot Intelligence** — intercept screenshots, analyze with Vision + Claude, pixel-perfect editor
+- **Notchly Hub** — full-window control center to toggle notch modules and manage screenshots
+- **System Monitor** — real-time CPU, RAM, network, battery in the notch
+- **Timer & Stopwatch** — countdown alarms and stopwatch under the notch
+- **Event Calendar** — local calendar + Notion database sync
+- **Quick App Launcher** — personalized mini-dock inside the notch
 
-This is NOT an Electron app. This is NOT a menu bar icon app. The UI lives inside/around the physical notch area at the top center of the screen.
+This is NOT an Electron app. This is NOT a menu bar icon app. The UI lives inside/around
+the physical notch area at the top center of the screen.
 
 ---
 
@@ -23,14 +27,13 @@ This is NOT an Electron app. This is NOT a menu bar icon app. The UI lives insid
 
 ```
 UI Layer:        SwiftUI + AppKit hybrid
-                 SwiftUI  → all panels, notch overlay, settings, gallery views
+                 SwiftUI  → all panels, notch overlay, Hub window, settings
                  AppKit   → NSWindow, NSPanel, NSPasteboard, FSEvents, menu bar
 
 Swift Version:   Swift 5.9+ (use async/await, @Observable, structured concurrency)
 
 AI - On Device:  Apple Vision Framework → OCR, barcode, image classification
                  Apple NaturalLanguage  → text categorization, entity extraction
-                 Core ML                → background removal (RMBG-1.4 model)
 
 AI - Cloud:      Anthropic Claude API (claude-sonnet-4-6 model)
                  ONLY call Claude API for: summarize, explain code, translate,
@@ -42,11 +45,13 @@ Data:            SwiftData (macOS 14+) for all persistence
                  FileManager for screenshot files in ~/Library/Application Support/NotchApp/
 
 Networking:      URLSession only — no third party HTTP libs
+                 Music: HTTP polling to localhost:9863 (TIDAL/YTM Desktop API)
+                        Apple Events / MediaRemote for Apple Music / Spotify
 ```
 
 ---
 
-## Project Structure — Maintain This Exactly
+## Project Structure — Current State (May 2026)
 
 ```
 NotchApp/
@@ -54,74 +59,53 @@ NotchApp/
 ├── NotchApp/
 │   ├── App/
 │   │   ├── NotchAppApp.swift           # @main entry, AppDelegate setup
-│   │   ├── AppDelegate.swift           # NSApplicationDelegate, menu bar, lifecycle
-│   │   └── AppState.swift              # @Observable global state singleton
+│   │   ├── AppDelegate.swift           # NSApplicationDelegate, menu bar, Hub launch
+│   │   ├── AppState.swift              # @Observable global state singleton
+│   │   └── SettingsManager.swift       # @Observable notch module toggles + preferences
 │   │
 │   ├── Notch/
 │   │   ├── NotchWindowController.swift # Creates + positions borderless NSWindow at notch
 │   │   ├── NotchOverlayView.swift      # SwiftUI root — hover detection, expand animation
-│   │   ├── NotchExpandedView.swift     # Full expanded panel with tab navigation
-│   │   └── NotchHoverDetector.swift    # NSTrackingArea mouse enter/exit
+│   │   ├── NotchExpandedView.swift     # Full expanded panel: music, timer, system, calendar, launcher
+│   │   ├── NotchShape.swift            # Custom notch shape + outer radius tuning
+│   │   ├── NotchHoverDetector.swift    # NSTrackingArea mouse enter/exit
+│   │   ├── MediaPlayerManager.swift    # Multi-source media: AppleMusic/Spotify/YTM/TIDAL
+│   │   ├── CalendarManager.swift       # EventKit + optional Notion database integration
+│   │   ├── LauncherManager.swift       # Quick app launcher dock management
+│   │   └── PreviewWindowController.swift # Floating preview window for expanded notch content
 │   │
 │   ├── Screenshots/
 │   │   ├── ScreenshotMonitor.swift     # FSEvents on ~/Desktop, detects new screenshots
-│   │   ├── ScreenshotInterceptor.swift # Moves file from Desktop → app gallery instantly
+│   │   ├── CaptureManager.swift        # Coordinates capture, move, index pipeline
 │   │   ├── ScreenshotAnalyzer.swift    # Orchestrates Vision + Claude analysis
-│   │   ├── ScreenshotGallery.swift     # SwiftUI LazyVGrid gallery with search
-│   │   └── ScreenshotActionBar.swift   # Dynamic action buttons based on ContentType
+│   │   ├── ScreenshotEditorWindow.swift # Full pixel-perfect editor (annotations, crop, export)
+│   │   ├── ScreenshotGalleryView.swift # SwiftUI LazyVGrid gallery with search
+│   │   ├── ScreenshotActionBar.swift   # Dynamic action buttons based on ContentType
+│   │   └── ScreenshotFloatingPreview.swift # Floating preview panel after capture
 │   │
-│   ├── Clipboard/
-│   │   ├── ClipboardMonitor.swift      # Timer polling NSPasteboard every 0.5s
-│   │   ├── ClipboardItem.swift         # SwiftData model + ItemType enum
-│   │   ├── ClipboardCategorizer.swift  # Regex + NL categorization
-│   │   ├── ClipboardHistoryView.swift  # SwiftUI list with search + pin
-│   │   └── ClipboardSearch.swift       # Full-text search across text + OCR content
+│   ├── UI/                             # NEW — Hub window & shared UI utilities
+│   │   ├── NotchlyHubView.swift        # Full-window control center (SwiftUI)
+│   │   │                               #   → NotchControlsView: toggle each notch module
+│   │   │                               #   → ScreenshotManagerView: grid gallery + editor launch
+│   │   ├── NotchlyHubWindowController.swift # AppKit NSWindow controller for Hub
+│   │   └── VisualEffectView.swift      # NSViewRepresentable wrapper for NSVisualEffectView
 │   │
-│   ├── PiP/
-│   │   ├── PiPWindowManager.swift      # Manages array of active PiP sessions
-│   │   ├── PiPOverlayWindow.swift      # NSPanel .floating level, snap-to-corner
-│   │   ├── WindowCaptureSession.swift  # ScreenCaptureKit SCStream per window
-│   │   └── PiPControlsView.swift       # Opacity slider, close, resize handle
-│   │
-│   ├── Notes/
-│   │   ├── QuickNoteView.swift         # Instant note composer inside notch
-│   │   ├── PinnedFilesView.swift       # Drag-and-drop file pins
-│   │   ├── StickyNoteWindow.swift      # Floating NSPanel sticky note
-│   │   └── NotesStorage.swift          # SwiftData CRUD for QuickNote model
-│   │
-│   ├── AI/
-│   │   ├── VisionAnalyzer.swift        # VNRecognizeTextRequest, VNDetectBarcodesRequest
-│   │   ├── ContentClassifier.swift     # Returns ContentType enum from CGImage
-│   │   ├── ClaudeAPIClient.swift       # Anthropic /v1/messages with vision support
-│   │   ├── BackgroundRemover.swift     # Core ML RMBG model wrapper
-│   │   └── SmartActions.swift          # ContentType → [QuickAction] mapping
+│   ├── Settings/
+│   │   └── SettingsView.swift          # Native macOS Settings (TabView: General, Permissions, About)
 │   │
 │   ├── Permissions/
 │   │   ├── PermissionsManager.swift    # Check + request screen recording, accessibility
 │   │   └── PermissionsOnboarding.swift # First-launch SwiftUI permission flow
 │   │
-│   ├── Settings/
-│   │   ├── SettingsView.swift          # TabView: General, AI, Hotkeys, About
-│   │   ├── HotkeyManager.swift         # KeyboardShortcuts package integration
-│   │   └── PreferencesStore.swift      # Defaults package wrapper
-│   │
-│   └── Utilities/
-│       ├── Extensions/
-│       │   ├── NSImage+Extensions.swift
-│       │   ├── String+Extensions.swift
-│       │   └── View+Extensions.swift
-│       ├── Constants.swift             # App-wide constants, directory URLs
-│       └── Logger.swift               # os.Logger wrapper with subsystem
+│   └── Resources/                      # NEW — bundled assets
+│       └── (CoreML models, bundled fonts, etc.)
 │
-├── NotchAppTests/
-└── Resources/
-    ├── Assets.xcassets
-    └── Models/                         # CoreML .mlpackage files go here
+└── scratch/                            # Temporary diffs and debug files (not committed)
 ```
 
 ---
 
-## Xcode Project Configuration — Apply This First
+## Xcode Project Configuration
 
 ### Deployment Target
 ```
@@ -131,7 +115,7 @@ macOS 14.0 (Sonoma) minimum
 ### App Sandbox
 ```
 DISABLED — must be OFF
-Reason: FSEvents on Desktop, notch window positioning, 
+Reason: FSEvents on Desktop, notch window positioning,
         clipboard access, and ScreenCaptureKit all require no sandbox
 ```
 
@@ -139,47 +123,7 @@ Reason: FSEvents on Desktop, notch window positioning,
 ```
 Hardened Runtime: ON
 App Sandbox: OFF
-```
-
-### Entitlements File (NotchApp/NotchApp.entitlements)
-```xml
-<?xml version="1.0" encoding="UTF-8"?>
-<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
-<plist version="1.0">
-<dict>
-    <key>com.apple.security.screen-capture</key>
-    <true/>
-    <key>com.apple.security.network.client</key>
-    <true/>
-    <key>com.apple.security.files.user-selected.read-write</key>
-    <true/>
-    <key>com.apple.security.files.downloads.read-write</key>
-    <true/>
-    <key>com.apple.security.automation.apple-events</key>
-    <true/>
-    <key>com.apple.security.cs.allow-jit</key>
-    <false/>
-</dict>
-</plist>
-```
-
-### Info.plist Required Keys
-```xml
-<!-- Hide from Dock — this is a menu bar only app -->
-<key>LSUIElement</key>
-<true/>
-
-<!-- Required for ScreenCaptureKit / PiP -->
-<key>NSScreenCaptureUsageDescription</key>
-<string>NotchApp needs screen access to create PiP windows for any app.</string>
-
-<!-- Required for global hotkeys -->
-<key>NSAccessibilityUsageDescription</key>
-<string>NotchApp needs accessibility access for system-wide keyboard shortcuts.</string>
-
-<!-- Required for Apple Events -->
-<key>NSAppleEventsUsageDescription</key>
-<string>NotchApp uses Apple Events for app integration features.</string>
+Ad-hoc codesigning for local Debug builds
 ```
 
 ### Swift Package Dependencies
@@ -210,6 +154,51 @@ window.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle]
 window.orderFrontRegardless()
 ```
 
+### Hub Window — Apple Liquid Glass Pattern (CRITICAL)
+```swift
+// NotchlyHubWindowController.swift — assign hosting controller DIRECTLY
+// Never manually size NSVisualEffectView before layout runs (0×0 frame bug)
+window.backgroundColor = .clear
+window.isOpaque = false
+window.titlebarAppearsTransparent = true
+window.contentViewController = hostingController  // ← direct, no container NSViewController
+
+// NotchlyHubView.swift — VisualEffectView lives in SwiftUI root ZStack
+// SwiftUI auto-sizes it to fill the window — no manual frame needed
+var body: some View {
+    ZStack {
+        VisualEffectView(material: .hudWindow, blendingMode: .behindWindow)
+            .ignoresSafeArea()   // ← base glass layer, fills entire window
+        HStack(spacing: 0) { ... }  // ← content on top
+    }
+    .frame(minWidth: 900, maxWidth: .infinity, minHeight: 620, maxHeight: .infinity)
+}
+```
+
+### macOS Full-Row Tap Target Pattern (CRITICAL)
+```swift
+// Button + .buttonStyle(.plain) on macOS only hits rendered pixels (icon area)
+// ❌ WRONG — text areas won't respond to taps
+Button { ... } label: { HStack { Image(...); Text(...); Spacer() } }
+    .buttonStyle(.plain)
+    .contentShape(Rectangle())  // doesn't fully work on macOS for Text/Spacer
+
+// ✅ CORRECT — ZStack with Color.clear as tap layer, visual HStack below
+ZStack(alignment: .leading) {
+    Color.clear
+        .frame(maxWidth: .infinity)
+        .contentShape(Rectangle())
+        .onTapGesture { ... }              // ← handles all taps
+
+    HStack { Image(...); Text(...); Spacer() }
+        .padding(.horizontal, 16)
+        .padding(.vertical, 10)
+        .allowsHitTesting(false)           // ← visual only, no hit testing
+}
+.fixedSize(horizontal: false, vertical: true)  // ← prevents vertical expansion
+.frame(maxWidth: .infinity)
+```
+
 ### Screenshot Interception Pattern
 ```swift
 // FSEvents latency: 0.1s (100ms) for near-instant detection
@@ -218,20 +207,14 @@ window.orderFrontRegardless()
 // Then analyze async — never block the move
 ```
 
-### Clipboard Polling Pattern
+### Music Player Multi-Source Detection
 ```swift
-// Poll every 0.5 seconds — NSPasteboard has no push notifications
-// Check NSPasteboard.general.changeCount — only process if changed
-// Priority: image > file URL > string
-// Cap history at 500 items
-```
-
-### PiP Window Pattern
-```swift
-// Use ScreenCaptureKit SCContentFilter(desktopIndependentWindow:)
-// NSPanel with .floating window level for always-on-top
-// Snap to corners on mouseUp with 200ms animation
-// Support multiple simultaneous PiP windows
+// Priority order for music source detection:
+// 1. Apple Music / Spotify → MediaRemote framework (private, but stable)
+// 2. YouTube Music Desktop App → HTTP poll http://localhost:9863/query
+// 3. TIDAL Desktop → HTTP poll http://localhost:9863/query (same port as YTM)
+// Console errors "Connection refused" on localhost:9863 are EXPECTED when YTM/TIDAL not running
+// Never crash or alert on these failures — silently skip
 ```
 
 ### Claude API Calls
@@ -258,16 +241,6 @@ enum ContentType {
 // This drives: what actions show, what AI prompt is used, how it's stored
 ```
 
-### Dynamic Actions Per ContentType
-```
-.codeSnippet  → [copyCode, explainCode, debugCode, openInVSCode]
-.receipt      → [extractTotals, saveExpense, exportPDF, copyText]
-.textDocument → [copyText, summarize, translate, convertToMarkdown, removeSensitiveData]
-.photo        → [save, removeBackground, extractObjects, copyImage, share]
-.qrCode       → [openURL, copyContent, save]
-.uiScreenshot → [copyText, save, share, addToNotes]
-```
-
 ---
 
 ## Data Models (SwiftData)
@@ -276,6 +249,7 @@ enum ContentType {
 @Model class ScreenshotItem {
     var id: UUID
     var filePath: String
+    var filename: String
     var capturedAt: Date
     var contentType: String      // rawValue of ContentType
     var extractedText: String?   // OCR result from Vision
@@ -283,167 +257,98 @@ enum ContentType {
     var tags: [String]
     var isFavorited: Bool
 }
-
-@Model class ClipboardItem {
-    var id: UUID
-    var content: String
-    var type: String             // text/url/code/email/color/otp/image/file
-    var copiedAt: Date
-    var appSource: String?       // bundle ID of source app
-    var imageData: Data?
-    var isPinned: Bool
-}
-
-@Model class QuickNote {
-    var id: UUID
-    var content: String
-    var createdAt: Date
-    var isPinned: Bool
-    var isFloating: Bool
-    var attachedScreenshotId: UUID?
-}
-
-@Model class PinnedFile {
-    var id: UUID
-    var filePath: String
-    var pinnedAt: Date
-    var customLabel: String?
-}
 ```
 
 ---
 
-## Build Order — Follow Sprints Sequentially
+## Settings / Module Toggles (SettingsManager)
 
-**Never jump ahead. Each sprint depends on the previous.**
+`SettingsManager` is a shared `@Observable` / `ObservableObject` singleton.
+It controls which modules are visible in the notch and stores user preferences.
 
-### ✅ Sprint 1 — Foundation (COMPLETED)
-```
-Task 1: Configure Xcode project (Done)
-Task 2: NotchWindowController.swift (Done)
-Task 3: NotchOverlayView.swift + NotchExpandedView.swift (Done)
-Task 4: AppDelegate.swift + NotchAppApp.swift (Done)
-Bonus: Productivity Hub (Timer, SysMonitor, Media, Calendar, Launcher) (Done)
-```
-
-### ✅ Sprint 2 — Screenshot Intelligence (COMPLETED)
-```
-Task 5: ScreenshotMonitor.swift (Done)
-Task 6: ScreenshotInterceptor.swift (Done)
-Task 7: ContentClassifier.swift + VisionAnalyzer.swift (Done)
-Task 8: ScreenshotActionBar.swift (Done)
-Task 9: ScreenshotGallery.swift (Done)
+```swift
+// Notch module visibility — all default true
+var showNotchMusic: Bool
+var showNotchTimer: Bool
+var showNotchSystem: Bool
+var showNotchCalendar: Bool
+var showNotchLauncher: Bool
+var showNotchScreenshots: Bool
 ```
 
-### 🚀 Sprint 3 — Clipboard Intelligence (ACTIVE)
+The **NotchlyHub → Notch Controls** tab binds directly to these properties
+via `ToggleCard` components. Changes take effect immediately in the notch.
+
+---
+
+## Notchly Hub Window
+
+**Entry point:** `AppDelegate` calls `NotchlyHubWindowController.shared.show()`
+
+The Hub is a full-size window (default 1100×700, min 900×620, freely resizable)
+with an Apple Liquid Glass background (`.hudWindow` material).
+
+**Sidebar tabs:**
+- `Notch Controls` → `NotchControlsView` — toggle cards for each notch module
+- `Screenshot Manager` → `ScreenshotManagerView` — searchable grid, tap to open editor
+
+**Bottom of sidebar:** Preferences… button → opens native Settings window
+
+---
+
+## Sprint Status — May 2026
+
+### ✅ Sprint 1 — Foundation (COMPLETE)
 ```
-Task 10: ClipboardMonitor.swift
-         - Timer 0.5s interval
-         - NSPasteboard.general.changeCount tracking
-         - Priority: NSImage > fileURL > string
-         - Max 500 items, insert at index 0
+NotchWindowController, NotchOverlayView, NotchExpandedView, AppDelegate
+Productivity Hub: Timer, SysMonitor, Media, Calendar, Launcher
+```
 
-Task 11: ClipboardCategorizer.swift
-         - isURL: URL(string:).scheme == https/http
-         - isEmail: regex [A-Z0-9._%+-]+@[A-Z0-9.-]+\.[A-Z]{2,}
-         - isPhone: regex starts with +, digits, dashes
-         - isHexColor: starts with # + 6 hex chars
-         - isOTP: 4-8 chars, all digits
-         - isCode: contains Swift/Python/JS keywords
-         - Default: .text
+### ✅ Sprint 2 — Screenshot Intelligence (COMPLETE)
+```
+ScreenshotMonitor, CaptureManager, Vision analysis pipeline
+ScreenshotEditorWindow (full pixel-perfect editor with annotation tools)
+ScreenshotFloatingPreview, ScreenshotActionBar, ScreenshotGalleryView
+```
 
-Task 12: ClipboardHistoryView.swift
-         - List with sections by date
-         - Category icon + preview text
-         - Swipe to delete, tap to copy back to clipboard
-         - Pin button
+### ✅ Sprint 2.5 — Notchly Hub (COMPLETE)
+```
+NotchlyHubView, NotchlyHubWindowController, VisualEffectView
+Apple Liquid Glass window design
+Notch module toggles via SettingsManager
+Screenshot Manager grid in Hub
+```
 
-Task 13: ClipboardSearch.swift
-         - Search across ClipboardItem.content
-         - Also search ScreenshotItem.extractedText
-         - Unified results view
+### 🚀 Sprint 3 — Clipboard Intelligence (NEXT)
+```
+Task 10: ClipboardMonitor.swift   — Timer 0.5s, changeCount tracking, max 500 items
+Task 11: ClipboardCategorizer.swift — URL/email/OTP/code/hex detection
+Task 12: ClipboardHistoryView.swift — List by date, pin, swipe-to-delete
+Task 13: ClipboardSearch.swift    — Search clipboard + screenshot OCR text
 ```
 
 ### Sprint 4 — PiP Windows
 ```
-Task 14: PermissionsManager.swift + PermissionsOnboarding.swift
-         - Check CGPreflightScreenCaptureAccess()
-         - Check AXIsProcessTrusted()
-         - Request via SCShareableContent.current (triggers dialog)
-         - SwiftUI onboarding shown on first launch if permissions missing
-
-Task 15: WindowCaptureSession.swift
-         - SCShareableContent.current to get window list
-         - SCContentFilter(desktopIndependentWindow:)
-         - SCStreamConfiguration: 30fps, retina scale
-         - SCStreamOutput delegate → update PiP frame
-
-Task 16: PiPOverlayWindow.swift
-         - NSPanel, .floating level
-         - isMovableByWindowBackground = true
-         - canJoinAllSpaces + fullScreenAuxiliary
-         - mouseUp → snapToNearestCorner() with 200ms animation
-         - updateFrame(with: CGImage) for live rendering
-
-Task 17: PiPControlsView.swift + PiPWindowManager.swift
-         - Overlay controls: opacity slider, close button
-         - Controls fade in on hover, fade out after 2s
-         - PiPWindowManager maintains [WindowCaptureSession]
-         - Stop stream + close window cleanly
+Task 14: PermissionsManager + PermissionsOnboarding
+Task 15: WindowCaptureSession (ScreenCaptureKit SCStream per window)
+Task 16: PiPOverlayWindow (NSPanel .floating, snap-to-corner)
+Task 17: PiPControlsView + PiPWindowManager
 ```
 
-### Sprint 5 — Notes, Hotkeys, Settings
+### Sprint 5 — Notes, Hotkeys, Full Settings
 ```
-Task 18: QuickNoteView.swift
-         - TextEditor auto-focused on appear
-         - DropZone for image/file attachment
-         - Buttons: Pin | Save | Float (open as sticky)
-
-Task 19: StickyNoteWindow.swift + NotesStorage.swift
-         - NSPanel floating, yellow-ish tint background
-         - Resizable, movable, always on top
-         - SwiftData persist QuickNote
-         - Multiple stickies supported
-
-Task 20: HotkeyManager.swift
-         - Cmd+Shift+N → open notch to Notes tab
-         - Cmd+Shift+V → open notch to Clipboard tab
-         - Cmd+Shift+S → open notch to Screenshots tab
-         - Use KeyboardShortcuts package
-         - User-customizable via Settings
-
-Task 21: SettingsView.swift + PreferencesStore.swift
-         - Tab: General (launch at login, history limits)
-         - Tab: AI (Claude API key field → stored in Keychain)
-         - Tab: Hotkeys (KeyboardShortcuts.Recorder views)
-         - Tab: Permissions (status indicators + re-request buttons)
-         - Tab: About (version, links)
+Task 18: QuickNoteView
+Task 19: StickyNoteWindow + NotesStorage (SwiftData)
+Task 20: HotkeyManager (Cmd+Shift+N/V/S)
+Task 21: Full SettingsView (AI key, hotkeys, permissions tabs)
 ```
 
-### Sprint 6 — AI Integration + Polish
+### Sprint 6 — AI + Polish
 ```
-Task 22: ClaudeAPIClient.swift
-         - POST to https://api.anthropic.com/v1/messages
-         - model: claude-sonnet-4-6
-         - Headers: x-api-key (from Keychain), anthropic-version: 2023-06-01
-         - Vision: base64 image + text prompt in single message
-         - Async/await with proper error handling
-
-Task 23: Wire Claude into features
-         - Screenshot: summarize, explain code, translate, extract receipt JSON
-         - Clipboard: smart categorize ambiguous items
-         - Each feature uses buildPrompt(for: ContentType) pattern
-
-Task 24: BackgroundRemover.swift
-         - Core ML RMBG-1.4 model (download from HuggingFace, add to Resources/Models/)
-         - Input: CGImage → Output: CGImage with alpha mask
-         - Run on background thread
-
+Task 22: ClaudeAPIClient (full vision support)
+Task 23: Wire Claude into screenshot + clipboard features
+Task 24: BackgroundRemover (Core ML RMBG-1.4)
 Task 25: Sparkle auto-update
-         - Add SUUpdater to AppDelegate
-         - Add SUFeedURL to Info.plist
-         - Check for updates on launch (background)
-         - Show update UI non-intrusively
 ```
 
 ---
@@ -453,44 +358,44 @@ Task 25: Sparkle auto-update
 | Mistake | Correct Approach |
 |---------|-----------------|
 | Using `@main` WindowGroup | Use `@main App` with `NSApplicationDelegateAdaptor` + `Settings {}` only |
-| Creating window in SwiftUI | All notch/PiP windows created in AppKit (NSWindowController/NSPanel) |
+| Creating window in SwiftUI | All notch/PiP/Hub windows created in AppKit (NSWindowController/NSPanel) |
 | Enabling App Sandbox | Must be OFF — this is a direct-distribution app |
 | Hardcoding API key | Store in Keychain via `Security` framework |
 | Calling Claude API on MainActor | Always `Task { }` on background, `await MainActor.run {}` for UI updates |
 | `NSPasteboard` push notifications | Don't exist — must poll with Timer |
-| Using UserDefaults for sensitive data | Use Keychain for API key, Defaults package for preferences |
+| Button+.plain for full-row tap on macOS | Use ZStack + Color.clear + onTapGesture pattern (see above) |
+| Fixed SwiftUI `.frame(width:height:)` for resizable windows | Use `.frame(minWidth:maxWidth:minHeight:maxHeight:)` |
+| Setting `visualEffectView.frame = visualEffectView.bounds` at init | bounds is 0×0 before layout — let SwiftUI size the VisualEffectView instead |
+| `maxHeight: .infinity` on Color.clear inside VStack ZStack | Causes rows to expand and fill parent — use `.fixedSize(horizontal:false, vertical:true)` |
+| Crashing/alerting on localhost:9863 connection refused | These are expected when YTM/TIDAL not running — silently ignore |
+| Forgetting `canJoinAllSpaces` | Notch window must follow user across all Spaces |
 | Single PiP window assumption | Design PiPWindowManager for N simultaneous windows |
 | Blocking file move for analysis | Move screenshot instantly, analyze async |
-| Forgetting `canJoinAllSpaces` | Notch window must follow user across all Spaces |
 
 ---
 
 ## File Naming Conventions
 
 ```
-Views:       *View.swift       (ScreenshotGallery.swift, ClipboardHistoryView.swift)
-Controllers: *Controller.swift (NotchWindowController.swift)
-Managers:    *Manager.swift    (PiPWindowManager.swift, HotkeyManager.swift)
-Monitors:    *Monitor.swift    (ClipboardMonitor.swift, ScreenshotMonitor.swift)
-Models:      noun only         (ClipboardItem.swift, QuickNote in NotesStorage.swift)
+Views:       *View.swift       (NotchlyHubView.swift, ScreenshotGalleryView.swift)
+Controllers: *Controller.swift (NotchlyHubWindowController.swift)
+Managers:    *Manager.swift    (SettingsManager.swift, LauncherManager.swift)
+Monitors:    *Monitor.swift    (ScreenshotMonitor.swift)
+Models:      noun only         (ScreenshotItem, ClipboardItem)
 Clients:     *Client.swift     (ClaudeAPIClient.swift)
 ```
 
 ---
 
-## What Success Looks Like Per Sprint
+## Build & Verify
 
-After Sprint 1: App launches, no Dock icon, menu bar item visible, black notch expands on hover with spring animation, collapses on mouse out. Build is clean.
+```bash
+# Always verify after changes
+xcodebuild -project NotchApp.xcodeproj -scheme NotchApp -configuration Debug build
 
-After Sprint 2: Take a screenshot → it disappears from Desktop → appears in notch popup instantly → action buttons show based on content type.
-
-After Sprint 3: Copy text/image/URL → appears in clipboard history in notch → searchable → OTPs auto-detected.
-
-After Sprint 4: Right-click any window → "Open in PiP" → floating always-on-top mini window → snaps to corner on drag release.
-
-After Sprint 5: Cmd+Shift+N → notch opens to note → type → float as sticky → persists after relaunch.
-
-After Sprint 6: Receipt screenshot → Claude extracts merchant, total, items → shows structured result. Code screenshot → Claude explains it in 2-3 sentences.
+# Expected output: ** BUILD SUCCEEDED **
+# Ignore: "Metadata extraction skipped. No AppIntents.framework dependency found." (harmless)
+```
 
 ---
 

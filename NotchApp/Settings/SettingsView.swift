@@ -1,50 +1,41 @@
 import SwiftUI
+import KeyboardShortcuts
 
 struct SettingsView: View {
     @StateObject private var settings = SettingsManager.shared
     @State private var selection: String? = "Music"
     
     var body: some View {
-        NavigationSplitView {
-            List(selection: $selection) {
-                NavigationLink(value: "Music") {
+        TabView(selection: $selection) {
+            MusicSettingsPage(settings: settings)
+                .tabItem {
                     Label("Music", systemImage: "music.note")
                 }
-                NavigationLink(value: "Timer") {
+                .tag("Music")
+            
+            TimerSettingsPage(settings: settings)
+                .tabItem {
                     Label("Timer", systemImage: "timer")
                 }
-                NavigationLink(value: "Performance") {
+                .tag("Timer")
+                
+            PerformanceSettingsPage(settings: settings)
+                .tabItem {
                     Label("Performance", systemImage: "cpu")
                 }
-                NavigationLink(value: "Calendar") {
-                    Label("Calendar", systemImage: "calendar")
+                .tag("Performance")
+                
+            DockSettingsPage(settings: settings)
+                .tabItem {
+                    Label("Dock", systemImage: "dock.rectangle")
                 }
-                NavigationLink(value: "Dock") {
-                    Label("Dock", systemImage: "apps.ipad.desktop")
+                .tag("Dock")
+                
+            ScreenshotSettingsPage()
+                .tabItem {
+                    Label("Screenshots", systemImage: "camera.viewfinder")
                 }
-            }
-            .navigationTitle("Settings")
-        } detail: {
-            Group {
-                switch selection {
-                case "Music":
-                    MusicSettingsPage(settings: settings)
-                case "Timer":
-                    TimerSettingsPage(settings: settings)
-                case "Performance":
-                    PerformanceSettingsPage(settings: settings)
-                case "Calendar":
-                    Text("Calendar settings coming soon...")
-                        .font(.headline)
-                        .foregroundColor(.secondary)
-                case "Dock":
-                    DockSettingsPage(settings: settings)
-                default:
-                    Text("Select a page")
-                }
-            }
-            .frame(maxWidth: .infinity, maxHeight: .infinity)
-            .background(Color(NSColor.windowBackgroundColor))
+                .tag("Screenshots")
         }
         .frame(width: 700, height: 500)
     }
@@ -257,5 +248,30 @@ struct DockSettingsPage: View {
             }
         }
         allApps = foundApps.sorted { $0.name < $1.name }
+    }
+}
+
+struct ScreenshotSettingsPage: View {
+    var body: some View {
+        Form {
+            Section("Keyboard Shortcuts") {
+                HStack {
+                    Text("Capture Full Screen")
+                    Spacer()
+                    KeyboardShortcuts.Recorder(for: .takeFullScreen)
+                }
+                HStack {
+                    Text("Capture Selection")
+                    Spacer()
+                    KeyboardShortcuts.Recorder(for: .takeSelection)
+                }
+            }
+            
+            Text("These shortcuts trigger Notchly's native screenshot capture tool.")
+                .font(.caption)
+                .foregroundColor(.secondary)
+        }
+        .formStyle(.grouped)
+        .navigationTitle("Screenshot Settings")
     }
 }

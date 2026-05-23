@@ -71,6 +71,7 @@ class MediaPlayerManager: ObservableObject {
     private var lyricsTask: Task<Void, Never>?
     private var artworkTask: Task<Void, Never>?
     private var ytmTimer: Timer?
+    private var ytmConsecutiveFailures: Int = 0
 
     private init() {}
 
@@ -451,7 +452,11 @@ class MediaPlayerManager: ObservableObject {
     private func startYTMTracker() {
         ytmTimer?.invalidate()
         ytmTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
-            Task { await self?.fetchYTMState() }
+            guard let self = self else { return }
+            let backoff = min(60, 1 << min(6, self.ytmConsecutiveFailures))
+            if Int(Date().timeIntervalSince1970) % backoff == 0 {
+                Task { await self.fetchYTMState() }
+            }
         }
     }
 
@@ -462,7 +467,10 @@ class MediaPlayerManager: ObservableObject {
 
         do {
             let (data, response) = try await URLSession.shared.data(for: request)
-            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else { return }
+            guard let httpResponse = response as? HTTPURLResponse, httpResponse.statusCode == 200 else {
+                await MainActor.run { self.ytmConsecutiveFailures += 1 }
+                return
+            }
 
             if let json = try? JSONSerialization.jsonObject(with: data) as? [String: Any],
                let player = json["player"] as? [String: Any],
@@ -476,6 +484,7 @@ class MediaPlayerManager: ObservableObject {
                 let coverUrl = track["cover"] as? String ?? ""
 
                 await MainActor.run {
+                    self.ytmConsecutiveFailures = 0
                     // Only take over if Apple Music / Spotify are not actively playing
                     if self.activeSource != "YouTubeMusic" && self.isPlaying {
                         if self.activeSource == "Music" || self.activeSource == "Spotify" {
@@ -521,6 +530,7 @@ class MediaPlayerManager: ObservableObject {
         } catch {
             // YTM Not running or remote control disabled
             await MainActor.run {
+                self.ytmConsecutiveFailures += 1
                 if self.activeSource == "YouTubeMusic" {
                     self.isPlaying = false
                     self.isRunning = false
