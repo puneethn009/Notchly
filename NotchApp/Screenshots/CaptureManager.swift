@@ -82,6 +82,7 @@ class CaptureManager {
     }
     
     func disableNativeThumbnails() {
+        // Disable macOS native screenshot thumbnail so Notchly's own preview shows instead
         let task = Process()
         task.launchPath = "/usr/bin/defaults"
         task.arguments = ["write", "com.apple.screencapture", "show-thumbnail", "-bool", "FALSE"]
@@ -93,10 +94,14 @@ class CaptureManager {
         locTask.arguments = ["write", "com.apple.screencapture", "location", desktopPath]
         locTask.launch()
         
-        // Restart SystemUIServer to apply (optional, but recommended)
-        let killTask = Process()
-        killTask.launchPath = "/usr/bin/killall"
-        killTask.arguments = ["SystemUIServer"]
-        killTask.launch()
+        // Only restart SystemUIServer once ever — it kills menu bar apps and causes flicker
+        let key = "notchly.didRestartSystemUIServer"
+        if !UserDefaults.standard.bool(forKey: key) {
+            UserDefaults.standard.set(true, forKey: key)
+            let killTask = Process()
+            killTask.launchPath = "/usr/bin/killall"
+            killTask.arguments = ["SystemUIServer"]
+            killTask.launch()
+        }
     }
 }

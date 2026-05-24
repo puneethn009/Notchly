@@ -149,8 +149,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 MediaPlayerManager.shared.start()
             }
             
-            // Open the Notchly Hub as the main app window
-            NotchlyHubWindowController.shared.show()
+            // Check Accessibility permission for global hotkeys
+            checkAccessibilityPermission()
         }
     }
 
@@ -165,6 +165,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         }
 
         let menu = NSMenu()
+        menu.addItem(NSMenuItem(title: "Open Notchly Hub", action: #selector(openHub), keyEquivalent: "o"))
+        menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ","))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit Notchly", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
@@ -182,17 +184,33 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         // Window level management is now handled dynamically in checkMousePosition
     }
 
+    @objc func openHub() {
+        NotchlyHubWindowController.shared.show()
+    }
+
     @objc func openSettings(_ sender: Any?) {
         NSApp.activate(ignoringOtherApps: true)
-        let appMenu = NSApp.mainMenu?.item(at: 0)?.submenu
-        let settingsItem = appMenu?.items.first(where: { 
-            $0.action == Selector(("showSettingsWindow:")) || $0.title.contains("Settings")
-        })
+        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+    }
+
+    /// Check Accessibility permission needed for global hotkeys.
+    /// If not granted, prompt user once and show a non-blocking alert.
+    private func checkAccessibilityPermission() {
+        guard !AXIsProcessTrusted() else { return }
         
-        if let item = settingsItem {
-            _ = item.target?.perform(item.action, with: item)
-        } else {
-            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
+            let alert = NSAlert()
+            alert.messageText = "Accessibility Access Needed"
+            alert.informativeText = "Notchly needs Accessibility permission to enable global screenshot hotkeys (⌥⇧3 / ⌥⇧4).\n\nGo to System Settings → Privacy & Security → Accessibility and enable Notchly."
+            alert.alertStyle = .warning
+            alert.addButton(withTitle: "Open System Settings")
+            alert.addButton(withTitle: "Later")
+            
+            if alert.runModal() == .alertFirstButtonReturn {
+                if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                    NSWorkspace.shared.open(url)
+                }
+            }
         }
     }
 

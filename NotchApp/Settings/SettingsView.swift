@@ -1,5 +1,6 @@
 import SwiftUI
 import KeyboardShortcuts
+import EventKit
 
 struct SettingsView: View {
     @StateObject private var settings = SettingsManager.shared
@@ -36,6 +37,12 @@ struct SettingsView: View {
                     Label("Screenshots", systemImage: "camera.viewfinder")
                 }
                 .tag("Screenshots")
+
+            PermissionsSettingsPage()
+                .tabItem {
+                    Label("Permissions", systemImage: "lock.shield")
+                }
+                .tag("Permissions")
         }
         .frame(width: 700, height: 500)
     }
@@ -273,5 +280,111 @@ struct ScreenshotSettingsPage: View {
         }
         .formStyle(.grouped)
         .navigationTitle("Screenshot Settings")
+    }
+}
+
+// MARK: - Permissions Page
+
+struct PermissionsSettingsPage: View {
+    @State private var accessibilityGranted: Bool = false
+    @State private var screenRecordingGranted: Bool = false
+    @State private var calendarGranted: Bool = false
+    @State private var remindersGranted: Bool = false
+
+    var body: some View {
+        Form {
+            Section("Required Permissions") {
+                PermissionRow(
+                    title: "Accessibility",
+                    subtitle: "Enables global screenshot hotkeys (⌥⇧3 / ⌥⇧4)",
+                    icon: "figure.arms.open",
+                    granted: accessibilityGranted,
+                    settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+                )
+                PermissionRow(
+                    title: "Screen Recording",
+                    subtitle: "Required for screenshot capture",
+                    icon: "camera.viewfinder",
+                    granted: screenRecordingGranted,
+                    settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
+                )
+            }
+
+            Section("Optional Permissions") {
+                PermissionRow(
+                    title: "Calendar",
+                    subtitle: "Show upcoming events in the notch",
+                    icon: "calendar",
+                    granted: calendarGranted,
+                    settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars"
+                )
+                PermissionRow(
+                    title: "Reminders",
+                    subtitle: "Show reminders in the notch calendar view",
+                    icon: "checklist",
+                    granted: remindersGranted,
+                    settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Reminders"
+                )
+            }
+        }
+        .formStyle(.grouped)
+        .navigationTitle("Permissions")
+        .onAppear(perform: checkPermissions)
+        .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
+            checkPermissions() // Refresh when user returns from System Settings
+        }
+    }
+
+    private func checkPermissions() {
+        accessibilityGranted = AXIsProcessTrusted()
+        screenRecordingGranted = CGPreflightScreenCaptureAccess()
+
+        let calendarStatus = EKEventStore.authorizationStatus(for: .event)
+        calendarGranted = calendarStatus == .fullAccess || calendarStatus.rawValue == 3
+
+        let reminderStatus = EKEventStore.authorizationStatus(for: .reminder)
+        remindersGranted = reminderStatus == .fullAccess || reminderStatus.rawValue == 3
+    }
+}
+
+struct PermissionRow: View {
+    let title: String
+    let subtitle: String
+    let icon: String
+    let granted: Bool
+    let settingsURL: String
+
+    var body: some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon)
+                .font(.system(size: 16, weight: .medium))
+                .foregroundColor(granted ? .green : .orange)
+                .frame(width: 24)
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title)
+                    .font(.body)
+                Text(subtitle)
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+
+            Spacer()
+
+            if granted {
+                Label("Granted", systemImage: "checkmark.circle.fill")
+                    .font(.caption)
+                    .foregroundColor(.green)
+            } else {
+                Button("Enable") {
+                    if let url = URL(string: settingsURL) {
+                        NSWorkspace.shared.open(url)
+                    }
+                }
+                .buttonStyle(.bordered)
+                .controlSize(.small)
+            }
+        }
+        .padding(.vertical, 2)
     }
 }
