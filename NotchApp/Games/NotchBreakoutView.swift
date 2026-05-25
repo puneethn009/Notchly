@@ -118,11 +118,24 @@ final class BreakoutEngine: ObservableObject {
 
     func buildBricks() {
         bricks = []
+        let currentLevel = min(level, 10)
+        
+        // Simple deterministic random for the level
+        var seed = UInt64(currentLevel * 12345)
+        func rand() -> Double {
+            seed = seed &* 6364136223846793005 &+ 1442695040888963407
+            return Double(seed >> 11) * (1.0 / 9007199254740992.0)
+        }
+        
         for row in 0..<brickRows {
             for col in 0..<brickCols {
-                bricks.append(BrickCell(col: col, row: row))
+                let threshold = currentLevel == 1 ? 1.0 : (0.95 - Double(currentLevel) * 0.04)
+                if rand() <= threshold {
+                    bricks.append(BrickCell(col: col, row: row))
+                }
             }
         }
+        if bricks.isEmpty { bricks.append(BrickCell(col: brickCols/2, row: brickRows/2)) }
     }
 
     func brickRect(col: Int, row: Int) -> CGRect {
@@ -154,6 +167,7 @@ final class BreakoutEngine: ObservableObject {
     }
 
     func spacePressed() {
+        NSApp.activate(ignoringOtherApps: true)
         switch phase {
         case .idle:     phase = .playing
         case .playing:  phase = .paused
@@ -165,6 +179,7 @@ final class BreakoutEngine: ObservableObject {
     }
 
     func startGame() {
+        NSApp.activate(ignoringOtherApps: true)
         guard phase == .idle || phase == .gameOver else { return }
         if phase == .gameOver { reset(keepHi: true) }
         phase = .playing
@@ -374,6 +389,9 @@ struct NotchBreakoutView: View {
     // MARK: - Key Monitor
 
     private func setupKeyMonitor() {
+        // Ensure the app has focus so spacebar and arrow keys work globally
+        NSApp.activate(ignoringOtherApps: true)
+        
         keyMonitorDown = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
             handleKey(event, down: true)
             return event
@@ -443,24 +461,32 @@ struct NotchBreakoutView: View {
             let color = game.rowColors[brick.row]
             let alpha = brick.alive ? 1.0 : brick.flashAge
 
+            let cornerRadius: CGFloat = 2.5
+            let rPath = Path(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), cornerRadius: cornerRadius)
+
             // Glow
             var gCtx = ctx
             gCtx.addFilter(.blur(radius: 4))
-            gCtx.fill(
-                Path(rect.insetBy(dx: 0.5, dy: 0.5)),
-                with: .color(color.opacity(0.55 * alpha))
-            )
+            gCtx.fill(rPath, with: .color(color.opacity(0.6 * alpha)))
 
-            // Body
-            ctx.fill(
-                Path(rect.insetBy(dx: 0.5, dy: 0.5)),
-                with: .color(color.opacity(alpha))
-            )
+            // Body gradient (modern glassmorphism)
+            let grad = Gradient(colors: [
+                color.opacity(alpha * 0.95),
+                color.opacity(alpha * 0.4)
+            ])
+            ctx.fill(rPath, with: .linearGradient(
+                grad,
+                startPoint: CGPoint(x: rect.minX, y: rect.minY),
+                endPoint: CGPoint(x: rect.minX, y: rect.maxY)
+            ))
 
-            // Top highlight
+            // Inner stroke for glassy edge
+            ctx.stroke(rPath, with: .color(.white.opacity(0.3 * alpha)), lineWidth: 0.5)
+
+            // Top highlight for 3D bevel
             ctx.fill(
-                Path(CGRect(x: rect.minX + 1, y: rect.minY + 1, width: rect.width - 2, height: 2)),
-                with: .color(Color.white.opacity(0.28 * alpha))
+                Path(roundedRect: CGRect(x: rect.minX + 1, y: rect.minY + 1, width: rect.width - 2, height: 1.5), cornerRadius: 1),
+                with: .color(Color.white.opacity(0.5 * alpha))
             )
         }
     }
