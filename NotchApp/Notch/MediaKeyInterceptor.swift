@@ -13,6 +13,14 @@ class MediaKeyInterceptor {
     private init() { }
     
     func start() {
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true] as CFDictionary
+        let isTrusted = AXIsProcessTrustedWithOptions(options)
+        
+        if !isTrusted {
+            print("WARNING: Accessibility permissions are not granted. The MediaKeyInterceptor will not work.")
+            // You could potentially show an NSAlert here as well
+        }
+        
         let NX_SYSDEFINED: UInt32 = 14
         
         let pointer = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
