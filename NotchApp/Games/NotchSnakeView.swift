@@ -18,7 +18,7 @@ class SnakeGame: ObservableObject {
     var direction: Direction = .right
     var nextDirection: Direction = .right
     
-    let cols = 40
+    let cols = 64
     let rows = 12
     let cellSize: CGFloat = 10
     
@@ -199,19 +199,18 @@ struct NotchSnakeView: View {
                 .background(.black.opacity(0.8))
             } else {
                 VStack {
-                    HStack {
+                    HStack(alignment: .top) {
                         Text("\(game.score)")
                             .font(.system(size: 24, weight: .heavy, design: .rounded))
                             .foregroundColor(.white.opacity(0.5))
                             .padding(.leading, 30)
-                            .padding(.top, 10)
                         Spacer()
                         Text("BEST: \(game.highScore)")
                             .font(.system(size: 12, weight: .bold, design: .rounded))
                             .foregroundColor(.white.opacity(0.4))
                             .padding(.trailing, 30)
-                            .padding(.top, 10)
                     }
+                    .padding(.top, -5)
                     Spacer()
                 }
             }

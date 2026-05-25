@@ -13,8 +13,8 @@ class FlappyGame: ObservableObject {
     let birdRadius: CGFloat = 12
     
     // Physics
-    let gravity: CGFloat = 0.35
-    let jumpForce: CGFloat = -4.5
+    let gravity: CGFloat = 0.2
+    let jumpForce: CGFloat = -4.0
     
     // Pipe State
     struct Pipe {
@@ -26,8 +26,8 @@ class FlappyGame: ObservableObject {
     }
     @Published var pipes: [Pipe] = []
     
-    let pipeSpeed: CGFloat = 3.5
-    let spawnInterval: Int = 90 // frames
+    let pipeSpeed: CGFloat = 2.5
+    let spawnInterval: Int = 110 // frames
     var frameCount = 0
     
     let width: CGFloat = 600
@@ -45,6 +45,7 @@ class FlappyGame: ObservableObject {
     func flap() {
         if phase == .idle || phase == .gameOver {
             reset()
+            birdVelocity = jumpForce // Instantly jump when starting
         } else if phase == .playing {
             birdVelocity = jumpForce
         }
@@ -188,19 +189,18 @@ struct NotchFlappyView: View {
                 .background(.black.opacity(0.8))
             } else {
                 VStack {
-                    HStack {
+                    HStack(alignment: .top) {
                         Text("\(game.score)")
                             .font(.system(size: 24, weight: .heavy, design: .rounded))
                             .foregroundColor(.white.opacity(0.5))
                             .padding(.leading, 30)
-                            .padding(.top, 10)
                         Spacer()
                         Text("BEST: \(game.highScore)")
                             .font(.system(size: 12, weight: .bold, design: .rounded))
                             .foregroundColor(.white.opacity(0.4))
                             .padding(.trailing, 30)
-                            .padding(.top, 10)
                     }
+                    .padding(.top, -5)
                     Spacer()
                 }
             }
