@@ -76,18 +76,11 @@ struct NotchlyHubView: View {
                 // Navigation Options
                 VStack(spacing: 4) {
                     ForEach(HubTab.allCases) { tab in
-                        ZStack(alignment: .leading) {
-                            // Tap target — fixed 44pt height, full width
-                            Color.clear
-                                .frame(maxWidth: .infinity)
-                                .contentShape(Rectangle())
-                                .onTapGesture {
-                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
-                                        currentTab = tab
-                                    }
-                                }
-                            
-                            // Visual row — drives ZStack height
+                        Button(action: {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.75)) {
+                                currentTab = tab
+                            }
+                        }) {
                             HStack(spacing: 12) {
                                 Image(systemName: tab.icon)
                                     .font(.system(size: 14, weight: .bold))
@@ -110,9 +103,9 @@ struct NotchlyHubView: View {
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 10)
-                            .allowsHitTesting(false)
+                            .contentShape(Rectangle())
                         }
-                        .fixedSize(horizontal: false, vertical: true) // height driven by content, never expands
+                        .buttonStyle(.plain)
                         .frame(maxWidth: .infinity)
                         .background(
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
@@ -125,45 +118,7 @@ struct NotchlyHubView: View {
                 }
                 .padding(.horizontal, 12)
                 
-                Spacer()
-                
-                // BOTTOM PREFERENCES SHORTCUT
-                VStack(spacing: 8) {
-                    Divider()
-                        .background(Color.white.opacity(0.1))
-                        .padding(.horizontal, 16)
-                        .padding(.bottom, 12)
-                    
-                    Button(action: {
-                        AppDelegate.shared?.openSettings(nil)
-                    }) {
-                        HStack(spacing: 12) {
-                            Image(systemName: "gearshape.fill")
-                                .font(.system(size: 14))
-                                .foregroundColor(.white.opacity(0.6))
-                            Text("Preferences…")
-                                .font(.system(size: 13, weight: .medium, design: .rounded))
-                                .foregroundColor(.white.opacity(0.7))
-                            Spacer()
-                            Image(systemName: "arrow.up.right")
-                                .font(.system(size: 10))
-                                .foregroundColor(.white.opacity(0.3))
-                        }
-                        .padding(.horizontal, 16)
-                        .padding(.vertical, 8)
-                        .background(
-                            RoundedRectangle(cornerRadius: 8)
-                                .fill(Color.white.opacity(0.04))
-                        )
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 8)
-                                .stroke(Color.white.opacity(0.06), lineWidth: 1)
-                        )
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, 16)
-                    .padding(.bottom, 24)
-                }
+
             }
             .frame(width: 220)
             .background(Color.black.opacity(0.18))
