@@ -19,11 +19,11 @@ class SnakeGame: ObservableObject {
     var nextDirection: Direction = .right
     
     let cols = 64
-    let rows = 12
+    let rows = 11 // Reduced from 12 to add more vertical padding (pushes boundary down from the top edge)
     let cellSize: CGFloat = 10
     
     var frameCount = 0
-    var speed: Int = 10 // moves every 10 frames
+    var speed: Int = 16 // frames at 120fps
     
     func reset() {
         snake = [
@@ -34,7 +34,7 @@ class SnakeGame: ObservableObject {
         direction = .right
         nextDirection = .right
         score = 0
-        speed = 10
+        speed = 16
         frameCount = 0
         spawnApple()
         phase = .playing
@@ -106,7 +106,7 @@ class SnakeGame: ObservableObject {
                 highScore = score
                 UserDefaults.standard.set(highScore, forKey: "SnakeHighScore")
             }
-            if speed > 4 { speed -= 1 } // gets slightly faster
+            if speed > 6 { speed -= 1 } // gets slightly faster (floor at 6 frames = 20 moves/sec)
             spawnApple()
         } else {
             snake.removeLast()
@@ -122,7 +122,7 @@ struct NotchSnakeView: View {
     @StateObject private var game = SnakeGame()
     @State private var keyMonitorDown: Any?
     
-    private let ticker = Timer.publish(every: 1/60, on: .main, in: .common).autoconnect()
+    private let ticker = Timer.publish(every: 1/120, on: .main, in: .common).autoconnect()
     
     var body: some View {
         ZStack {
@@ -161,11 +161,31 @@ struct NotchSnakeView: View {
                         ctx.fill(applePath, with: .color(.red))
                         ctx.fill(Path(ellipseIn: CGRect(x: appleRect.minX + 3, y: appleRect.minY + 2, width: 3, height: 2)), with: .color(.white.opacity(0.7)))
                         
-                        // Draw Snake (Glassmorphism blocks)
+                        // Calculate visual interpolation progress
+                        let progress = CGFloat(game.frameCount % game.speed) / CGFloat(game.speed)
+                        
+                        // Draw Snake (Glassmorphism blocks with buttery smooth interpolation)
                         for (i, p) in game.snake.enumerated() {
-                            let rect = CGRect(x: offsetX + CGFloat(p.x) * game.cellSize,
-                                              y: offsetY + CGFloat(p.y) * game.cellSize,
-                                              width: game.cellSize, height: game.cellSize)
+                            var px = offsetX + CGFloat(p.x) * game.cellSize
+                            var py = offsetY + CGFloat(p.y) * game.cellSize
+                            
+                            // Interpolate position towards the next tile
+                            if i == 0 {
+                                // Head interpolates in current direction
+                                switch game.direction {
+                                case .up:    py -= game.cellSize * progress
+                                case .down:  py += game.cellSize * progress
+                                case .left:  px -= game.cellSize * progress
+                                case .right: px += game.cellSize * progress
+                                }
+                            } else {
+                                // Body interpolates towards the previous segment
+                                let prev = game.snake[i - 1]
+                                px += CGFloat(prev.x - p.x) * game.cellSize * progress
+                                py += CGFloat(prev.y - p.y) * game.cellSize * progress
+                            }
+                            
+                            let rect = CGRect(x: px, y: py, width: game.cellSize, height: game.cellSize)
                             
                             let path = Path(roundedRect: rect.insetBy(dx: 0.5, dy: 0.5), cornerRadius: 2)
                             

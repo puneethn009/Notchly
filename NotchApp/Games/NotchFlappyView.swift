@@ -20,14 +20,14 @@ class FlappyGame: ObservableObject {
     struct Pipe {
         var x: CGFloat
         var gapY: CGFloat
-        let gapSize: CGFloat = 85
-        let width: CGFloat = 35
+        let gapSize: CGFloat = 70
+        let width: CGFloat = 28
         var passed = false
     }
     @Published var pipes: [Pipe] = []
     
-    let pipeSpeed: CGFloat = 1.0
-    let spawnInterval: Int = 260 // frames at 120fps
+    let pipeSpeed: CGFloat = 1.5
+    let spawnInterval: Int = 180 // frames at 120fps
     var frameCount = 0
     
     let width: CGFloat = 600
@@ -151,20 +151,28 @@ struct NotchFlappyView: View {
                         let topPath = Path(roundedRect: topRect, cornerRadius: 6)
                         let botPath = Path(roundedRect: bottomRect, cornerRadius: 6)
                         
-                        // Solid green pipe body
-                        let grad = Gradient(colors: [Color.green, Color(hue: 0.35, saturation: 0.9, brightness: 0.4)])
+                        // Sleek glowing blue/purple laser pillars
+                        let grad = Gradient(colors: [Color.purple.opacity(0.8), Color.cyan.opacity(0.8)])
                         ctx.fill(topPath, with: .linearGradient(grad, startPoint: CGPoint(x: topRect.minX, y: topRect.minY), endPoint: CGPoint(x: topRect.maxX, y: topRect.minY)))
                         ctx.fill(botPath, with: .linearGradient(grad, startPoint: CGPoint(x: bottomRect.minX, y: bottomRect.minY), endPoint: CGPoint(x: bottomRect.maxX, y: bottomRect.minY)))
                         
                         // Outer neon glow
                         var gCtx = ctx
-                        gCtx.addFilter(.blur(radius: 4))
-                        gCtx.fill(topPath, with: .color(.green))
-                        gCtx.fill(botPath, with: .color(.green))
+                        gCtx.addFilter(.blur(radius: 6))
+                        gCtx.fill(topPath, with: .color(.cyan))
+                        gCtx.fill(botPath, with: .color(.cyan))
                         
                         // Inner glassy stroke
-                        ctx.stroke(topPath, with: .color(.white.opacity(0.6)), lineWidth: 1.5)
-                        ctx.stroke(botPath, with: .color(.white.opacity(0.6)), lineWidth: 1.5)
+                        ctx.stroke(topPath, with: .color(.white.opacity(0.8)), lineWidth: 1.0)
+                        ctx.stroke(botPath, with: .color(.white.opacity(0.8)), lineWidth: 1.0)
+                        
+                        // Laser glowing caps
+                        let topCap = Path(roundedRect: CGRect(x: p.x - 2, y: topRect.maxY - 4, width: p.width + 4, height: 4), cornerRadius: 2)
+                        let botCap = Path(roundedRect: CGRect(x: p.x - 2, y: bottomRect.minY, width: p.width + 4, height: 4), cornerRadius: 2)
+                        ctx.fill(topCap, with: .color(.white))
+                        ctx.fill(botCap, with: .color(.white))
+                        gCtx.fill(topCap, with: .color(.cyan))
+                        gCtx.fill(botCap, with: .color(.cyan))
                     }
                 }
             }
