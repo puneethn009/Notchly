@@ -13,10 +13,10 @@ struct NotchlyHubView: View {
     enum HubTab: String, CaseIterable, Identifiable {
         case notchControls = "Notch Controls"
         case screenshotManager = "Screenshot Manager"
-        case music = "Music Settings"
-        case timer = "Timer Settings"
+        case music = "Music"
+        case timer = "Timer"
         case performance = "Performance"
-        case dock = "Dock Settings"
+        case dock = "Dock"
         case permissions = "Permissions"
         
         var id: String { self.rawValue }
