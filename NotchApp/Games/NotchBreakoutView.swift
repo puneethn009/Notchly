@@ -9,6 +9,7 @@ enum BreakoutPhase: Equatable {
     case playing
     case paused
     case levelUp    // brief between levels
+    case lifeLost   // lost a life, brief pause before continuing
     case gameOver
 }
 
@@ -33,7 +34,7 @@ final class BreakoutEngine: ObservableObject {
 
     // ── Canvas ──────────────────────────────────────────────────
     static let W: CGFloat = 700
-    static let H: CGFloat = 134   // content area is 140; leave 3pt top + 3pt bottom
+    static let H: CGFloat = 138   // content area is 140; leave 2pt bottom
 
     // ── Bricks ──────────────────────────────────────────────────
     let brickCols  = 14
@@ -42,7 +43,7 @@ final class BreakoutEngine: ObservableObject {
     let brickGapY: CGFloat = 2
     let brickH:    CGFloat = 11
     let sidePad:   CGFloat = 8
-    let brickTopY: CGFloat = 4
+    let brickTopY: CGFloat = 0
 
     // ── Ball & Paddle ───────────────────────────────────────────
     let ballR:    CGFloat = 4.5
@@ -157,6 +158,7 @@ final class BreakoutEngine: ObservableObject {
         case .idle:     phase = .playing
         case .playing:  phase = .paused
         case .paused:   phase = .playing
+        case .lifeLost: placeBall(); phase = .playing
         case .gameOver: reset(keepHi: true); phase = .playing
         default: break
         }
@@ -231,11 +233,11 @@ final class BreakoutEngine: ObservableObject {
                 saveHiScore()
                 phase = .gameOver
             } else {
-                phase = .paused
-                // Auto-resume after 1s so ball resets
+                phase = .lifeLost
+                // Auto-resume after 1.5s so ball resets
                 Task { @MainActor in
-                    try? await Task.sleep(nanoseconds: 900_000_000)
-                    guard self.phase == .paused else { return }
+                    try? await Task.sleep(nanoseconds: 1_500_000_000)
+                    guard self.phase == .lifeLost else { return }
                     self.placeBall()
                     self.phase = .playing
                 }
@@ -349,6 +351,8 @@ struct NotchBreakoutView: View {
                 IdleOverlay()
             case .paused:
                 PausedOverlay(lives: game.lives)
+            case .lifeLost:
+                LifeLostOverlay(lives: game.lives)
             case .levelUp:
                 LevelUpOverlay(level: game.level)
             case .gameOver:
@@ -728,3 +732,30 @@ private struct GameOverOverlay: View {
         }
     }
 }
+
+private struct LifeLostOverlay: View {
+    let lives: Int
+    @State private var scale: CGFloat = 0.6
+
+    var body: some View {
+        VStack(spacing: 4) {
+            Text(String(repeating: "♥ ", count: lives).trimmingCharacters(in: .whitespaces))
+                .font(.system(size: 32, weight: .black))
+                .foregroundColor(Color(hue: 0.97, saturation: 0.85, brightness: 1.0))
+                .shadow(color: Color(hue: 0.97, saturation: 0.9, brightness: 1.0), radius: 10)
+                .scaleEffect(scale)
+            
+            Text("GET READY")
+                .font(.system(size: 10, weight: .bold, design: .monospaced))
+                .foregroundColor(.white.opacity(0.5))
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(.black.opacity(0.65))
+        .onAppear {
+            withAnimation(.spring(response: 0.4, dampingFraction: 0.5)) {
+                scale = 1.0
+            }
+        }
+    }
+}
+
