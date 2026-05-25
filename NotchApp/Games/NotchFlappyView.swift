@@ -177,12 +177,12 @@ struct NotchFlappyView: View {
                 }
             }
             
-            // Draw Bird (Using SF Symbol inside standard SwiftUI overlay for better quality than Canvas drawing)
-            Image(systemName: "bird.fill")
+            // Draw Bird (Using the generated premium app icon)
+            Image("flappy_icon")
                 .resizable()
-                .scaledToFit()
-                .frame(width: game.birdRadius * 2, height: game.birdRadius * 2)
-                .foregroundColor(.yellow)
+                .scaledToFill()
+                .frame(width: game.birdRadius * 2.5, height: game.birdRadius * 2.5) // Slightly larger to account for icon padding
+                .clipShape(RoundedRectangle(cornerRadius: 8)) // So it isn't completely square if it rotates
                 .shadow(color: .orange.opacity(0.8), radius: 6)
                 .rotationEffect(.degrees(Double(game.birdVelocity * 3))) // Rotate bird based on velocity
                 .position(x: game.birdX, y: game.birdY)
