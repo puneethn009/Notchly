@@ -153,6 +153,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             
             // Check Accessibility permission for global hotkeys
             checkAccessibilityPermission()
+            
+            // Open the Notchly Hub window automatically on launch
+            NotchlyHubWindowController.shared.show()
         }
     }
 
@@ -191,8 +194,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     }
 
     @objc func openSettings(_ sender: Any?) {
-        NSApp.activate(ignoringOtherApps: true)
-        NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+        NotchlyHubWindowController.shared.show()
     }
 
     /// Check Accessibility permission needed for global hotkeys.

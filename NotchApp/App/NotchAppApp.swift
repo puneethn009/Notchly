@@ -8,7 +8,7 @@ struct NotchAppApp: App {
 
     var body: some Scene {
         Settings {
-            SettingsView()
+            EmptyView()
         }
         .modelContainer(PersistenceController.shared.container)
     }

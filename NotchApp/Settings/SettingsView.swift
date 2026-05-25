@@ -2,51 +2,7 @@ import SwiftUI
 import KeyboardShortcuts
 import EventKit
 
-struct SettingsView: View {
-    @StateObject private var settings = SettingsManager.shared
-    @AppStorage("selectedSettingsTab") private var selection: String = "Music"
-    
-    var body: some View {
-        TabView(selection: $selection) {
-            MusicSettingsPage(settings: settings)
-                .tabItem {
-                    Label("Music", systemImage: "music.note")
-                }
-                .tag("Music")
-            
-            TimerSettingsPage(settings: settings)
-                .tabItem {
-                    Label("Timer", systemImage: "timer")
-                }
-                .tag("Timer")
-                
-            PerformanceSettingsPage(settings: settings)
-                .tabItem {
-                    Label("Performance", systemImage: "cpu")
-                }
-                .tag("Performance")
-                
-            DockSettingsPage(settings: settings)
-                .tabItem {
-                    Label("Dock", systemImage: "dock.rectangle")
-                }
-                .tag("Dock")
-                
-            ScreenshotSettingsPage()
-                .tabItem {
-                    Label("Screenshots", systemImage: "camera.viewfinder")
-                }
-                .tag("Screenshots")
 
-            PermissionsSettingsPage()
-                .tabItem {
-                    Label("Permissions", systemImage: "lock.shield")
-                }
-                .tag("Permissions")
-        }
-        .frame(width: 700, height: 500)
-    }
-}
 
 struct MusicSettingsPage: View {
     @ObservedObject var settings: SettingsManager

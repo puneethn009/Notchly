@@ -155,21 +155,14 @@ struct NotchExpandedView: View {
                         .buttonStyle(.plain)
                     }
                     
-                    if #available(macOS 14.0, *) {
-                        SettingsLink {
-                            Image(systemName: "gearshape.fill")
-                                .foregroundColor(.white.opacity(0.6))
-                        }
-                        .buttonStyle(.plain)
-                    } else {
-                        Button(action: {
-                            NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
-                        }) {
-                            Image(systemName: "gearshape.fill")
-                                .foregroundColor(.white.opacity(0.6))
-                        }
-                        .buttonStyle(.plain)
+                    Button(action: {
+                        NotchlyHubWindowController.shared.show()
+                        NotchState.shared.isExpanded = false
+                    }) {
+                        Image(systemName: "gearshape.fill")
+                            .foregroundColor(.white.opacity(0.6))
                     }
+                    .buttonStyle(.plain)
                     
                     HStack(spacing: 4) {
                         Text("\(batteryManager.batteryPercentage)%")
@@ -802,9 +795,10 @@ struct TimerContent: View {
                             
                             if SettingsManager.shared.customTimers.count < 5 {
                                 Button(action: {
-                                    UserDefaults.standard.set("Timer", forKey: "selectedSettingsTab")
-                                    NSApp.activate(ignoringOtherApps: true)
-                                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                                    NotchlyHubWindowController.shared.show()
+                                    DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                        NotificationCenter.default.post(name: NSNotification.Name("OpenHubToTab"), object: "Timer")
+                                    }
                                     NotchState.shared.isExpanded = false
                                 }) {
                                     VStack(alignment: .center, spacing: 6) {

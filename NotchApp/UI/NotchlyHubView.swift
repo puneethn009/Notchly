@@ -13,6 +13,11 @@ struct NotchlyHubView: View {
     enum HubTab: String, CaseIterable, Identifiable {
         case notchControls = "Notch Controls"
         case screenshotManager = "Screenshot Manager"
+        case music = "Music Settings"
+        case timer = "Timer Settings"
+        case performance = "Performance"
+        case dock = "Dock Settings"
+        case permissions = "Permissions"
         
         var id: String { self.rawValue }
         
@@ -20,6 +25,11 @@ struct NotchlyHubView: View {
             switch self {
             case .notchControls: return "app.badge"
             case .screenshotManager: return "square.grid.2x2.fill"
+            case .music: return "music.note"
+            case .timer: return "timer"
+            case .performance: return "cpu"
+            case .dock: return "dock.rectangle"
+            case .permissions: return "lock.shield"
             }
         }
     }
@@ -196,6 +206,21 @@ struct NotchlyHubView: View {
                         deleteScreenshotItem(item)
                     })
                     .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)), removal: .opacity))
+                case .music:
+                    MusicSettingsPage(settings: settings)
+                        .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)), removal: .opacity))
+                case .timer:
+                    TimerSettingsPage(settings: settings)
+                        .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)), removal: .opacity))
+                case .performance:
+                    PerformanceSettingsPage(settings: settings)
+                        .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)), removal: .opacity))
+                case .dock:
+                    DockSettingsPage(settings: settings)
+                        .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)), removal: .opacity))
+                case .permissions:
+                    PermissionsSettingsPage()
+                        .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)), removal: .opacity))
                 }
             }
             .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -204,6 +229,13 @@ struct NotchlyHubView: View {
         .frame(minWidth: 900, maxWidth: .infinity, minHeight: 620, maxHeight: .infinity)
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("OpenScreenshotManager"))) { _ in
             currentTab = .screenshotManager
+        }
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("OpenHubToTab"))) { notification in
+            if let tabName = notification.object as? String {
+                if let mappedTab = HubTab.allCases.first(where: { $0.rawValue.contains(tabName) || $0.id.contains(tabName) }) {
+                    currentTab = mappedTab
+                }
+            }
         }
     }
 
