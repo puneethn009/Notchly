@@ -45,15 +45,26 @@ class SettingsManager: ObservableObject {
     @AppStorage("showNotchScreenshots") var showNotchScreenshots: Bool = true
     @AppStorage("showNotchGame") var showNotchGame: Bool = true
     
+    @AppStorage("notchPagesOrderData") private var notchPagesOrderData: Data = Data()
+    @Published var notchPagesOrder: [NotchPage] = [.media, .timer, .system, .calendar, .launcher, .screenshots, .game] {
+        didSet {
+            saveNotchPagesOrder()
+        }
+    }
+    
     var activeNotchPages: [NotchPage] {
         var pages: [NotchPage] = []
-        if showNotchMusic { pages.append(.media) }
-        if showNotchTimer { pages.append(.timer) }
-        if showNotchSystem { pages.append(.system) }
-        if showNotchCalendar { pages.append(.calendar) }
-        if showNotchLauncher { pages.append(.launcher) }
-        if showNotchScreenshots { pages.append(.screenshots) }
-        if showNotchGame { pages.append(.game) }
+        for page in notchPagesOrder {
+            switch page {
+            case .media: if showNotchMusic { pages.append(page) }
+            case .timer: if showNotchTimer { pages.append(page) }
+            case .system: if showNotchSystem { pages.append(page) }
+            case .calendar: if showNotchCalendar { pages.append(page) }
+            case .launcher: if showNotchLauncher { pages.append(page) }
+            case .screenshots: if showNotchScreenshots { pages.append(page) }
+            case .game: if showNotchGame { pages.append(page) }
+            }
+        }
         return pages.isEmpty ? [.media] : pages
     }
     
@@ -85,6 +96,21 @@ class SettingsManager: ObservableObject {
     private init() {
         loadTimers()
         loadDock()
+        loadNotchPagesOrder()
+    }
+    
+    private func loadNotchPagesOrder() {
+        if let decoded = try? JSONDecoder().decode([NotchPage].self, from: notchPagesOrderData) {
+            notchPagesOrder = decoded
+        } else {
+            notchPagesOrder = [.media, .timer, .system, .calendar, .launcher, .screenshots, .game]
+        }
+    }
+    
+    private func saveNotchPagesOrder() {
+        if let encoded = try? JSONEncoder().encode(notchPagesOrder) {
+            notchPagesOrderData = encoded
+        }
     }
     
     private func loadTimers() {

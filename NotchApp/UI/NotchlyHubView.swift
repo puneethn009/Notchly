@@ -1,5 +1,6 @@
 import SwiftUI
 import SwiftData
+import UniformTypeIdentifiers
 
 struct NotchlyHubView: View {
     @Environment(\.modelContext) private var modelContext
@@ -211,19 +212,37 @@ struct NotchlyHubView: View {
 // MARK: - NOTCH CONTROLS PANEL
 struct NotchControlsView: View {
     @ObservedObject var settings: SettingsManager
+    @State private var isEditing: Bool = false
+    @State private var draggedPage: NotchPage?
+    
+    private let wiggleAnimation = Animation.easeInOut(duration: 0.15).repeatForever(autoreverses: true)
     
     var body: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: 30) {
                 // Header Section
-                VStack(alignment: .leading, spacing: 6) {
-                    Text("Notch Modules")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundColor(.white)
-                    
-                    Text("Customize exactly which sections are active and interactive inside your screen's notch.")
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.5))
+                HStack {
+                    VStack(alignment: .leading, spacing: 6) {
+                        Text("Notch Modules")
+                            .font(.system(size: 28, weight: .bold, design: .rounded))
+                            .foregroundColor(.white)
+                        
+                        Text("Customize exactly which sections are active and interactive inside your screen's notch.")
+                            .font(.system(size: 14))
+                            .foregroundColor(.white.opacity(0.5))
+                    }
+                    Spacer()
+                    Button(action: {
+                        withAnimation { isEditing.toggle() }
+                    }) {
+                        Text(isEditing ? "Done" : "Edit Order")
+                            .font(.system(size: 13, weight: .bold))
+                            .padding(.horizontal, 16)
+                            .padding(.vertical, 8)
+                            .background(isEditing ? Color.blue : Color.white.opacity(0.1))
+                            .cornerRadius(8)
+                    }
+                    .buttonStyle(.plain)
                 }
                 
                 // NOTCH OVERVIEW MOCKUP
@@ -248,39 +267,9 @@ struct NotchControlsView: View {
                                     .frame(width: 260, height: 35)
                                 
                                 HStack(spacing: 16) {
-                                    if settings.showNotchMusic {
-                                        Image(systemName: "music.note")
-                                            .foregroundColor(.pink)
-                                            .font(.system(size: 10, weight: .bold))
-                                    }
-                                    if settings.showNotchTimer {
-                                        Image(systemName: "timer")
-                                            .foregroundColor(.orange)
-                                            .font(.system(size: 10, weight: .bold))
-                                    }
-                                    if settings.showNotchSystem {
-                                        Image(systemName: "cpu")
-                                            .foregroundColor(.blue)
-                                            .font(.system(size: 10, weight: .bold))
-                                    }
-                                    if settings.showNotchCalendar {
-                                        Image(systemName: "calendar")
-                                            .foregroundColor(.green)
-                                            .font(.system(size: 10, weight: .bold))
-                                    }
-                                    if settings.showNotchLauncher {
-                                        Image(systemName: "square.grid.2x2")
-                                            .foregroundColor(.purple)
-                                            .font(.system(size: 10, weight: .bold))
-                                    }
-                                    if settings.showNotchScreenshots {
-                                        Image(systemName: "camera.viewfinder")
-                                            .foregroundColor(.cyan)
-                                            .font(.system(size: 10, weight: .bold))
-                                    }
-                                    if settings.showNotchGame {
-                                        Image(systemName: "gamecontroller")
-                                            .foregroundColor(Color(hue: 0.07, saturation: 0.88, brightness: 1.0))
+                                    ForEach(settings.activeNotchPages, id: \.self) { page in
+                                        Image(systemName: page.rawValue)
+                                            .foregroundColor(iconColor(for: page))
                                             .font(.system(size: 10, weight: .bold))
                                     }
                                 }
@@ -298,67 +287,122 @@ struct NotchControlsView: View {
                 
                 // TOGGLES GRID
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20)], spacing: 20) {
-                    ToggleCard(
-                        title: "Music Player",
-                        subtitle: "Control Apple Music / Spotify with media keys & live artwork",
-                        icon: "music.note",
-                        iconColor: .pink,
-                        isOn: $settings.showNotchMusic
-                    )
-                    
-                    ToggleCard(
-                        title: "Timer & Stopwatch",
-                        subtitle: "Manage countdown alarms & stopwatch directly under the notch",
-                        icon: "timer",
-                        iconColor: .orange,
-                        isOn: $settings.showNotchTimer
-                    )
-                    
-                    ToggleCard(
-                        title: "System Monitor",
-                        subtitle: "View real-time CPU, RAM, Disk, and Network speeds",
-                        icon: "cpu",
-                        iconColor: .blue,
-                        isOn: $settings.showNotchSystem
-                    )
-                    
-                    ToggleCard(
-                        title: "Event Calendar",
-                        subtitle: "Sync with your Apple Calendar for upcoming schedule info",
-                        icon: "calendar",
-                        iconColor: .green,
-                        isOn: $settings.showNotchCalendar
-                    )
-                    
-                    ToggleCard(
-                        title: "Quick App Launcher",
-                        subtitle: "A personalized mini-dock for high-speed app launches",
-                        icon: "square.grid.2x2",
-                        iconColor: .purple,
-                        isOn: $settings.showNotchLauncher
-                    )
-                    
-                    ToggleCard(
-                        title: "Screenshot Manager",
-                        subtitle: "Browse captured screenshots history in the notch",
-                        icon: "camera.viewfinder",
-                        iconColor: .cyan,
-                        isOn: $settings.showNotchScreenshots
-                    )
-
-                    ToggleCard(
-                        title: "Notch Breaker",
-                        subtitle: "A retro Breakout game — move your mouse to control the paddle",
-                        icon: "gamecontroller",
-                        iconColor: Color(hue: 0.07, saturation: 0.88, brightness: 1.0),
-                        isOn: $settings.showNotchGame
-                    )
+                    ForEach(settings.notchPagesOrder, id: \.self) { page in
+                        ToggleCard(
+                            title: title(for: page),
+                            subtitle: subtitle(for: page),
+                            icon: page.rawValue,
+                            iconColor: iconColor(for: page),
+                            isOn: binding(for: page)
+                        )
+                        .disabled(isEditing)
+                        .rotationEffect(.degrees(isEditing ? (Double.random(in: -1...1)) : 0))
+                        .animation(isEditing ? wiggleAnimation : .default, value: isEditing)
+                        .onDrag {
+                            if isEditing {
+                                self.draggedPage = page
+                                return NSItemProvider(object: page.rawValue as NSString)
+                            }
+                            return NSItemProvider()
+                        }
+                        .onDrop(of: [.text], delegate: NotchPageDropDelegate(item: page, items: $settings.notchPagesOrder, draggedItem: $draggedPage))
+                    }
                 }
             }
             .padding(.top, 52)
             .padding(.horizontal, 40)
             .padding(.bottom, 40)
         }
+    }
+    
+    private func binding(for page: NotchPage) -> Binding<Bool> {
+        Binding(
+            get: {
+                switch page {
+                case .media: return settings.showNotchMusic
+                case .timer: return settings.showNotchTimer
+                case .system: return settings.showNotchSystem
+                case .calendar: return settings.showNotchCalendar
+                case .launcher: return settings.showNotchLauncher
+                case .screenshots: return settings.showNotchScreenshots
+                case .game: return settings.showNotchGame
+                }
+            },
+            set: { newValue in
+                switch page {
+                case .media: settings.showNotchMusic = newValue
+                case .timer: settings.showNotchTimer = newValue
+                case .system: settings.showNotchSystem = newValue
+                case .calendar: settings.showNotchCalendar = newValue
+                case .launcher: settings.showNotchLauncher = newValue
+                case .screenshots: settings.showNotchScreenshots = newValue
+                case .game: settings.showNotchGame = newValue
+                }
+            }
+        )
+    }
+    
+    private func title(for page: NotchPage) -> String {
+        switch page {
+        case .media: return "Music Player"
+        case .timer: return "Timer & Stopwatch"
+        case .system: return "System Monitor"
+        case .calendar: return "Event Calendar"
+        case .launcher: return "Quick App Launcher"
+        case .screenshots: return "Screenshot Manager"
+        case .game: return "Notch Breaker"
+        }
+    }
+    
+    private func subtitle(for page: NotchPage) -> String {
+        switch page {
+        case .media: return "Control Apple Music / Spotify with media keys & live artwork"
+        case .timer: return "Manage countdown alarms & stopwatch directly under the notch"
+        case .system: return "View real-time CPU, RAM, Disk, and Network speeds"
+        case .calendar: return "Sync with your Apple Calendar for upcoming schedule info"
+        case .launcher: return "A personalized mini-dock for high-speed app launches"
+        case .screenshots: return "Browse captured screenshots history in the notch"
+        case .game: return "A retro Breakout game — move your mouse to control the paddle"
+        }
+    }
+    
+    private func iconColor(for page: NotchPage) -> Color {
+        switch page {
+        case .media: return .pink
+        case .timer: return .orange
+        case .system: return .blue
+        case .calendar: return .green
+        case .launcher: return .purple
+        case .screenshots: return .cyan
+        case .game: return Color(hue: 0.07, saturation: 0.88, brightness: 1.0)
+        }
+    }
+}
+
+struct NotchPageDropDelegate: DropDelegate {
+    let item: NotchPage
+    @Binding var items: [NotchPage]
+    @Binding var draggedItem: NotchPage?
+    
+    func dropEntered(info: DropInfo) {
+        guard let draggedItem = self.draggedItem else { return }
+        if draggedItem != item {
+            if let from = items.firstIndex(of: draggedItem),
+               let to = items.firstIndex(of: item) {
+                withAnimation(.default) {
+                    self.items.move(fromOffsets: IndexSet(integer: from), toOffset: to > from ? to + 1 : to)
+                }
+            }
+        }
+    }
+    
+    func performDrop(info: DropInfo) -> Bool {
+        self.draggedItem = nil
+        return true
+    }
+    
+    func dropUpdated(info: DropInfo) -> DropProposal? {
+        return DropProposal(operation: .move)
     }
 }
 

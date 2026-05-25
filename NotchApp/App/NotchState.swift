@@ -1,7 +1,7 @@
 import SwiftUI
 import Combine
 
-enum NotchPage: String, CaseIterable {
+enum NotchPage: String, CaseIterable, Codable {
     case media = "music.note"
     case timer = "timer"
     case system = "cpu"
