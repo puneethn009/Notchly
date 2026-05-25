@@ -103,10 +103,10 @@ struct NotchlyHubView: View {
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 10)
-                            .frame(maxWidth: .infinity)
-                            .contentShape(Rectangle())
+                            .frame(maxWidth: .infinity, alignment: .leading)
                         }
                         .buttonStyle(.plain)
+                        .contentShape(Rectangle())
                         .background(
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
                                 .fill(currentTab == tab ? Color.white.opacity(0.08) : (hoverTab == tab ? Color.white.opacity(0.03) : Color.clear))
@@ -149,6 +149,7 @@ struct NotchlyHubView: View {
                     Spacer()
                 }
                 .ignoresSafeArea()
+                .allowsHitTesting(false)
                 
                 switch currentTab {
                 case .notchControls:
@@ -182,6 +183,7 @@ struct NotchlyHubView: View {
         }
         } // end ZStack
         .frame(minWidth: 900, maxWidth: .infinity, minHeight: 620, maxHeight: .infinity)
+        .preferredColorScheme(.dark)
         .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("OpenScreenshotManager"))) { _ in
             currentTab = .screenshotManager
         }
