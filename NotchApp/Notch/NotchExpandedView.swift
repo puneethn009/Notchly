@@ -643,7 +643,7 @@ struct TimerModuleView: View {
     @State private var mode: Int = 0 // 0: Timer, 1: Stopwatch
     
     var body: some View {
-        VStack(spacing: 12) {
+        VStack(spacing: 6) {
             // Stabilized Segmented Control Toggle
             if !timerManager.isAlarmPlaying && !timerManager.isRunning && !timerManager.isStopwatchRunning {
                 HStack(spacing: 0) {
@@ -676,8 +676,8 @@ struct TimerModuleView: View {
                     .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.05)))
                     .overlay(RoundedRectangle(cornerRadius: 12).stroke(Color.white.opacity(0.05), lineWidth: 0.5))
                 }
-                .padding(.top, -10)
-                .padding(.bottom, -8) // Nudged content slightly up
+                .padding(.top, -6)
+                .padding(.bottom, -4)
             }
             
             // Dynamic Height Content Area
@@ -720,7 +720,7 @@ struct TimerContent: View {
                     .buttonStyle(.plain)
                 }
             } else if timerManager.isRunning {
-                HStack(spacing: 32) {
+                HStack(spacing: 0) {
                     // Left Side: Modern Rounded Rectangle Progress
                     ZStack {
                         RoundedRectangle(cornerRadius: 24, style: .continuous)
@@ -738,9 +738,11 @@ struct TimerContent: View {
                             .foregroundColor(.white)
                     }
                     
+                    Spacer()
+                    
                     // Right Side: Timer count and Stop button
-                    VStack(alignment: .leading, spacing: 12) {
-                        VStack(alignment: .leading, spacing: -2) {
+                    VStack(alignment: .trailing, spacing: 12) {
+                        VStack(alignment: .trailing, spacing: -2) {
                             Text(timerManager.currentTimerName.uppercased())
                                 .font(.system(size: 11, weight: .bold))
                                 .foregroundColor(Color(hue: 0.25, saturation: 0.9, brightness: 1.0))
@@ -753,51 +755,57 @@ struct TimerContent: View {
                         Button(action: { timerManager.stop() }) {
                             Text("Stop Timer")
                                 .font(.system(size: 13, weight: .bold))
-                                .foregroundColor(.white)
+                                .foregroundColor(.black)
                                 .frame(width: 140, height: 34)
-                                .background(Capsule().fill(Color.white.opacity(0.15)))
+                                .background(Capsule().fill(Color.white))
                         }
                         .buttonStyle(.plain)
                     }
                 }
+                .padding(.horizontal, 60)
                 .padding(.vertical, 8)
+                .frame(maxWidth: .infinity)
             } else {
-                VStack(spacing: 16) {
+                VStack(spacing: 8) {
                     Text("Select a Timer")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.white.opacity(0.4))
                         .frame(maxWidth: .infinity, alignment: .leading)
+                        .padding(.horizontal, 40)
                     
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 12) {
                             ForEach(SettingsManager.shared.customTimers) { timer in
                                 Button(action: { timerManager.start(minutes: timer.minutes, name: timer.name) }) {
-                                    VStack(alignment: .leading, spacing: 10) {
+                                    VStack(alignment: .leading, spacing: 6) {
                                         Image(systemName: "timer")
-                                            .font(.system(size: 20))
+                                            .font(.system(size: 18))
                                             .foregroundColor(Color(hue: 0.25, saturation: 0.9, brightness: 1.0))
                                         
-                                        VStack(alignment: .leading, spacing: 2) {
+                                        VStack(alignment: .leading, spacing: 0) {
                                             Text(timer.name)
-                                                .font(.system(size: 14, weight: .bold))
+                                                .font(.system(size: 13, weight: .bold))
                                                 .foregroundColor(.white)
                                                 .lineLimit(1)
                                             Text("\(timer.minutes) mins")
-                                                .font(.system(size: 12, weight: .medium))
+                                                .font(.system(size: 11, weight: .medium))
                                                 .foregroundColor(.white.opacity(0.5))
                                         }
                                     }
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 16)
-                                    .frame(width: 130, alignment: .leading)
-                                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.05)))
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 14)
+                                    .frame(width: 120, alignment: .leading)
+                                    .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.05)))
                                 }
                                 .buttonStyle(.plain)
                             }
                         }
+                        .padding(.horizontal, 40)
                     }
+                    .padding(.horizontal, -40)
                 }
-                .padding(.vertical, 8)
+                .padding(.vertical, 4)
+                .frame(maxWidth: .infinity)
             }
         }
     }
