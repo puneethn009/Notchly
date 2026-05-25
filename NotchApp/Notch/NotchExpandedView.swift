@@ -109,6 +109,29 @@ struct NotchExpandedView: View {
                 
                 // Status Icons (Settings & Battery)
                 HStack(spacing: 16) {
+                    if notchState.selectedPage == .game {
+                        Button(action: {
+                            withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.4)) {
+                                NotchState.shared.isHovering = false
+                                NotchState.shared.isExpanded = false
+                            }
+                        }) {
+                            ZStack {
+                                Capsule()
+                                    .fill(Color.white.opacity(0.12))
+                                    .frame(width: 28, height: 16)
+                                    .overlay(
+                                        Capsule()
+                                            .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                                    )
+                                Image(systemName: "xmark")
+                                    .font(.system(size: 7, weight: .black))
+                                    .foregroundColor(.white.opacity(0.7))
+                            }
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    
                     if #available(macOS 14.0, *) {
                         SettingsLink {
                             Image(systemName: "gearshape.fill")

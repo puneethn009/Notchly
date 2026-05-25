@@ -361,30 +361,6 @@ struct NotchBreakoutView: View {
                 EmptyView()
             }
 
-            // ── Close (X) button — always visible ────────────────
-            VStack {
-                HStack {
-                    Spacer()
-                    Button(action: closeGame) {
-                        ZStack {
-                            Capsule()
-                                .fill(Color.white.opacity(0.12))
-                                .frame(width: 28, height: 16)
-                                .overlay(
-                                    Capsule()
-                                        .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
-                                )
-                            Image(systemName: "xmark")
-                                .font(.system(size: 7, weight: .black))
-                                .foregroundColor(.white.opacity(0.7))
-                        }
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.top, 4)
-                    .padding(.trailing, 8)
-                }
-                Spacer()
-            }
         }
         .frame(width: BreakoutEngine.W, height: BreakoutEngine.H)
         .onReceive(ticker) { _ in
