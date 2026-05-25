@@ -103,10 +103,10 @@ struct NotchlyHubView: View {
                             }
                             .padding(.horizontal, 16)
                             .padding(.vertical, 10)
+                            .frame(maxWidth: .infinity)
                             .contentShape(Rectangle())
                         }
                         .buttonStyle(.plain)
-                        .frame(maxWidth: .infinity)
                         .background(
                             RoundedRectangle(cornerRadius: 10, style: .continuous)
                                 .fill(currentTab == tab ? Color.white.opacity(0.08) : (hoverTab == tab ? Color.white.opacity(0.03) : Color.clear))
