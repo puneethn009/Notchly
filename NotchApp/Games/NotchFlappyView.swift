@@ -20,14 +20,14 @@ class FlappyGame: ObservableObject {
     struct Pipe {
         var x: CGFloat
         var gapY: CGFloat
-        let gapSize: CGFloat = 65
+        let gapSize: CGFloat = 85
         let width: CGFloat = 35
         var passed = false
     }
     @Published var pipes: [Pipe] = []
     
-    let pipeSpeed: CGFloat = 2.5
-    let spawnInterval: Int = 110 // frames
+    let pipeSpeed: CGFloat = 1.8
+    let spawnInterval: Int = 150 // frames
     var frameCount = 0
     
     let width: CGFloat = 600
@@ -123,6 +123,26 @@ struct NotchFlappyView: View {
             // Render Loop
             TimelineView(.animation) { context in
                 Canvas { ctx, size in
+                    // Draw Flames at bottom
+                    let time = context.date.timeIntervalSinceReferenceDate
+                    var flamePath = Path()
+                    flamePath.move(to: CGPoint(x: -10, y: size.height + 20))
+                    
+                    for x in stride(from: 0, through: Double(size.width), by: 8.0) {
+                        let wave1 = sin(x * 0.05 + time * 6) * 6
+                        let wave2 = cos(x * 0.12 + time * 10) * 4
+                        let h = 10 + wave1 + wave2
+                        flamePath.addLine(to: CGPoint(x: CGFloat(x), y: size.height - CGFloat(h)))
+                    }
+                    flamePath.addLine(to: CGPoint(x: size.width + 10, y: size.height + 20))
+                    flamePath.closeSubpath()
+                    
+                    var flameGlow = ctx
+                    flameGlow.addFilter(.blur(radius: 6))
+                    flameGlow.fill(flamePath, with: .color(.red.opacity(0.8)))
+                    
+                    ctx.fill(flamePath, with: .linearGradient(Gradient(colors: [.yellow, .red]), startPoint: CGPoint(x: 0, y: size.height - 15), endPoint: CGPoint(x: 0, y: size.height)))
+                    
                     // Draw Pipes
                     for p in game.pipes {
                         let topRect = CGRect(x: p.x, y: 0, width: p.width, height: p.gapY - p.gapSize / 2)
@@ -131,20 +151,20 @@ struct NotchFlappyView: View {
                         let topPath = Path(roundedRect: topRect, cornerRadius: 6)
                         let botPath = Path(roundedRect: bottomRect, cornerRadius: 6)
                         
-                        // Glassmorphism pipe body
-                        let grad = Gradient(colors: [Color.green.opacity(0.8), Color.green.opacity(0.4)])
-                        ctx.fill(topPath, with: .linearGradient(grad, startPoint: CGPoint(x: topRect.minX, y: topRect.minY), endPoint: CGPoint(x: topRect.minX, y: topRect.maxY)))
-                        ctx.fill(botPath, with: .linearGradient(grad, startPoint: CGPoint(x: bottomRect.minX, y: bottomRect.minY), endPoint: CGPoint(x: bottomRect.minX, y: bottomRect.maxY)))
+                        // Solid green pipe body
+                        let grad = Gradient(colors: [Color.green, Color(hue: 0.35, saturation: 0.9, brightness: 0.4)])
+                        ctx.fill(topPath, with: .linearGradient(grad, startPoint: CGPoint(x: topRect.minX, y: topRect.minY), endPoint: CGPoint(x: topRect.maxX, y: topRect.minY)))
+                        ctx.fill(botPath, with: .linearGradient(grad, startPoint: CGPoint(x: bottomRect.minX, y: bottomRect.minY), endPoint: CGPoint(x: bottomRect.maxX, y: bottomRect.minY)))
                         
                         // Outer neon glow
                         var gCtx = ctx
                         gCtx.addFilter(.blur(radius: 4))
-                        gCtx.fill(topPath, with: .color(.green.opacity(0.5)))
-                        gCtx.fill(botPath, with: .color(.green.opacity(0.5)))
+                        gCtx.fill(topPath, with: .color(.green))
+                        gCtx.fill(botPath, with: .color(.green))
                         
                         // Inner glassy stroke
-                        ctx.stroke(topPath, with: .color(.white.opacity(0.3)), lineWidth: 1)
-                        ctx.stroke(botPath, with: .color(.white.opacity(0.3)), lineWidth: 1)
+                        ctx.stroke(topPath, with: .color(.white.opacity(0.6)), lineWidth: 1.5)
+                        ctx.stroke(botPath, with: .color(.white.opacity(0.6)), lineWidth: 1.5)
                     }
                 }
             }
@@ -189,18 +209,20 @@ struct NotchFlappyView: View {
                 .background(.black.opacity(0.8))
             } else {
                 VStack {
-                    HStack(alignment: .top) {
+                    HStack(alignment: .center) {
                         Text("\(game.score)")
-                            .font(.system(size: 24, weight: .heavy, design: .rounded))
-                            .foregroundColor(.white.opacity(0.5))
-                            .padding(.leading, 30)
+                            .font(.system(size: 20, weight: .heavy, design: .rounded))
+                            .foregroundColor(.white.opacity(0.7))
+                            .padding(.leading, 45) // Align with where icons were
+                        
                         Spacer()
+                        
                         Text("BEST: \(game.highScore)")
                             .font(.system(size: 12, weight: .bold, design: .rounded))
                             .foregroundColor(.white.opacity(0.4))
-                            .padding(.trailing, 30)
+                            .padding(.trailing, 100) // Avoid the X button
                     }
-                    .padding(.top, -5)
+                    .offset(y: -35) // Move into the top bar area
                     Spacer()
                 }
             }

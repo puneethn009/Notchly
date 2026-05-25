@@ -42,10 +42,17 @@ class SnakeGame: ObservableObject {
     
     func spawnApple() {
         var p = Point(x: Int.random(in: 0..<cols), y: Int.random(in: 0..<rows))
-        while snake.contains(p) {
+        while snake.contains(p) || isCorner(p) {
             p = Point(x: Int.random(in: 0..<cols), y: Int.random(in: 0..<rows))
         }
         apple = p
+    }
+    
+    private func isCorner(_ p: Point) -> Bool {
+        return (p.x == 0 && p.y == 0) || 
+               (p.x == cols - 1 && p.y == 0) ||
+               (p.x == 0 && p.y == rows - 1) || 
+               (p.x == cols - 1 && p.y == rows - 1)
     }
     
     func changeDirection(_ newDir: Direction) {
@@ -133,6 +140,15 @@ struct NotchSnakeView: View {
                         let offsetX = (size.width - gridWidth) / 2
                         let offsetY = (size.height - gridHeight) / 2
                         
+                        // Draw Neon Border
+                        let borderRect = CGRect(x: offsetX - 2, y: offsetY - 2, width: gridWidth + 4, height: gridHeight + 4)
+                        let borderPath = Path(roundedRect: borderRect, cornerRadius: 16) // matches notch style
+                        
+                        var borderGlow = ctx
+                        borderGlow.addFilter(.blur(radius: 6))
+                        borderGlow.stroke(borderPath, with: .color(.green.opacity(0.8)), lineWidth: 4)
+                        ctx.stroke(borderPath, with: .color(Color(hue: 0.35, saturation: 0.9, brightness: 1.0)), lineWidth: 1.5)
+                        
                         // Draw Apple (Neon glowing red orb)
                         let appleRect = CGRect(x: offsetX + CGFloat(game.apple.x) * game.cellSize,
                                                y: offsetY + CGFloat(game.apple.y) * game.cellSize,
@@ -199,18 +215,20 @@ struct NotchSnakeView: View {
                 .background(.black.opacity(0.8))
             } else {
                 VStack {
-                    HStack(alignment: .top) {
+                    HStack(alignment: .center) {
                         Text("\(game.score)")
-                            .font(.system(size: 24, weight: .heavy, design: .rounded))
-                            .foregroundColor(.white.opacity(0.5))
-                            .padding(.leading, 30)
+                            .font(.system(size: 20, weight: .heavy, design: .rounded))
+                            .foregroundColor(.white.opacity(0.7))
+                            .padding(.leading, 45) // Align with where icons were
+                        
                         Spacer()
+                        
                         Text("BEST: \(game.highScore)")
                             .font(.system(size: 12, weight: .bold, design: .rounded))
                             .foregroundColor(.white.opacity(0.4))
-                            .padding(.trailing, 30)
+                            .padding(.trailing, 100) // Avoid the X button
                     }
-                    .padding(.top, -5)
+                    .offset(y: -35) // Move into the top bar area
                     Spacer()
                 }
             }

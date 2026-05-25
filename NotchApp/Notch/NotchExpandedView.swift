@@ -84,26 +84,30 @@ struct NotchExpandedView: View {
             // 1. Top Navigation & Status Bar (Pinned at top)
             HStack(alignment: .center) {
                 // Navigation Icons
-                HStack(spacing: 8) {
-                    ForEach(activePages, id: \.self) { page in
-                        Button(action: { 
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                notchState.selectedPage = page 
+                if notchState.selectedPage != .game || notchState.activeGame == nil {
+                    HStack(spacing: 8) {
+                        ForEach(activePages, id: \.self) { page in
+                            Button(action: { 
+                                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                    notchState.selectedPage = page 
+                                }
+                            }) {
+                                Image(systemName: page.rawValue)
+                                    .font(.system(size: 14, weight: .bold))
+                                    .foregroundColor(notchState.selectedPage == page ? .white : .white.opacity(0.4))
+                                    .frame(width: 28, height: 28)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(notchState.selectedPage == page ? Color.white.opacity(0.15) : Color.clear)
+                                    )
                             }
-                        }) {
-                            Image(systemName: page.rawValue)
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(notchState.selectedPage == page ? .white : .white.opacity(0.4))
-                                .frame(width: 28, height: 28)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 8)
-                                        .fill(notchState.selectedPage == page ? Color.white.opacity(0.15) : Color.clear)
-                                )
+                            .buttonStyle(.plain)
                         }
-                        .buttonStyle(.plain)
                     }
+                    .padding(.leading, 45)
+                } else {
+                    Spacer().frame(width: 45)
                 }
-                .padding(.leading, 45)
                 
                 Spacer()
                 
