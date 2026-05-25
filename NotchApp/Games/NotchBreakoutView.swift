@@ -65,6 +65,11 @@ final class BreakoutEngine: ObservableObject {
     @Published var combo:    Int = 0
     @Published var screenFlash: CGFloat = 0  // 0-1 white flash on brick break
 
+    // ── Input State ─────────────────────────────────────────────
+    var leftHeld:  Bool = false
+    var rightHeld: Bool = false
+    let paddleSpeed: CGFloat = 340   // points per second
+
     // ── Internal ────────────────────────────────────────────────
     private var speedMul: CGFloat = 1.0   // increases each level
 
@@ -139,10 +144,22 @@ final class BreakoutEngine: ObservableObject {
 
     // MARK: - Controls
 
-    func movePaddle(to x: CGFloat) {
+    /// Called from key monitor every frame — applies held-key paddle velocity.
+    func applyKeyMovement(dt: CGFloat) {
+        guard phase == .playing else { return }
         let half = paddleW / 2
-        paddleX = max(half, min(Self.W - half, x))
-        if phase == .idle { startGame() }
+        if leftHeld  { paddleX = max(half, paddleX - paddleSpeed * dt) }
+        if rightHeld { paddleX = min(Self.W - half, paddleX + paddleSpeed * dt) }
+    }
+
+    func spacePressed() {
+        switch phase {
+        case .idle:     phase = .playing
+        case .playing:  phase = .paused
+        case .paused:   phase = .playing
+        case .gameOver: reset(keepHi: true); phase = .playing
+        default: break
+        }
     }
 
     func startGame() {
@@ -295,8 +312,12 @@ struct NotchBreakoutView: View {
 
     @StateObject private var game = BreakoutEngine()
 
-    // 60fps game tick
+    // 60fps game tick (1/60 s ≈ 16.67 ms)
     private let ticker = Timer.publish(every: 1/60, on: .main, in: .common).autoconnect()
+    private let dt: CGFloat = 1.0 / 60.0
+
+    @State private var keyMonitorDown: Any? = nil
+    @State private var keyMonitorUp:   Any? = nil
 
     var body: some View {
         ZStack {
@@ -320,20 +341,7 @@ struct NotchBreakoutView: View {
                 }
             }
             .contentShape(Rectangle())
-            .onContinuousHover { hoverPhase in
-                if case .active(let loc) = hoverPhase {
-                    game.movePaddle(to: loc.x)
-                }
-            }
-            .onTapGesture {
-                switch game.phase {
-                case .idle:     game.startGame()
-                case .playing:  game.pauseToggle()
-                case .paused:   game.pauseToggle()
-                case .gameOver: game.reset(keepHi: true)
-                default: break
-                }
-            }
+            .onTapGesture { game.spacePressed() }
 
             // ── Overlay screens ──────────────────────────────────
             switch game.phase {
@@ -348,10 +356,79 @@ struct NotchBreakoutView: View {
             default:
                 EmptyView()
             }
+
+            // ── Close (X) button — always visible ────────────────
+            VStack {
+                HStack {
+                    Spacer()
+                    Button(action: closeGame) {
+                        ZStack {
+                            Capsule()
+                                .fill(Color.white.opacity(0.12))
+                                .frame(width: 28, height: 16)
+                                .overlay(
+                                    Capsule()
+                                        .stroke(Color.white.opacity(0.2), lineWidth: 0.5)
+                                )
+                            Image(systemName: "xmark")
+                                .font(.system(size: 7, weight: .black))
+                                .foregroundColor(.white.opacity(0.7))
+                        }
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.top, 4)
+                    .padding(.trailing, 8)
+                }
+                Spacer()
+            }
         }
         .frame(width: BreakoutEngine.W, height: BreakoutEngine.H)
-        .onReceive(ticker) { _ in game.update() }
-        .onDisappear { game.phase = .paused }
+        .onReceive(ticker) { _ in
+            game.applyKeyMovement(dt: dt)
+            game.update()
+        }
+        .onAppear  { setupKeyMonitor() }
+        .onDisappear { tearDownKeyMonitor(); game.phase = .paused }
+    }
+
+    // MARK: - Key Monitor
+
+    private func setupKeyMonitor() {
+        keyMonitorDown = NSEvent.addLocalMonitorForEvents(matching: .keyDown) { event in
+            handleKey(event, down: true)
+            return event
+        }
+        keyMonitorUp = NSEvent.addLocalMonitorForEvents(matching: .keyUp) { event in
+            handleKey(event, down: false)
+            return event
+        }
+    }
+
+    private func tearDownKeyMonitor() {
+        if let m = keyMonitorDown { NSEvent.removeMonitor(m); keyMonitorDown = nil }
+        if let m = keyMonitorUp   { NSEvent.removeMonitor(m); keyMonitorUp   = nil }
+    }
+
+    private func handleKey(_ event: NSEvent, down: Bool) {
+        switch event.keyCode {
+        case 123: game.leftHeld  = down   // ← left arrow
+        case 124: game.rightHeld = down   // → right arrow
+        case 49 where down:               // Space bar — only on key-down
+            game.spacePressed()
+        default: break
+        }
+    }
+
+    // MARK: - Close
+
+    private func closeGame() {
+        game.leftHeld  = false
+        game.rightHeld = false
+        game.phase = .paused
+        withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.4)) {
+            NotchState.shared.isHovering = false
+            NotchState.shared.isExpanded = false
+        }
     }
 
     // MARK: - Drawing
@@ -519,7 +596,7 @@ private struct IdleOverlay: View {
     @State private var pulse = false
 
     var body: some View {
-        VStack(spacing: 3) {
+        VStack(spacing: 4) {
             Text("NOTCH BREAKER")
                 .font(.system(size: 13, weight: .black, design: .monospaced))
                 .foregroundStyle(
@@ -534,10 +611,14 @@ private struct IdleOverlay: View {
                 )
                 .shadow(color: Color(hue: 0.57, saturation: 0.9, brightness: 1.0), radius: 8)
 
-            Text("MOVE MOUSE TO START")
+            Text("PRESS SPACE TO START")
                 .font(.system(size: 8, weight: .bold, design: .monospaced))
-                .foregroundColor(.white.opacity(pulse ? 0.8 : 0.3))
+                .foregroundColor(.white.opacity(pulse ? 0.85 : 0.3))
                 .animation(.easeInOut(duration: 0.7).repeatForever(), value: pulse)
+
+            Text("← → MOVE PADDLE   SPACE PAUSE")
+                .font(.system(size: 7, weight: .medium, design: .monospaced))
+                .foregroundColor(.white.opacity(0.25))
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(.black.opacity(0.55))

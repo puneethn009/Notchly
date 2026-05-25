@@ -65,8 +65,10 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
         }
         
         if isExpanded {
-            // Prevent auto-collapse if mouse is outside AND NO screenshot is pending
-            if !isInside && !TimerManager.shared.isAlarmPlaying && NotchState.shared.pendingScreenshotURL == nil {
+            // Don't auto-collapse when the game tab is active — player needs the notch to stay open.
+            // The game provides its own explicit X button to close.
+            let gameIsActive = NotchState.shared.selectedPage == .game
+            if !isInside && !TimerManager.shared.isAlarmPlaying && NotchState.shared.pendingScreenshotURL == nil && !gameIsActive {
                 updateExpansion(false)
             }
         } else {
