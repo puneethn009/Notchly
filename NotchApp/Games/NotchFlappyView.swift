@@ -182,7 +182,6 @@ struct NotchFlappyView: View {
                 .resizable()
                 .scaledToFill()
                 .frame(width: game.birdRadius * 3, height: game.birdRadius * 3) // Slightly larger to account for sprite padding
-                .blendMode(.screen) // Makes the pure black background transparent against the game canvas
                 .shadow(color: .orange.opacity(0.4), radius: 6)
                 .rotationEffect(.degrees(Double(game.birdVelocity * 3))) // Rotate bird based on velocity
                 .position(x: game.birdX, y: game.birdY)
