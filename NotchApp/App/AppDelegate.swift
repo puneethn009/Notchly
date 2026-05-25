@@ -65,9 +65,9 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
         }
         
         if isExpanded {
-            // Don't auto-collapse when the game tab is active — player needs the notch to stay open.
+            // Don't auto-collapse when a game is actively playing — player needs the notch to stay open.
             // The game provides its own explicit X button to close.
-            let gameIsActive = NotchState.shared.selectedPage == .game
+            let gameIsActive = NotchState.shared.selectedPage == .game && NotchState.shared.activeGame != nil
             if !isInside && !TimerManager.shared.isAlarmPlaying && NotchState.shared.pendingScreenshotURL == nil && !gameIsActive {
                 updateExpansion(false)
             }
