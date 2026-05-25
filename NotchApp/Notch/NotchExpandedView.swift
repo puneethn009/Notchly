@@ -201,6 +201,12 @@ struct NotchExpandedView: View {
                         if notchState.activeGame == "breakout" {
                             NotchBreakoutView()
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else if notchState.activeGame == "flappy" {
+                            NotchFlappyView()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else if notchState.activeGame == "snake" {
+                            NotchSnakeView()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
                         } else {
                             GamesLibraryView()
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -1563,6 +1569,8 @@ struct GamesLibraryView: View {
     @ObservedObject private var notchState = NotchState.shared
     
     @State private var hoverBreakout = false
+    @State private var hoverFlappy = false
+    @State private var hoverSnake = false
     
     var body: some View {
         HStack(spacing: 24) {
@@ -1611,25 +1619,94 @@ struct GamesLibraryView: View {
                 hoverBreakout = hovering
             }
             
-            // Coming Soon placeholder
-            VStack(spacing: 12) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16, style: .continuous)
-                        .fill(Color.white.opacity(0.05))
-                        .frame(width: 140, height: 80)
-                        .overlay(
-                            RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                .stroke(Color.white.opacity(0.1), style: StrokeStyle(lineWidth: 1, dash: [4]))
-                        )
-                    
-                    Image(systemName: "plus")
-                        .font(.system(size: 24, weight: .bold))
-                        .foregroundColor(.white.opacity(0.3))
+            // Flappy Bird Game Card
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    notchState.activeGame = "flappy"
                 }
-                
-                Text("Coming Soon")
-                    .font(.system(size: 13, weight: .medium, design: .rounded))
-                    .foregroundColor(.white.opacity(0.4))
+            }) {
+                VStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(LinearGradient(
+                                colors: [
+                                    Color(hue: 0.12, saturation: 0.8, brightness: 1.0).opacity(hoverFlappy ? 0.4 : 0.2), 
+                                    Color(hue: 0.08, saturation: 0.9, brightness: 1.0).opacity(hoverFlappy ? 0.2 : 0.1)
+                                ],
+                                startPoint: .topLeading, endPoint: .bottomTrailing
+                            ))
+                            .frame(width: 140, height: 80)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .stroke(Color.white.opacity(hoverFlappy ? 0.3 : 0.15), lineWidth: 1)
+                            )
+                        
+                        Image(systemName: "bird.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [Color(hue: 0.12, saturation: 0.8, brightness: 1.0), Color(hue: 0.08, saturation: 0.9, brightness: 1.0)],
+                                    startPoint: .leading, endPoint: .trailing
+                                )
+                            )
+                            .shadow(color: Color(hue: 0.12, saturation: 0.8, brightness: 1.0).opacity(0.8), radius: hoverFlappy ? 12 : 8)
+                            .scaleEffect(hoverFlappy ? 1.05 : 1.0)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoverFlappy)
+                    }
+                    
+                    Text("Flappy Bird")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
+            }
+            .buttonStyle(.plain)
+            .onHover { hovering in
+                hoverFlappy = hovering
+            }
+            
+            // Snake Game Card
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    notchState.activeGame = "snake"
+                }
+            }) {
+                VStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(LinearGradient(
+                                colors: [
+                                    Color(hue: 0.35, saturation: 0.8, brightness: 1.0).opacity(hoverSnake ? 0.4 : 0.2), 
+                                    Color(hue: 0.45, saturation: 0.9, brightness: 1.0).opacity(hoverSnake ? 0.2 : 0.1)
+                                ],
+                                startPoint: .topLeading, endPoint: .bottomTrailing
+                            ))
+                            .frame(width: 140, height: 80)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .stroke(Color.white.opacity(hoverSnake ? 0.3 : 0.15), lineWidth: 1)
+                            )
+                        
+                        Image(systemName: "point.topleft.down.curvedto.point.bottomright.up")
+                            .font(.system(size: 32))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [Color(hue: 0.35, saturation: 0.8, brightness: 1.0), Color(hue: 0.45, saturation: 0.9, brightness: 1.0)],
+                                    startPoint: .leading, endPoint: .trailing
+                                )
+                            )
+                            .shadow(color: Color(hue: 0.35, saturation: 0.8, brightness: 1.0).opacity(0.8), radius: hoverSnake ? 12 : 8)
+                            .scaleEffect(hoverSnake ? 1.05 : 1.0)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoverSnake)
+                    }
+                    
+                    Text("Snake")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
+            }
+            .buttonStyle(.plain)
+            .onHover { hovering in
+                hoverSnake = hovering
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
