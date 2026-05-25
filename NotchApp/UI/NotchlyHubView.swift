@@ -266,12 +266,29 @@ struct NotchControlsView: View {
                                     .fill(Color.black)
                                     .frame(width: 260, height: 35)
                                 
-                                HStack(spacing: 16) {
-                                    ForEach(settings.activeNotchPages, id: \.self) { page in
-                                        Image(systemName: page.rawValue)
-                                            .foregroundColor(iconColor(for: page))
+                                HStack {
+                                    HStack(spacing: 16) {
+                                        ForEach(settings.activeNotchPages.filter { $0 != .system }, id: \.self) { page in
+                                            Image(systemName: page.rawValue)
+                                                .foregroundColor(iconColor(for: page))
+                                                .font(.system(size: 10, weight: .bold))
+                                        }
+                                    }
+                                    .padding(.leading, 16)
+                                    
+                                    Spacer()
+                                    
+                                    HStack(spacing: 16) {
+                                        if settings.showNotchSystem {
+                                            Image(systemName: "cpu")
+                                                .foregroundColor(.blue)
+                                                .font(.system(size: 10, weight: .bold))
+                                        }
+                                        Image(systemName: "gearshape.fill")
+                                            .foregroundColor(.white.opacity(0.5))
                                             .font(.system(size: 10, weight: .bold))
                                     }
+                                    .padding(.trailing, 16)
                                 }
                             }
                             
@@ -296,6 +313,7 @@ struct NotchControlsView: View {
                             isOn: binding(for: page)
                         )
                         .disabled(isEditing)
+                        .opacity(draggedPage == page ? 0.0 : 1.0)
                         .rotationEffect(.degrees(isEditing ? (Double.random(in: -1...1)) : 0))
                         .animation(isEditing ? wiggleAnimation : .default, value: isEditing)
                         .onDrag {
