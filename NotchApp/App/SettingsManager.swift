@@ -30,11 +30,7 @@ class SettingsManager: ObservableObject {
     @AppStorage("showMuteButton") var showMuteButton: Bool = true
     
     // Calendar Settings
-    @AppStorage("calendarSource") var calendarSource: String = "local" // local, notion, both
-    @AppStorage("notionToken") var notionToken: String = ""
-    @AppStorage("notionDatabaseID") var notionDatabaseID: String = ""
-    @AppStorage("notionDateProperty") var notionDateProperty: String = "Date"
-    @AppStorage("notionTitleProperty") var notionTitleProperty: String = "Name"
+
     
     // Module Toggles
     @AppStorage("enableStopwatch") var enableStopwatch: Bool = true

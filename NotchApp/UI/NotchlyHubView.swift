@@ -335,7 +335,7 @@ struct NotchControlsView: View {
                     
                     ToggleCard(
                         title: "Event Calendar",
-                        subtitle: "Sync Local Calendars or Notion databases for schedule info",
+                        subtitle: "Sync with your Apple Calendar for upcoming schedule info",
                         icon: "calendar",
                         iconColor: .green,
                         isOn: $settings.showNotchCalendar

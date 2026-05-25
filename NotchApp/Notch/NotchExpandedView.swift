@@ -1108,21 +1108,9 @@ struct CalendarModuleView: View {
                             .font(.system(size: 10, weight: .black))
                             .foregroundColor(.white.opacity(0.3))
                         
-                        Spacer()
                         
                         HStack(spacing: 4) {
-                            SourceTab(icon: "calendar", isSelected: SettingsManager.shared.calendarSource == "local") {
-                                SettingsManager.shared.calendarSource = "local"
-                                calendarManager.refresh()
-                            }
-                            SourceTab(icon: "n.circle.fill", isSelected: SettingsManager.shared.calendarSource == "notion") {
-                                SettingsManager.shared.calendarSource = "notion"
-                                calendarManager.refresh()
-                            }
-                            SourceTab(icon: "square.grid.2x2.fill", isSelected: SettingsManager.shared.calendarSource == "both") {
-                                SettingsManager.shared.calendarSource = "both"
-                                calendarManager.refresh()
-                            }
+                            // Source tabs removed since we only support Apple Calendar now
                         }
                         .background(Capsule().fill(Color.white.opacity(0.05)))
                     }
@@ -1133,13 +1121,8 @@ struct CalendarModuleView: View {
                     
                     // 2. DYNAMIC CONTENT: Grows downwards, never pushes the header up
                     ZStack(alignment: .top) {
-                        if SettingsManager.shared.calendarSource == "notion" && (SettingsManager.shared.notionToken.isEmpty || SettingsManager.shared.notionDatabaseID.isEmpty) {
-                            NotionSetupView(calendarManager: calendarManager)
-                                .transition(.opacity)
-                                .padding(.top, -20)
-                        } else {
-                            VStack(spacing: 0) {
-                                // Date Strip (Collapsible)
+                        VStack(spacing: 0) {
+                            // Date Strip (Collapsible)
                                 if !isDateStripCollapsed {
                                     ScrollViewReader { proxy in
                                         ScrollView(.horizontal, showsIndicators: false) {
@@ -1200,53 +1183,11 @@ struct CalendarModuleView: View {
                                         }
                                     }
                             )
-                        }
                     }
                 }
             }
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .top)
-    }
-}
-
-struct NotionSetupView: View {
-    @ObservedObject var calendarManager: CalendarManager
-    @State private var token: String = SettingsManager.shared.notionToken
-    @State private var dbId: String = SettingsManager.shared.notionDatabaseID
-    @State private var showManualSetup = false
-    
-    var body: some View {
-        VStack(spacing: 12) {
-            // Restore Premium Centered Layout (Compacted)
-            VStack(spacing: 8) {
-                Image(systemName: "n.circle.fill")
-                    .font(.system(size: 30))
-                    .foregroundColor(.white)
-                
-                Text("Sync with Notion")
-                    .font(.system(size: 14, weight: .bold))
-                
-                Text("Connect your workspace to see your tasks.")
-                    .font(.system(size: 9))
-                    .foregroundColor(.white.opacity(0.4))
-                    .multilineTextAlignment(.center)
-                
-                Button(action: {
-                    if let url = URL(string: "https://www.notion.so/my-integrations") {
-                        NSWorkspace.shared.open(url)
-                    }
-                }) {
-                    Text("CONNECT NOTION")
-                        .font(.system(size: 10, weight: .black))
-                        .foregroundColor(.black)
-                        .padding(.horizontal, 24)
-                        .padding(.vertical, 8)
-                        .background(Capsule().fill(Color.white))
-                }
-                .buttonStyle(.plain)
-            }
-        }
-        .padding(.horizontal, 40)
     }
 }
 
