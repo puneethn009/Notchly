@@ -56,16 +56,23 @@ class SnakeGame: ObservableObject {
     }
     
     func changeDirection(_ newDir: Direction) {
-        if phase == .idle || phase == .gameOver {
-            reset()
-            return
-        }
+        if phase != .playing { return }
         
         switch (direction, newDir) {
         case (.up, .down), (.down, .up), (.left, .right), (.right, .left):
             break
         default:
             nextDirection = newDir
+        }
+    }
+    
+    func spacePressed() {
+        switch phase {
+        case .idle:     reset()
+        case .playing:  phase = .paused
+        case .paused:   phase = .playing
+        case .gameOver: reset()
+        default: break
         }
     }
     
@@ -212,7 +219,7 @@ struct NotchSnakeView: View {
                         .font(.system(size: 14, weight: .black, design: .monospaced))
                         .foregroundStyle(LinearGradient(colors: [.green, .cyan], startPoint: .leading, endPoint: .trailing))
                         .shadow(color: .green, radius: 8)
-                    Text("PRESS ARROWS TO PLAY")
+                    Text("PRESS SPACE TO PLAY")
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundColor(.white.opacity(0.5))
                 }
@@ -227,7 +234,18 @@ struct NotchSnakeView: View {
                     Text("Score: \(game.score)")
                         .font(.system(size: 14, weight: .bold))
                         .foregroundColor(.white)
-                    Text("PRESS ARROWS TO RESTART")
+                    Text("PRESS SPACE TO RESTART")
+                        .font(.system(size: 10, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white.opacity(0.5))
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(.black.opacity(0.8))
+            } else if game.phase == .paused {
+                VStack(spacing: 8) {
+                    Text("PAUSED")
+                        .font(.system(size: 32, weight: .black, design: .rounded))
+                        .foregroundColor(.white)
+                    Text("PRESS SPACE TO RESUME")
                         .font(.system(size: 10, weight: .bold, design: .monospaced))
                         .foregroundColor(.white.opacity(0.5))
                 }
@@ -280,6 +298,7 @@ struct NotchSnakeView: View {
             case 125: game.changeDirection(.down); return nil
             case 123: game.changeDirection(.left); return nil
             case 124: game.changeDirection(.right); return nil
+            case 49: game.spacePressed(); return nil
             default: break
             }
             return event
