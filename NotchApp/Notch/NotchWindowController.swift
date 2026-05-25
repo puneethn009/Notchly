@@ -35,7 +35,7 @@ class NotchWindowController: NSWindowController {
         window.backgroundColor = .clear
         window.isOpaque = false
         window.hasShadow = false
-        window.collectionBehavior = [.stationary, .ignoresCycle, .fullScreenAuxiliary]
+        window.collectionBehavior = [.canJoinAllSpaces, .stationary, .ignoresCycle, .fullScreenAuxiliary]
         window.ignoresMouseEvents = false // We handle click-through via hitTest
         window.sharingType = .none // Prevents appearing in screenshots/screen recordings
 
