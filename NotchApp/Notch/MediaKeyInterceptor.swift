@@ -1,4 +1,5 @@
 import Cocoa
+import CoreGraphics
 import CoreAudio
 import AudioToolbox
 import IOKit
@@ -6,24 +7,50 @@ import IOKit
 class MediaKeyInterceptor {
     static let shared = MediaKeyInterceptor()
     
-    private var globalEventMonitor: Any?
+    private var eventTap: CFMachPort?
+    private var runLoopSource: CFRunLoopSource?
     
     private init() { }
     
     func start() {
-        globalEventMonitor = NSEvent.addGlobalMonitorForEvents(matching: .systemDefined) { [weak self] event in
-            self?.handleSystemDefinedEvent(event)
+        let NX_SYSDEFINED: UInt32 = 14
+        
+        let pointer = UnsafeMutableRawPointer(Unmanaged.passUnretained(self).toOpaque())
+        
+        guard let tap = CGEvent.tapCreate(
+            tap: .cgSessionEventTap,
+            place: .headInsertEventTap,
+            options: .listenOnly, // Listen only, don't block
+            eventsOfInterest: CGEventMask(1 << NX_SYSDEFINED),
+            callback: { (proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? in
+                
+                let NX_SYSDEFINED: UInt32 = 14
+                if type.rawValue == NX_SYSDEFINED, let refcon = refcon {
+                    let mySelf = Unmanaged<MediaKeyInterceptor>.fromOpaque(refcon).takeUnretainedValue()
+                    mySelf.handleSystemDefinedEvent(event)
+                }
+                
+                return Unmanaged.passUnretained(event)
+            },
+            userInfo: pointer
+        ) else {
+            print("Failed to create event tap. Make sure app has Accessibility permissions.")
+            return
         }
         
-        // Also listen to local events if the app is focused
-        NSEvent.addLocalMonitorForEvents(matching: .systemDefined) { [weak self] event in
-            self?.handleSystemDefinedEvent(event)
-            return event
+        self.eventTap = tap
+        self.runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
+        
+        if let source = self.runLoopSource {
+            CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
+            CGEvent.tapEnable(tap: tap, enable: true)
         }
     }
     
-    private func handleSystemDefinedEvent(_ event: NSEvent) {
-        let data1 = event.data1
+    private func handleSystemDefinedEvent(_ event: CGEvent) {
+        guard let nsevent = NSEvent(cgEvent: event) else { return }
+        
+        let data1 = nsevent.data1
         let keyCode = (data1 & 0xFFFF0000) >> 16
         let keyFlags = (data1 & 0x0000FFFF)
         let keyState = (((keyFlags & 0xFF00) >> 8)) == 0xA
