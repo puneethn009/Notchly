@@ -31,7 +31,7 @@ class FlappyGame: ObservableObject {
     var frameCount = 0
     
     let width: CGFloat = 600
-    let height: CGFloat = 140
+    let height: CGFloat = 150
     
     func reset() {
         birdY = height / 2

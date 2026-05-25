@@ -225,7 +225,7 @@ struct NotchExpandedView: View {
             }
             .offset(x: shakeOffset)
             .frame(maxWidth: .infinity)
-            .frame(height: 140, alignment: .top) // Force top alignment for everything
+            .frame(height: 150, alignment: .top) // Force top alignment for everything
             
             Spacer(minLength: 0) // Anchor everything to the top
         }

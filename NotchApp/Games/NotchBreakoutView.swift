@@ -34,7 +34,7 @@ final class BreakoutEngine: ObservableObject {
 
     // ── Canvas ──────────────────────────────────────────────────
     static let W: CGFloat = 700
-    static let H: CGFloat = 138   // content area is 140; leave 2pt bottom
+    static let H: CGFloat = 150
 
     // ── Bricks ──────────────────────────────────────────────────
     let brickCols  = 14
