@@ -100,7 +100,9 @@ struct ScreenshotGalleryView: View {
                             
                             Button(action: {
                                 NotchlyHubWindowController.shared.show()
-                                NotificationCenter.default.post(name: NSNotification.Name("OpenScreenshotManager"), object: nil)
+                                DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                                    NotificationCenter.default.post(name: NSNotification.Name("OpenScreenshotManager"), object: nil)
+                                }
                                 NotchState.shared.isExpanded = false
                             }) {
                                 VStack(alignment: .center, spacing: 4) {

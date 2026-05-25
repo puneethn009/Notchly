@@ -803,6 +803,7 @@ struct TimerContent: View {
                             if SettingsManager.shared.customTimers.count < 5 {
                                 Button(action: {
                                     UserDefaults.standard.set("Timer", forKey: "selectedSettingsTab")
+                                    NSApp.activate(ignoringOtherApps: true)
                                     NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
                                     NotchState.shared.isExpanded = false
                                 }) {
