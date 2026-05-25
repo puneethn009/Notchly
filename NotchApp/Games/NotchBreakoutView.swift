@@ -378,31 +378,28 @@ struct NotchBreakoutView: View {
             // HUD (Lives, Score, Level) mapped into top bar
             if game.phase == .playing || game.phase == .paused {
                 VStack {
-                    HStack(alignment: .center) {
+                    HStack(alignment: .center, spacing: 12) {
                         Text("\(game.score)")
                             .font(.system(size: 20, weight: .heavy, design: .rounded))
                             .foregroundColor(.white.opacity(0.7))
-                            .padding(.leading, 45) // Align with where icons were
                         
                         if game.level > 1 {
                             Text("LVL \(game.level)")
                                 .font(.system(size: 10, weight: .black, design: .monospaced))
                                 .foregroundColor(Color(hue: 0.14, saturation: 0.8, brightness: 1.0).opacity(0.7))
-                                .padding(.leading, 10)
                         }
-                        
-                        Spacer()
                         
                         Text(String(repeating: "♥ ", count: game.lives).trimmingCharacters(in: .whitespaces))
                             .font(.system(size: 16))
                             .foregroundColor(Color(hue: 0.97, saturation: 0.85, brightness: 1.0).opacity(0.8))
-                            .padding(.trailing, 10)
                         
                         Text("BEST: \(game.hiScore)")
                             .font(.system(size: 12, weight: .bold, design: .rounded))
                             .foregroundColor(.white.opacity(0.4))
-                            .padding(.trailing, 100) // Avoid the X button
+                            
+                        Spacer()
                     }
+                    .padding(.leading, 45) // Align with where icons were
                     .offset(y: -35) // Move into the top bar area
                     Spacer()
                 }

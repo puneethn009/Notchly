@@ -141,7 +141,7 @@ struct NotchSnakeView: View {
                         let offsetY = (size.height - gridHeight) / 2
                         
                         // Draw Neon Border
-                        let borderRect = CGRect(x: offsetX - 2, y: offsetY - 2, width: gridWidth + 4, height: gridHeight + 4)
+                        let borderRect = CGRect(x: offsetX - 2, y: offsetY - 6, width: gridWidth + 4, height: gridHeight + 10)
                         let borderPath = Path(roundedRect: borderRect, cornerRadius: 16) // matches notch style
                         
                         var borderGlow = ctx
@@ -215,19 +215,18 @@ struct NotchSnakeView: View {
                 .background(.black.opacity(0.8))
             } else {
                 VStack {
-                    HStack(alignment: .center) {
+                    HStack(alignment: .center, spacing: 15) {
                         Text("\(game.score)")
                             .font(.system(size: 20, weight: .heavy, design: .rounded))
                             .foregroundColor(.white.opacity(0.7))
-                            .padding(.leading, 45) // Align with where icons were
-                        
-                        Spacer()
                         
                         Text("BEST: \(game.highScore)")
                             .font(.system(size: 12, weight: .bold, design: .rounded))
                             .foregroundColor(.white.opacity(0.4))
-                            .padding(.trailing, 100) // Avoid the X button
+                            
+                        Spacer()
                     }
+                    .padding(.leading, 45) // Align with where icons were
                     .offset(y: -35) // Move into the top bar area
                     Spacer()
                 }

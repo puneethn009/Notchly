@@ -123,10 +123,10 @@ struct NotchFlappyView: View {
             // Render Loop
             TimelineView(.animation) { context in
                 Canvas { ctx, size in
-                    // Draw Flames at bottom
+                    // Draw Flames at bottom (drawn FIRST so pipes overlay them)
                     let time = context.date.timeIntervalSinceReferenceDate
                     var flamePath = Path()
-                    flamePath.move(to: CGPoint(x: -10, y: size.height + 20))
+                    flamePath.move(to: CGPoint(x: -10, y: size.height + 50))
                     
                     for x in stride(from: 0, through: Double(size.width), by: 8.0) {
                         let wave1 = sin(x * 0.05 + time * 6) * 6
@@ -134,14 +134,14 @@ struct NotchFlappyView: View {
                         let h = 10 + wave1 + wave2
                         flamePath.addLine(to: CGPoint(x: CGFloat(x), y: size.height - CGFloat(h)))
                     }
-                    flamePath.addLine(to: CGPoint(x: size.width + 10, y: size.height + 20))
+                    flamePath.addLine(to: CGPoint(x: size.width + 10, y: size.height + 50))
                     flamePath.closeSubpath()
                     
                     var flameGlow = ctx
                     flameGlow.addFilter(.blur(radius: 6))
                     flameGlow.fill(flamePath, with: .color(.red.opacity(0.8)))
                     
-                    ctx.fill(flamePath, with: .linearGradient(Gradient(colors: [.yellow, .red]), startPoint: CGPoint(x: 0, y: size.height - 15), endPoint: CGPoint(x: 0, y: size.height)))
+                    ctx.fill(flamePath, with: .linearGradient(Gradient(colors: [.yellow, .red]), startPoint: CGPoint(x: 0, y: size.height - 15), endPoint: CGPoint(x: 0, y: size.height + 10)))
                     
                     // Draw Pipes
                     for p in game.pipes {
@@ -209,19 +209,18 @@ struct NotchFlappyView: View {
                 .background(.black.opacity(0.8))
             } else {
                 VStack {
-                    HStack(alignment: .center) {
+                    HStack(alignment: .center, spacing: 15) {
                         Text("\(game.score)")
                             .font(.system(size: 20, weight: .heavy, design: .rounded))
                             .foregroundColor(.white.opacity(0.7))
-                            .padding(.leading, 45) // Align with where icons were
-                        
-                        Spacer()
                         
                         Text("BEST: \(game.highScore)")
                             .font(.system(size: 12, weight: .bold, design: .rounded))
                             .foregroundColor(.white.opacity(0.4))
-                            .padding(.trailing, 100) // Avoid the X button
+                            
+                        Spacer()
                     }
+                    .padding(.leading, 45) // Align with where icons were
                     .offset(y: -35) // Move into the top bar area
                     Spacer()
                 }
