@@ -29,7 +29,7 @@ class NotchlyHubWindowController: NSWindowController {
         window.title = "Notchly Hub"
         window.titleVisibility = .hidden
         window.titlebarAppearsTransparent = true
-        window.isMovableByWindowBackground = true
+        window.isMovableByWindowBackground = false
         window.backgroundColor = .clear
         window.isOpaque = false
         window.hasShadow = true
