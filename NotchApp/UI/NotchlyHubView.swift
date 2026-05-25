@@ -290,6 +290,7 @@ struct NotchControlsView: View {
                                     }
                                     .padding(.trailing, 16)
                                 }
+                                .frame(width: 260)
                             }
                             
                             Text("Mock Dynamic Live Notch Status")
