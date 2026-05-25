@@ -268,7 +268,7 @@ struct NotchControlsView: View {
                                 
                                 HStack {
                                     HStack(spacing: 16) {
-                                        ForEach(settings.activeNotchPages.filter { $0 != .system }, id: \.self) { page in
+                                        ForEach(Array(settings.activeNotchPages.dropLast()), id: \.self) { page in
                                             Image(systemName: page.rawValue)
                                                 .foregroundColor(iconColor(for: page))
                                                 .font(.system(size: 10, weight: .bold))
@@ -279,9 +279,9 @@ struct NotchControlsView: View {
                                     Spacer()
                                     
                                     HStack(spacing: 16) {
-                                        if settings.showNotchSystem {
-                                            Image(systemName: "cpu")
-                                                .foregroundColor(.blue)
+                                        if let lastPage = settings.activeNotchPages.last {
+                                            Image(systemName: lastPage.rawValue)
+                                                .foregroundColor(iconColor(for: lastPage))
                                                 .font(.system(size: 10, weight: .bold))
                                         }
                                         Image(systemName: "gearshape.fill")

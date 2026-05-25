@@ -67,7 +67,7 @@ struct NotchExpandedView: View {
     @StateObject private var settings = SettingsManager.shared
     
     private var activePages: [NotchPage] {
-        settings.activeNotchPages.filter { $0 != .system }
+        settings.activeNotchPages
     }
     
     private func ensureSelectedPageIsValid() {
@@ -86,7 +86,7 @@ struct NotchExpandedView: View {
                 // Navigation Icons
                 if notchState.selectedPage != .game || notchState.activeGame == nil {
                     HStack(spacing: 8) {
-                        ForEach(activePages, id: \.self) { page in
+                        ForEach(Array(activePages.dropLast()), id: \.self) { page in
                             Button(action: { 
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                     notchState.selectedPage = page 
@@ -136,24 +136,24 @@ struct NotchExpandedView: View {
                         .buttonStyle(.plain)
                     }
 
-                    // System Monitor Button
-                    if settings.showNotchSystem {
+                    // Dynamic Last Button (Right Aligned)
+                    if let lastPage = activePages.last {
                         Button(action: {
                             withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                notchState.selectedPage = .system
+                                notchState.selectedPage = lastPage
                             }
                         }) {
-                            Image(systemName: "cpu")
+                            Image(systemName: lastPage.rawValue)
                                 .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(notchState.selectedPage == .system ? .white : .white.opacity(0.5))
+                                .foregroundColor(notchState.selectedPage == lastPage ? .white : .white.opacity(0.5))
                                 .padding(4)
                                 .background(
                                     RoundedRectangle(cornerRadius: 6)
-                                        .fill(notchState.selectedPage == .system ? Color.white.opacity(0.15) : Color.clear)
+                                        .fill(notchState.selectedPage == lastPage ? Color.white.opacity(0.15) : Color.clear)
                                 )
                         }
                         .buttonStyle(.plain)
-                    }
+                    } 
                     
                     Button(action: {
                         NotchlyHubWindowController.shared.show()
