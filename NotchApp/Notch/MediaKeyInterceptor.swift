@@ -50,7 +50,7 @@ class MediaKeyInterceptor {
         self.runLoopSource = CFMachPortCreateRunLoopSource(kCFAllocatorDefault, tap, 0)
         
         if let source = self.runLoopSource {
-            CFRunLoopAddSource(CFRunLoopGetCurrent(), source, .commonModes)
+            CFRunLoopAddSource(RunLoop.main.getCFRunLoop(), source, .commonModes)
             CGEvent.tapEnable(tap: tap, enable: true)
         }
     }
