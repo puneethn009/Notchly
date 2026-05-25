@@ -221,7 +221,7 @@ struct NotchSnakeView: View {
             } else if game.phase == .gameOver {
                 VStack(spacing: 8) {
                     Text("GAME OVER")
-                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .font(.system(size: 32, weight: .black, design: .rounded))
                         .foregroundColor(.red)
                         .shadow(color: .red, radius: 8)
                     Text("Score: \(game.score)")

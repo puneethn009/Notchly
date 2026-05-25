@@ -733,7 +733,7 @@ private struct GameOverOverlay: View {
     var body: some View {
         VStack(spacing: 3) {
             Text("GAME OVER")
-                .font(.system(size: 14, weight: .black, design: .monospaced))
+                .font(.system(size: 32, weight: .black, design: .monospaced))
                 .foregroundColor(Color(hue: 0.97, saturation: 0.85, brightness: 1.0))
                 .shadow(color: Color(hue: 0.97, saturation: 0.9, brightness: 1.0), radius: 8)
 

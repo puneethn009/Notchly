@@ -177,13 +177,13 @@ struct NotchFlappyView: View {
                 }
             }
             
-            // Draw Bird (Using the generated premium app icon)
-            Image("flappy_icon")
+            // Draw Bird (Using the generated cartoon sprite)
+            Image("flappy_bird_sprite")
                 .resizable()
                 .scaledToFill()
-                .frame(width: game.birdRadius * 2.5, height: game.birdRadius * 2.5) // Slightly larger to account for icon padding
-                .clipShape(RoundedRectangle(cornerRadius: 8)) // So it isn't completely square if it rotates
-                .shadow(color: .orange.opacity(0.8), radius: 6)
+                .frame(width: game.birdRadius * 3, height: game.birdRadius * 3) // Slightly larger to account for sprite padding
+                .blendMode(.screen) // Makes the pure black background transparent against the game canvas
+                .shadow(color: .orange.opacity(0.4), radius: 6)
                 .rotationEffect(.degrees(Double(game.birdVelocity * 3))) // Rotate bird based on velocity
                 .position(x: game.birdX, y: game.birdY)
             
@@ -203,7 +203,7 @@ struct NotchFlappyView: View {
             } else if game.phase == .gameOver {
                 VStack(spacing: 8) {
                     Text("GAME OVER")
-                        .font(.system(size: 24, weight: .black, design: .rounded))
+                        .font(.system(size: 32, weight: .black, design: .rounded))
                         .foregroundColor(.red)
                         .shadow(color: .red, radius: 8)
                     Text("Score: \(game.score)")
