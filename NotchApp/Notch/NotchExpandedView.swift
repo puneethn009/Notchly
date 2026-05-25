@@ -67,7 +67,7 @@ struct NotchExpandedView: View {
     @StateObject private var settings = SettingsManager.shared
     
     private var activePages: [NotchPage] {
-        settings.activeNotchPages
+        settings.activeNotchPages.filter { $0 != .system }
     }
     
     private func ensureSelectedPageIsValid() {
@@ -109,11 +109,11 @@ struct NotchExpandedView: View {
                 
                 // Status Icons (Settings & Battery)
                 HStack(spacing: 16) {
-                    if notchState.selectedPage == .game {
+                    // Close Game X button
+                    if notchState.selectedPage == .game && notchState.activeGame != nil {
                         Button(action: {
-                            withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.4)) {
-                                NotchState.shared.isHovering = false
-                                NotchState.shared.isExpanded = false
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                notchState.activeGame = nil
                             }
                         }) {
                             ZStack {
@@ -128,6 +128,25 @@ struct NotchExpandedView: View {
                                     .font(.system(size: 7, weight: .black))
                                     .foregroundColor(.white.opacity(0.7))
                             }
+                        }
+                        .buttonStyle(.plain)
+                    }
+
+                    // System Monitor Button
+                    if settings.showNotchSystem {
+                        Button(action: {
+                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                notchState.selectedPage = .system
+                            }
+                        }) {
+                            Image(systemName: "cpu")
+                                .font(.system(size: 14, weight: .bold))
+                                .foregroundColor(notchState.selectedPage == .system ? .white : .white.opacity(0.5))
+                                .padding(4)
+                                .background(
+                                    RoundedRectangle(cornerRadius: 6)
+                                        .fill(notchState.selectedPage == .system ? Color.white.opacity(0.15) : Color.clear)
+                                )
                         }
                         .buttonStyle(.plain)
                     }
@@ -179,8 +198,13 @@ struct NotchExpandedView: View {
                     case .screenshots:
                         ScreenshotGalleryView()
                     case .game:
-                        NotchBreakoutView()
-                            .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        if notchState.activeGame == "breakout" {
+                            NotchBreakoutView()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        } else {
+                            GamesLibraryView()
+                                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                        }
                     }
                 }
                 .id(NotchState.shared.selectedPage)
@@ -1530,5 +1554,85 @@ struct WaveformIndicator: View {
             }
         }
         .onAppear { isAnimating = true }
+    }
+}
+
+// MARK: - Games Library
+
+struct GamesLibraryView: View {
+    @ObservedObject private var notchState = NotchState.shared
+    
+    @State private var hoverBreakout = false
+    
+    var body: some View {
+        HStack(spacing: 24) {
+            // Notch Breaker Game Card
+            Button(action: {
+                withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                    notchState.activeGame = "breakout"
+                }
+            }) {
+                VStack(spacing: 12) {
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .fill(LinearGradient(
+                                colors: [
+                                    Color(hue: 0.57, saturation: 0.8, brightness: 1.0).opacity(hoverBreakout ? 0.4 : 0.2), 
+                                    Color(hue: 0.36, saturation: 0.8, brightness: 1.0).opacity(hoverBreakout ? 0.2 : 0.1)
+                                ],
+                                startPoint: .topLeading, endPoint: .bottomTrailing
+                            ))
+                            .frame(width: 140, height: 80)
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                    .stroke(Color.white.opacity(hoverBreakout ? 0.3 : 0.15), lineWidth: 1)
+                            )
+                        
+                        Image(systemName: "gamecontroller.fill")
+                            .font(.system(size: 32))
+                            .foregroundStyle(
+                                LinearGradient(
+                                    colors: [Color(hue: 0.57, saturation: 0.8, brightness: 1.0), Color(hue: 0.36, saturation: 0.8, brightness: 1.0)],
+                                    startPoint: .leading, endPoint: .trailing
+                                )
+                            )
+                            .shadow(color: Color(hue: 0.57, saturation: 0.8, brightness: 1.0).opacity(0.8), radius: hoverBreakout ? 12 : 8)
+                            .scaleEffect(hoverBreakout ? 1.05 : 1.0)
+                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoverBreakout)
+                    }
+                    
+                    Text("Notch Breaker")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                }
+            }
+            .buttonStyle(.plain)
+            .onHover { hovering in
+                hoverBreakout = hovering
+            }
+            
+            // Coming Soon placeholder
+            VStack(spacing: 12) {
+                ZStack {
+                    RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        .fill(Color.white.opacity(0.05))
+                        .frame(width: 140, height: 80)
+                        .overlay(
+                            RoundedRectangle(cornerRadius: 16, style: .continuous)
+                                .stroke(Color.white.opacity(0.1), style: StrokeStyle(lineWidth: 1, dash: [4]))
+                        )
+                    
+                    Image(systemName: "plus")
+                        .font(.system(size: 24, weight: .bold))
+                        .foregroundColor(.white.opacity(0.3))
+                }
+                
+                Text("Coming Soon")
+                    .font(.system(size: 13, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.4))
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .padding(.horizontal, 20)
     }
 }
