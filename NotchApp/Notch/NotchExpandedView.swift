@@ -720,86 +720,95 @@ struct TimerContent: View {
                     .buttonStyle(.plain)
                 }
             } else if timerManager.isRunning {
-                VStack(spacing: 12) {
-                    // Modern Rounded Rectangle Progress
+                HStack(spacing: 32) {
+                    // Left Side: Modern Rounded Rectangle Progress
                     ZStack {
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .stroke(Color.white.opacity(0.1), lineWidth: 10)
-                            .frame(width: 140, height: 60)
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 12)
+                            .frame(width: 100, height: 100)
                         
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
                             .trim(from: 0, to: CGFloat(timerManager.progress))
-                            .stroke(Color(hue: 0.25, saturation: 0.9, brightness: 1.0), style: StrokeStyle(lineWidth: 10, lineCap: .round))
-                            .frame(width: 140, height: 60)
+                            .stroke(Color(hue: 0.25, saturation: 0.9, brightness: 1.0), style: StrokeStyle(lineWidth: 12, lineCap: .round))
+                            .frame(width: 100, height: 100)
                             .rotationEffect(.degrees(-90))
                         
                         Image(systemName: "pause.fill")
-                            .font(.system(size: 22, weight: .black))
+                            .font(.system(size: 28, weight: .black))
                             .foregroundColor(.white)
                     }
                     
-                    VStack(spacing: 2) {
-                        Text("Timer")
-                            .font(.system(size: 11, weight: .medium))
-                            .foregroundColor(.white.opacity(0.5))
-                        
-                        Text(timerManager.timeString)
-                            .font(.system(size: 42, weight: .medium, design: .rounded))
-                            .foregroundColor(.white)
-                    }
-                    
-                    Button(action: { timerManager.stop() }) {
-                        Text("Stop")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundColor(.white)
-                            .frame(width: 180, height: 34)
-                            .background(Capsule().fill(Color.white.opacity(0.15)))
-                    }
-                    .buttonStyle(.plain)
-                    
-                    // Quick Presets Inline
-                    HStack(spacing: 10) {
-                        ForEach(SettingsManager.shared.customTimers) { timer in
-                            let isActive = timerManager.currentTimerName == timer.name
-                            Button(action: { timerManager.start(minutes: timer.minutes, name: timer.name) }) {
-                                Text("\(timer.minutes) mins")
-                                    .font(.system(size: 11, weight: .bold))
-                                    .foregroundColor(isActive ? .black : .white.opacity(0.7))
-                                    .padding(.horizontal, 14)
-                                    .padding(.vertical, 8)
-                                    .background(Capsule().fill(isActive ? Color(hue: 0.25, saturation: 0.9, brightness: 1.0) : Color.white.opacity(0.1)))
-                            }
-                            .buttonStyle(.plain)
+                    // Right Side: Timer count and Stop button
+                    VStack(alignment: .leading, spacing: 12) {
+                        VStack(alignment: .leading, spacing: -2) {
+                            Text(timerManager.currentTimerName.uppercased())
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(Color(hue: 0.25, saturation: 0.9, brightness: 1.0))
+                            
+                            Text(timerManager.timeString)
+                                .font(.system(size: 48, weight: .medium, design: .rounded))
+                                .foregroundColor(.white)
                         }
+                        
+                        Button(action: { timerManager.stop() }) {
+                            Text("Stop Timer")
+                                .font(.system(size: 13, weight: .bold))
+                                .foregroundColor(.white)
+                                .frame(width: 140, height: 34)
+                                .background(Capsule().fill(Color.white.opacity(0.15)))
+                        }
+                        .buttonStyle(.plain)
                     }
-                    .padding(.top, 4)
                 }
+                .padding(.vertical, 8)
             } else {
-                VStack(spacing: 24) {
-                    VStack(spacing: 4) {
-                        Text("Ready")
+                HStack(spacing: 32) {
+                    // Left side: Empty / Ready state
+                    ZStack {
+                        RoundedRectangle(cornerRadius: 24, style: .continuous)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 12)
+                            .frame(width: 100, height: 100)
+                            
+                        Text("00:00")
+                            .font(.system(size: 24, weight: .bold, design: .rounded))
+                            .foregroundColor(.white.opacity(0.3))
+                    }
+                    
+                    // Right side: List of timers
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("Quick Timers")
                             .font(.system(size: 12, weight: .bold))
                             .foregroundColor(.white.opacity(0.5))
-                        Text("00:00")
-                            .font(.system(size: 48, weight: .medium, design: .rounded))
-                            .foregroundColor(.white.opacity(0.2))
-                    }
-                    
-                    HStack(spacing: 16) {
-                        ForEach(SettingsManager.shared.customTimers) { timer in
-                            Button(action: { timerManager.start(minutes: timer.minutes, name: timer.name) }) {
-                                Text("\(timer.minutes) mins")
-                                    .font(.system(size: 13, weight: .bold))
-                                    .foregroundColor(.white)
-                                    .padding(.horizontal, 16)
-                                    .padding(.vertical, 10)
-                                    .background(Capsule().fill(Color.white.opacity(0.15)))
+                        
+                        ScrollView(.vertical, showsIndicators: false) {
+                            VStack(alignment: .leading, spacing: 6) {
+                                ForEach(SettingsManager.shared.customTimers) { timer in
+                                    Button(action: { timerManager.start(minutes: timer.minutes, name: timer.name) }) {
+                                        HStack {
+                                            Image(systemName: "timer")
+                                                .font(.system(size: 14))
+                                                .foregroundColor(Color(hue: 0.25, saturation: 0.9, brightness: 1.0))
+                                            Text(timer.name)
+                                                .font(.system(size: 12, weight: .medium))
+                                                .foregroundColor(.white)
+                                            Spacer()
+                                            Text("\(timer.minutes)m")
+                                                .font(.system(size: 12, weight: .bold))
+                                                .foregroundColor(.white.opacity(0.5))
+                                        }
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 10)
+                                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.05)))
+                                    }
+                                    .buttonStyle(.plain)
+                                }
                             }
-                            .buttonStyle(.plain)
                         }
+                        .frame(height: 90) // Constrain height so it scrolls if too many
                     }
+                    .frame(width: 180)
                 }
-                .padding(.vertical, 20)
+                .padding(.vertical, 8)
             }
         }
     }
