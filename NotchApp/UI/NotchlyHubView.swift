@@ -248,7 +248,7 @@ struct NotchControlsView: View {
                 // NOTCH OVERVIEW MOCKUP
                 VStack(spacing: 0) {
                     // Laptop Top Bezel
-                    ZStack(alignment: .top) {
+                    ZStack(alignment: .center) {
                         RoundedRectangle(cornerRadius: 12)
                             .fill(Color.white.opacity(0.03))
                             .frame(height: 100)
@@ -297,7 +297,6 @@ struct NotchControlsView: View {
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundColor(.white.opacity(0.3))
                         }
-                        .padding(.top, 10)
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 12))
                 }
