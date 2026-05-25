@@ -762,51 +762,40 @@ struct TimerContent: View {
                 }
                 .padding(.vertical, 8)
             } else {
-                HStack(spacing: 32) {
-                    // Left side: Empty / Ready state
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 24, style: .continuous)
-                            .stroke(Color.white.opacity(0.1), lineWidth: 12)
-                            .frame(width: 100, height: 100)
-                            
-                        Text("00:00")
-                            .font(.system(size: 24, weight: .bold, design: .rounded))
-                            .foregroundColor(.white.opacity(0.3))
-                    }
+                VStack(spacing: 16) {
+                    Text("Select a Timer")
+                        .font(.system(size: 12, weight: .bold))
+                        .foregroundColor(.white.opacity(0.4))
+                        .frame(maxWidth: .infinity, alignment: .leading)
                     
-                    // Right side: List of timers
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("Quick Timers")
-                            .font(.system(size: 12, weight: .bold))
-                            .foregroundColor(.white.opacity(0.5))
-                        
-                        ScrollView(.vertical, showsIndicators: false) {
-                            VStack(alignment: .leading, spacing: 6) {
-                                ForEach(SettingsManager.shared.customTimers) { timer in
-                                    Button(action: { timerManager.start(minutes: timer.minutes, name: timer.name) }) {
-                                        HStack {
-                                            Image(systemName: "timer")
-                                                .font(.system(size: 14))
-                                                .foregroundColor(Color(hue: 0.25, saturation: 0.9, brightness: 1.0))
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 12) {
+                            ForEach(SettingsManager.shared.customTimers) { timer in
+                                Button(action: { timerManager.start(minutes: timer.minutes, name: timer.name) }) {
+                                    VStack(alignment: .leading, spacing: 10) {
+                                        Image(systemName: "timer")
+                                            .font(.system(size: 20))
+                                            .foregroundColor(Color(hue: 0.25, saturation: 0.9, brightness: 1.0))
+                                        
+                                        VStack(alignment: .leading, spacing: 2) {
                                             Text(timer.name)
-                                                .font(.system(size: 12, weight: .medium))
+                                                .font(.system(size: 14, weight: .bold))
                                                 .foregroundColor(.white)
-                                            Spacer()
-                                            Text("\(timer.minutes)m")
-                                                .font(.system(size: 12, weight: .bold))
+                                                .lineLimit(1)
+                                            Text("\(timer.minutes) mins")
+                                                .font(.system(size: 12, weight: .medium))
                                                 .foregroundColor(.white.opacity(0.5))
                                         }
-                                        .padding(.horizontal, 12)
-                                        .padding(.vertical, 10)
-                                        .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.05)))
                                     }
-                                    .buttonStyle(.plain)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 16)
+                                    .frame(width: 130, alignment: .leading)
+                                    .background(RoundedRectangle(cornerRadius: 16).fill(Color.white.opacity(0.05)))
                                 }
+                                .buttonStyle(.plain)
                             }
                         }
-                        .frame(height: 90) // Constrain height so it scrolls if too many
                     }
-                    .frame(width: 180)
                 }
                 .padding(.vertical, 8)
             }
