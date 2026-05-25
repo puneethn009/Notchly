@@ -680,7 +680,7 @@ struct TimerModuleView: View {
                 .padding(.bottom, -8) // Nudged content slightly up
             }
             
-            // Fixed Height Content Area to prevent "Up and Down" jumps
+            // Dynamic Height Content Area
             ZStack {
                 if timerManager.isStopwatchRunning || (mode == 1 && !timerManager.isRunning) {
                     StopwatchContent(timerManager: timerManager)
@@ -690,7 +690,7 @@ struct TimerModuleView: View {
                         .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .leading)), removal: .opacity))
                 }
             }
-            .frame(height: 120) // Consistent height prevents layout shift
+            .frame(minHeight: 120) // Use minHeight to allow the new taller design to fit
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: mode)
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: timerManager.isRunning)
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: timerManager.isStopwatchRunning)
@@ -704,57 +704,102 @@ struct TimerContent: View {
     var body: some View {
         VStack(spacing: 16) {
             if timerManager.isAlarmPlaying {
-                // ... (Existing Alarm UI)
                 VStack(spacing: 20) {
                     Text("TIME'S UP!")
                         .font(.system(size: 32, weight: .black))
-                        .foregroundColor(.red)
+                        .foregroundColor(Color(hue: 0.25, saturation: 0.9, brightness: 1.0))
                     
                     Button(action: { timerManager.stopAlarm() }) {
-                        Text("STOP ALARM")
+                        Text("STOP")
                             .font(.system(size: 16, weight: .bold))
-                            .foregroundColor(.white)
+                            .foregroundColor(.black)
                             .padding(.horizontal, 40)
                             .padding(.vertical, 14)
-                            .background(Capsule().fill(Color.red))
+                            .background(Capsule().fill(Color(hue: 0.25, saturation: 0.9, brightness: 1.0)))
                     }
                     .buttonStyle(.plain)
                 }
             } else if timerManager.isRunning {
-                // ... (Existing Running UI)
-                VStack(spacing: 10) {
-                    Text(timerManager.currentTimerName)
-                        .font(.system(size: 13, weight: .bold))
-                        .foregroundColor(.white.opacity(0.5))
-                    
+                VStack(spacing: 12) {
+                    // Modern Rounded Rectangle Progress
                     ZStack {
-                        Circle()
-                            .stroke(Color.white.opacity(0.1), lineWidth: 8)
-                            .frame(width: 80, height: 80)
-                        Circle()
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
+                            .stroke(Color.white.opacity(0.1), lineWidth: 10)
+                            .frame(width: 140, height: 60)
+                        
+                        RoundedRectangle(cornerRadius: 16, style: .continuous)
                             .trim(from: 0, to: CGFloat(timerManager.progress))
-                            .stroke(LinearGradient(colors: [.blue, .cyan], startPoint: .top, endPoint: .bottom), style: StrokeStyle(lineWidth: 8, lineCap: .round))
-                            .frame(width: 80, height: 80)
+                            .stroke(Color(hue: 0.25, saturation: 0.9, brightness: 1.0), style: StrokeStyle(lineWidth: 10, lineCap: .round))
+                            .frame(width: 140, height: 60)
                             .rotationEffect(.degrees(-90))
+                        
+                        Image(systemName: "pause.fill")
+                            .font(.system(size: 22, weight: .black))
+                            .foregroundColor(.white)
+                    }
+                    
+                    VStack(spacing: 2) {
+                        Text("Timer")
+                            .font(.system(size: 11, weight: .medium))
+                            .foregroundColor(.white.opacity(0.5))
+                        
                         Text(timerManager.timeString)
-                            .font(.system(size: 20, weight: .bold, design: .monospaced))
+                            .font(.system(size: 42, weight: .medium, design: .rounded))
                             .foregroundColor(.white)
                     }
                     
                     Button(action: { timerManager.stop() }) {
-                        Text("Cancel").font(.system(size: 12, weight: .bold)).foregroundColor(.white).padding(.horizontal, 16).padding(.vertical, 8).background(Capsule().fill(Color.red.opacity(0.8)))
-                    }.buttonStyle(.plain)
+                        Text("Stop")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundColor(.white)
+                            .frame(width: 180, height: 34)
+                            .background(Capsule().fill(Color.white.opacity(0.15)))
+                    }
+                    .buttonStyle(.plain)
+                    
+                    // Quick Presets Inline
+                    HStack(spacing: 10) {
+                        ForEach(SettingsManager.shared.customTimers) { timer in
+                            let isActive = timerManager.currentTimerName == timer.name
+                            Button(action: { timerManager.start(minutes: timer.minutes, name: timer.name) }) {
+                                Text("\(timer.minutes) mins")
+                                    .font(.system(size: 11, weight: .bold))
+                                    .foregroundColor(isActive ? .black : .white.opacity(0.7))
+                                    .padding(.horizontal, 14)
+                                    .padding(.vertical, 8)
+                                    .background(Capsule().fill(isActive ? Color(hue: 0.25, saturation: 0.9, brightness: 1.0) : Color.white.opacity(0.1)))
+                            }
+                            .buttonStyle(.plain)
+                        }
+                    }
+                    .padding(.top, 4)
                 }
             } else {
-                VStack(spacing: 12) {
-                    HStack(spacing: 12) {
+                VStack(spacing: 24) {
+                    VStack(spacing: 4) {
+                        Text("Ready")
+                            .font(.system(size: 12, weight: .bold))
+                            .foregroundColor(.white.opacity(0.5))
+                        Text("00:00")
+                            .font(.system(size: 48, weight: .medium, design: .rounded))
+                            .foregroundColor(.white.opacity(0.2))
+                    }
+                    
+                    HStack(spacing: 16) {
                         ForEach(SettingsManager.shared.customTimers) { timer in
-                            TimerButton(label: timer.name, color: .blue) { 
-                                timerManager.start(minutes: timer.minutes, name: timer.name) 
+                            Button(action: { timerManager.start(minutes: timer.minutes, name: timer.name) }) {
+                                Text("\(timer.minutes) mins")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 10)
+                                    .background(Capsule().fill(Color.white.opacity(0.15)))
                             }
+                            .buttonStyle(.plain)
                         }
                     }
                 }
+                .padding(.vertical, 20)
             }
         }
     }
