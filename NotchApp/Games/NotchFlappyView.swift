@@ -151,16 +151,16 @@ struct NotchFlappyView: View {
                         let topPath = Path(roundedRect: topRect, cornerRadius: 6)
                         let botPath = Path(roundedRect: bottomRect, cornerRadius: 6)
                         
-                        // Sleek glowing blue/purple laser pillars
-                        let grad = Gradient(colors: [Color.purple.opacity(0.8), Color.cyan.opacity(0.8)])
+                        // Sleek glowing green laser pillars
+                        let grad = Gradient(colors: [Color.green.opacity(0.8), Color(hue: 0.35, saturation: 0.9, brightness: 1.0).opacity(0.8)])
                         ctx.fill(topPath, with: .linearGradient(grad, startPoint: CGPoint(x: topRect.minX, y: topRect.minY), endPoint: CGPoint(x: topRect.maxX, y: topRect.minY)))
                         ctx.fill(botPath, with: .linearGradient(grad, startPoint: CGPoint(x: bottomRect.minX, y: bottomRect.minY), endPoint: CGPoint(x: bottomRect.maxX, y: bottomRect.minY)))
                         
                         // Outer neon glow
                         var gCtx = ctx
                         gCtx.addFilter(.blur(radius: 6))
-                        gCtx.fill(topPath, with: .color(.cyan))
-                        gCtx.fill(botPath, with: .color(.cyan))
+                        gCtx.fill(topPath, with: .color(.green))
+                        gCtx.fill(botPath, with: .color(.green))
                         
                         // Inner glassy stroke
                         ctx.stroke(topPath, with: .color(.white.opacity(0.8)), lineWidth: 1.0)
@@ -171,8 +171,8 @@ struct NotchFlappyView: View {
                         let botCap = Path(roundedRect: CGRect(x: p.x - 2, y: bottomRect.minY, width: p.width + 4, height: 4), cornerRadius: 2)
                         ctx.fill(topCap, with: .color(.white))
                         ctx.fill(botCap, with: .color(.white))
-                        gCtx.fill(topCap, with: .color(.cyan))
-                        gCtx.fill(botCap, with: .color(.cyan))
+                        gCtx.fill(topCap, with: .color(.green))
+                        gCtx.fill(botCap, with: .color(.green))
                     }
                 }
             }
