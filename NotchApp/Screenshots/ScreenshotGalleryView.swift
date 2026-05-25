@@ -102,19 +102,28 @@ struct ScreenshotGalleryView: View {
                                 // Collapse notch optionally
                                 NotchWindowController.shared.isExpanded = false
                             }) {
-                                VStack(spacing: 8) {
-                                    Image(systemName: "square.grid.2x2.fill")
-                                        .font(.system(size: 20))
-                                    Text("View All")
-                                        .font(.system(size: 10, weight: .bold))
+                                VStack(alignment: .center, spacing: 4) {
+                                    ZStack {
+                                        RoundedRectangle(cornerRadius: 8)
+                                            .fill(Color.white.opacity(0.05))
+                                            .frame(width: 100, height: 60)
+                                        
+                                        VStack(spacing: 4) {
+                                            Image(systemName: "square.grid.2x2.fill")
+                                                .font(.system(size: 18))
+                                            Text("View All")
+                                                .font(.system(size: 10, weight: .bold))
+                                        }
+                                        .foregroundColor(.white.opacity(0.7))
+                                    }
+                                    
+                                    Text("Open Manager")
+                                        .font(.system(size: 8, weight: .medium))
+                                        .foregroundColor(.white.opacity(0.4))
+                                        .frame(width: 100)
                                 }
-                                .frame(width: 80, height: 60)
-                                .background(Color.white.opacity(0.05))
-                                .clipShape(RoundedRectangle(cornerRadius: 8))
-                                .foregroundColor(.white.opacity(0.7))
                             }
                             .buttonStyle(.plain)
-                            .padding(.leading, 8)
                         }
                         .padding(.horizontal, 40)
                     }
