@@ -73,7 +73,9 @@ struct ScreenshotGalleryView: View {
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
-                        LazyHStack(spacing: 16) {
+                        HStack(spacing: 16) {
+                            Spacer(minLength: 40)
+                            
                             ForEach(Array(filteredItems.prefix(4))) { item in
                                 ScreenshotThumbnail(
                                     item: item,
@@ -99,33 +101,35 @@ struct ScreenshotGalleryView: View {
                             Button(action: {
                                 NotchlyHubWindowController.shared.show()
                                 NotificationCenter.default.post(name: NSNotification.Name("OpenScreenshotManager"), object: nil)
-                                // Collapse notch optionally
-                                NotchWindowController.shared.isExpanded = false
+                                NotchState.shared.isExpanded = false
                             }) {
                                 VStack(alignment: .center, spacing: 4) {
                                     ZStack {
                                         RoundedRectangle(cornerRadius: 8)
-                                            .fill(Color.white.opacity(0.05))
+                                            .strokeBorder(Color.white.opacity(0.15), style: StrokeStyle(lineWidth: 1.5, dash: [4]))
                                             .frame(width: 100, height: 60)
+                                            .background(RoundedRectangle(cornerRadius: 8).fill(Color.white.opacity(0.05)))
                                         
                                         VStack(spacing: 4) {
                                             Image(systemName: "square.grid.2x2.fill")
-                                                .font(.system(size: 18))
+                                                .font(.system(size: 16))
                                             Text("View All")
                                                 .font(.system(size: 10, weight: .bold))
                                         }
                                         .foregroundColor(.white.opacity(0.7))
                                     }
                                     
-                                    Text("Open Manager")
+                                    Text("Manager")
                                         .font(.system(size: 8, weight: .medium))
                                         .foregroundColor(.white.opacity(0.4))
                                         .frame(width: 100)
                                 }
                             }
                             .buttonStyle(.plain)
+                            
+                            Spacer(minLength: 40)
                         }
-                        .padding(.horizontal, 40)
+                        .frame(minWidth: 700)
                     }
                     .frame(height: 100)
                     .padding(.bottom, 10)

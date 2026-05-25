@@ -4,7 +4,7 @@ import EventKit
 
 struct SettingsView: View {
     @StateObject private var settings = SettingsManager.shared
-    @State private var selection: String? = "Music"
+    @AppStorage("selectedSettingsTab") private var selection: String = "Music"
     
     var body: some View {
         TabView(selection: $selection) {
