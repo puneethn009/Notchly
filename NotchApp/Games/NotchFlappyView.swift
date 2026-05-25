@@ -12,9 +12,9 @@ class FlappyGame: ObservableObject {
     let birdX: CGFloat = 100
     let birdRadius: CGFloat = 12
     
-    // Physics
-    let gravity: CGFloat = 0.2
-    let jumpForce: CGFloat = -4.0
+    // Physics (Tuned for 120fps)
+    let gravity: CGFloat = 0.10
+    let jumpForce: CGFloat = -3.0
     
     // Pipe State
     struct Pipe {
@@ -26,8 +26,8 @@ class FlappyGame: ObservableObject {
     }
     @Published var pipes: [Pipe] = []
     
-    let pipeSpeed: CGFloat = 1.8
-    let spawnInterval: Int = 150 // frames
+    let pipeSpeed: CGFloat = 1.0
+    let spawnInterval: Int = 260 // frames at 120fps
     var frameCount = 0
     
     let width: CGFloat = 600
@@ -114,7 +114,7 @@ struct NotchFlappyView: View {
     @StateObject private var game = FlappyGame()
     @State private var keyMonitorDown: Any?
     
-    private let ticker = Timer.publish(every: 1/60, on: .main, in: .common).autoconnect()
+    private let ticker = Timer.publish(every: 1/120, on: .main, in: .common).autoconnect()
     
     var body: some View {
         ZStack {

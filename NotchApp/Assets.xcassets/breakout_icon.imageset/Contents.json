@@ -1,0 +1,12 @@
+{
+  "images" : [
+    {
+      "filename" : "breakout_icon.png",
+      "idiom" : "universal"
+    }
+  ],
+  "info" : {
+    "author" : "xcode",
+    "version" : 1
+  }
+}

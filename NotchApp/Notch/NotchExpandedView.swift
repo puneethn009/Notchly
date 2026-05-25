@@ -1585,33 +1585,14 @@ struct GamesLibraryView: View {
                 }
             }) {
                 VStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(LinearGradient(
-                                colors: [
-                                    Color(hue: 0.57, saturation: 0.8, brightness: 1.0).opacity(hoverBreakout ? 0.4 : 0.2), 
-                                    Color(hue: 0.36, saturation: 0.8, brightness: 1.0).opacity(hoverBreakout ? 0.2 : 0.1)
-                                ],
-                                startPoint: .topLeading, endPoint: .bottomTrailing
-                            ))
-                            .frame(width: 140, height: 80)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(Color.white.opacity(hoverBreakout ? 0.3 : 0.15), lineWidth: 1)
-                            )
-                        
-                        Image(systemName: "gamecontroller.fill")
-                            .font(.system(size: 32))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [Color(hue: 0.57, saturation: 0.8, brightness: 1.0), Color(hue: 0.36, saturation: 0.8, brightness: 1.0)],
-                                    startPoint: .leading, endPoint: .trailing
-                                )
-                            )
-                            .shadow(color: Color(hue: 0.57, saturation: 0.8, brightness: 1.0).opacity(0.8), radius: hoverBreakout ? 12 : 8)
-                            .scaleEffect(hoverBreakout ? 1.05 : 1.0)
-                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoverBreakout)
-                    }
+                    Image("breakout_icon")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .shadow(color: .black.opacity(0.4), radius: hoverBreakout ? 12 : 6, y: hoverBreakout ? 6 : 2)
+                        .scaleEffect(hoverBreakout ? 1.05 : 1.0)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoverBreakout)
                     
                     Text("Notch Breaker")
                         .font(.system(size: 13, weight: .bold, design: .rounded))
@@ -1630,33 +1611,14 @@ struct GamesLibraryView: View {
                 }
             }) {
                 VStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(LinearGradient(
-                                colors: [
-                                    Color(hue: 0.12, saturation: 0.8, brightness: 1.0).opacity(hoverFlappy ? 0.4 : 0.2), 
-                                    Color(hue: 0.08, saturation: 0.9, brightness: 1.0).opacity(hoverFlappy ? 0.2 : 0.1)
-                                ],
-                                startPoint: .topLeading, endPoint: .bottomTrailing
-                            ))
-                            .frame(width: 140, height: 80)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(Color.white.opacity(hoverFlappy ? 0.3 : 0.15), lineWidth: 1)
-                            )
-                        
-                        Image(systemName: "bird.fill")
-                            .font(.system(size: 32))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [Color(hue: 0.12, saturation: 0.8, brightness: 1.0), Color(hue: 0.08, saturation: 0.9, brightness: 1.0)],
-                                    startPoint: .leading, endPoint: .trailing
-                                )
-                            )
-                            .shadow(color: Color(hue: 0.12, saturation: 0.8, brightness: 1.0).opacity(0.8), radius: hoverFlappy ? 12 : 8)
-                            .scaleEffect(hoverFlappy ? 1.05 : 1.0)
-                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoverFlappy)
-                    }
+                    Image("flappy_icon")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .shadow(color: .black.opacity(0.4), radius: hoverFlappy ? 12 : 6, y: hoverFlappy ? 6 : 2)
+                        .scaleEffect(hoverFlappy ? 1.05 : 1.0)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoverFlappy)
                     
                     Text("Flappy Bird")
                         .font(.system(size: 13, weight: .bold, design: .rounded))
@@ -1675,33 +1637,14 @@ struct GamesLibraryView: View {
                 }
             }) {
                 VStack(spacing: 12) {
-                    ZStack {
-                        RoundedRectangle(cornerRadius: 16, style: .continuous)
-                            .fill(LinearGradient(
-                                colors: [
-                                    Color(hue: 0.35, saturation: 0.8, brightness: 1.0).opacity(hoverSnake ? 0.4 : 0.2), 
-                                    Color(hue: 0.45, saturation: 0.9, brightness: 1.0).opacity(hoverSnake ? 0.2 : 0.1)
-                                ],
-                                startPoint: .topLeading, endPoint: .bottomTrailing
-                            ))
-                            .frame(width: 140, height: 80)
-                            .overlay(
-                                RoundedRectangle(cornerRadius: 16, style: .continuous)
-                                    .stroke(Color.white.opacity(hoverSnake ? 0.3 : 0.15), lineWidth: 1)
-                            )
-                        
-                        Image(systemName: "point.topleft.down.curvedto.point.bottomright.up")
-                            .font(.system(size: 32))
-                            .foregroundStyle(
-                                LinearGradient(
-                                    colors: [Color(hue: 0.35, saturation: 0.8, brightness: 1.0), Color(hue: 0.45, saturation: 0.9, brightness: 1.0)],
-                                    startPoint: .leading, endPoint: .trailing
-                                )
-                            )
-                            .shadow(color: Color(hue: 0.35, saturation: 0.8, brightness: 1.0).opacity(0.8), radius: hoverSnake ? 12 : 8)
-                            .scaleEffect(hoverSnake ? 1.05 : 1.0)
-                            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoverSnake)
-                    }
+                    Image("snake_icon")
+                        .resizable()
+                        .scaledToFit()
+                        .frame(width: 80, height: 80)
+                        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
+                        .shadow(color: .black.opacity(0.4), radius: hoverSnake ? 12 : 6, y: hoverSnake ? 6 : 2)
+                        .scaleEffect(hoverSnake ? 1.05 : 1.0)
+                        .animation(.spring(response: 0.3, dampingFraction: 0.6), value: hoverSnake)
                     
                     Text("Snake")
                         .font(.system(size: 13, weight: .bold, design: .rounded))

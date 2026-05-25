@@ -33,7 +33,7 @@ struct ScorePopup: Identifiable {
 final class BreakoutEngine: ObservableObject {
 
     // ── Canvas ──────────────────────────────────────────────────
-    static let W: CGFloat = 700
+    static let W: CGFloat = 660 // Padding to prevent clipping into notch radius
     static let H: CGFloat = 150
 
     // ── Bricks ──────────────────────────────────────────────────
@@ -65,6 +65,7 @@ final class BreakoutEngine: ObservableObject {
     @Published var popups:   [ScorePopup]  = []
     @Published var combo:    Int = 0
     @Published var screenFlash: CGFloat = 0  // 0-1 white flash on brick break
+    var frameCount: Int = 0
 
     // ── Input State ─────────────────────────────────────────────
     var leftHeld:  Bool = false
@@ -146,7 +147,7 @@ final class BreakoutEngine: ObservableObject {
 
     func placeBall() {
         ballPos = CGPoint(x: paddleX, y: paddleY - ballR - 1)
-        let speed: CGFloat = (3.2 + CGFloat(level - 1) * 0.25) * speedMul
+        let speed: CGFloat = (1.6 + CGFloat(level - 1) * 0.125) * speedMul // Halved for 120fps
         let angleDeg = Double.random(in: 40...140)
         let rad = angleDeg * .pi / 180
         ballVel = CGPoint(
@@ -156,9 +157,19 @@ final class BreakoutEngine: ObservableObject {
         trail = []
     }
 
+    // MARK: - Update Loop
+    
+    /// The main 120fps physics step.
+    func tick(dt: CGFloat) {
+        guard phase == .playing else { return }
+        frameCount += 1
+        let half = paddleW / 2
+        if leftHeld  { paddleX = max(half, paddleX - paddleSpeed * dt) }
+        if rightHeld { paddleX = min(Self.W - half, paddleX + paddleSpeed * dt) }
+    }
+
     // MARK: - Controls
 
-    /// Called from key monitor every frame — applies held-key paddle velocity.
     func applyKeyMovement(dt: CGFloat) {
         guard phase == .playing else { return }
         let half = paddleW / 2
@@ -210,8 +221,10 @@ final class BreakoutEngine: ObservableObject {
         guard phase == .playing else { return }
 
         // ── Move ball ───────────────────────────────────────────
-        trail.append(ballPos)
-        if trail.count > 8 { trail.removeFirst() }
+        if frameCount % 2 == 0 { // Record trail every other frame at 120fps
+            trail.append(ballPos)
+            if trail.count > 8 { trail.removeFirst() }
+        }
 
         var nx = ballPos.x + ballVel.x
         var ny = ballPos.y + ballVel.y
@@ -329,9 +342,9 @@ struct NotchBreakoutView: View {
 
     @StateObject private var game = BreakoutEngine()
 
-    // 60fps game tick (1/60 s ≈ 16.67 ms)
-    private let ticker = Timer.publish(every: 1/60, on: .main, in: .common).autoconnect()
-    private let dt: CGFloat = 1.0 / 60.0
+    // 120fps game tick for buttery smooth physics (1/120 s ≈ 8.33 ms)
+    private let ticker = Timer.publish(every: 1/120, on: .main, in: .common).autoconnect()
+    private let dt: CGFloat = 1.0 / 120.0
 
     @State private var keyMonitorDown: Any? = nil
     @State private var keyMonitorUp:   Any? = nil

@@ -140,8 +140,8 @@ struct NotchSnakeView: View {
                         let offsetX = (size.width - gridWidth) / 2
                         let offsetY = (size.height - gridHeight) / 2
                         
-                        // Draw Neon Border
-                        let borderRect = CGRect(x: offsetX - 2, y: offsetY - 6, width: gridWidth + 4, height: gridHeight + 10)
+                        // Draw Neon Border (Extra breathing room on top and bottom)
+                        let borderRect = CGRect(x: offsetX - 2, y: offsetY - 10, width: gridWidth + 4, height: gridHeight + 14)
                         let borderPath = Path(roundedRect: borderRect, cornerRadius: 16) // matches notch style
                         
                         var borderGlow = ctx
