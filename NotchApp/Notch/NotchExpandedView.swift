@@ -690,7 +690,7 @@ struct TimerModuleView: View {
                         .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .leading)), removal: .opacity))
                 }
             }
-            .frame(minHeight: 120) // Use minHeight to allow the new taller design to fit
+            .frame(minHeight: 100) // Reduced minHeight to prevent pushing content down
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: mode)
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: timerManager.isRunning)
             .animation(.spring(response: 0.4, dampingFraction: 0.8), value: timerManager.isStopwatchRunning)
@@ -766,7 +766,7 @@ struct TimerContent: View {
                 .padding(.vertical, 8)
                 .frame(maxWidth: .infinity)
             } else {
-                VStack(spacing: 8) {
+                VStack(spacing: 4) {
                     Text("Select a Timer")
                         .font(.system(size: 12, weight: .bold))
                         .foregroundColor(.white.opacity(0.4))
@@ -774,12 +774,12 @@ struct TimerContent: View {
                         .padding(.horizontal, 40)
                     
                     ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 12) {
+                        HStack(spacing: 10) {
                             ForEach(SettingsManager.shared.customTimers) { timer in
                                 Button(action: { timerManager.start(minutes: timer.minutes, name: timer.name) }) {
-                                    VStack(alignment: .leading, spacing: 6) {
+                                    VStack(alignment: .leading, spacing: 4) {
                                         Image(systemName: "timer")
-                                            .font(.system(size: 18))
+                                            .font(.system(size: 16))
                                             .foregroundColor(Color(hue: 0.25, saturation: 0.9, brightness: 1.0))
                                         
                                         VStack(alignment: .leading, spacing: 0) {
@@ -793,8 +793,8 @@ struct TimerContent: View {
                                         }
                                     }
                                     .padding(.horizontal, 14)
-                                    .padding(.vertical, 14)
-                                    .frame(width: 120, alignment: .leading)
+                                    .padding(.vertical, 10)
+                                    .frame(width: 116, alignment: .leading)
                                     .background(RoundedRectangle(cornerRadius: 14).fill(Color.white.opacity(0.05)))
                                 }
                                 .buttonStyle(.plain)
@@ -802,9 +802,8 @@ struct TimerContent: View {
                         }
                         .padding(.horizontal, 40)
                     }
-                    .padding(.horizontal, -40)
                 }
-                .padding(.vertical, 4)
+                .padding(.vertical, 0)
                 .frame(maxWidth: .infinity)
             }
         }
