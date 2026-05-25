@@ -105,7 +105,7 @@ struct TimerSettingsPage: View {
             .frame(height: 150)
             
             List {
-                Section(header: Text("My Timers (\(settings.customTimers.count)/7)")) {
+                Section(header: Text("My Timers (\(settings.customTimers.count)/5)")) {
                     ForEach(settings.customTimers) { timer in
                         HStack {
                             VStack(alignment: .leading) {
@@ -117,8 +117,7 @@ struct TimerSettingsPage: View {
                     }
                     .onDelete(perform: settings.customTimers.count > 1 ? { offsets in settings.customTimers.remove(atOffsets: offsets) } : nil)
                 }
-                
-                if settings.customTimers.count < 7 {
+                if settings.customTimers.count < 5 {
                     Section(header: Text("Add New Timer")) {
                         HStack {
                             TextField("Name (e.g. Tea)", text: $newTimerName)

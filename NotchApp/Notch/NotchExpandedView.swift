@@ -799,6 +799,29 @@ struct TimerContent: View {
                                 }
                                 .buttonStyle(.plain)
                             }
+                            
+                            if SettingsManager.shared.customTimers.count < 5 {
+                                Button(action: {
+                                    NSApp.sendAction(Selector(("showSettingsWindow:")), to: nil, from: nil)
+                                    NotchState.shared.isExpanded = false
+                                }) {
+                                    VStack(alignment: .center, spacing: 6) {
+                                        Image(systemName: "plus")
+                                            .font(.system(size: 16, weight: .bold))
+                                            .foregroundColor(.white.opacity(0.4))
+                                        
+                                        Text("Add Timer")
+                                            .font(.system(size: 12, weight: .bold))
+                                            .foregroundColor(.white.opacity(0.4))
+                                    }
+                                    .frame(width: 116, height: 64, alignment: .center)
+                                    .background(
+                                        RoundedRectangle(cornerRadius: 14)
+                                            .stroke(Color.white.opacity(0.15), style: StrokeStyle(lineWidth: 1.5, dash: [4]))
+                                    )
+                                }
+                                .buttonStyle(.plain)
+                            }
                         }
                         .padding(.horizontal, 40)
                     }
