@@ -118,7 +118,7 @@ struct NotchlyHubView: View {
                 }
                 .padding(.horizontal, 12)
                 
-
+                Spacer()
             }
             .frame(width: 220)
             .background(Color.black.opacity(0.18))

@@ -1,30 +1,224 @@
 import SwiftUI
 import KeyboardShortcuts
 import EventKit
+// MARK: - Reusable UI Components
 
+struct SettingsCard<Content: View>: View {
+    let title: String?
+    let content: Content
+    
+    init(title: String? = nil, @ViewBuilder content: () -> Content) {
+        self.title = title
+        self.content = content()
+    }
+    
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            if let title = title {
+                Text(title.uppercased())
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundColor(.white.opacity(0.4))
+                    .padding(.leading, 4)
+            }
+            
+            VStack(spacing: 0) {
+                content
+            }
+            .background(Color.white.opacity(0.04))
+            .cornerRadius(12)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(Color.white.opacity(0.08), lineWidth: 1)
+            )
+        }
+        .padding(.horizontal, 40)
+    }
+}
+
+struct SettingsToggleRow: View {
+    let title: String
+    let subtitle: String?
+    let icon: String?
+    @Binding var isOn: Bool
+    var isLast: Bool = false
+    
+    init(title: String, subtitle: String? = nil, icon: String? = nil, isOn: Binding<Bool>, isLast: Bool = false) {
+        self.title = title
+        self.subtitle = subtitle
+        self.icon = icon
+        self._isOn = isOn
+        self.isLast = isLast
+    }
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 16) {
+                if let icon = icon {
+                    Image(systemName: icon)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
+                        .frame(width: 24)
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundColor(.white)
+                    
+                    if let subtitle = subtitle {
+                        Text(subtitle)
+                            .font(.system(size: 11, weight: .regular))
+                            .foregroundColor(.white.opacity(0.5))
+                            .lineLimit(2)
+                    }
+                }
+                
+                Spacer()
+                
+                Toggle("", isOn: $isOn)
+                    .toggleStyle(.switch)
+                    .labelsHidden()
+            }
+            .padding(.vertical, 14)
+            .padding(.horizontal, 20)
+            
+            if !isLast {
+                Divider()
+                    .background(Color.white.opacity(0.1))
+                    .padding(.leading, icon == nil ? 20 : 60)
+            }
+        }
+    }
+}
+
+struct SettingsActionRow: View {
+    let title: String
+    let subtitle: String?
+    let icon: String?
+    let buttonTitle: String?
+    let buttonIcon: String?
+    let action: () -> Void
+    var isLast: Bool = false
+    var customContent: AnyView? = nil
+    
+    var body: some View {
+        VStack(spacing: 0) {
+            HStack(spacing: 16) {
+                if let icon = icon {
+                    Image(systemName: icon)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(.white.opacity(0.7))
+                        .frame(width: 24)
+                }
+                
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(title)
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundColor(.white)
+                    
+                    if let subtitle = subtitle {
+                        Text(subtitle)
+                            .font(.system(size: 11, weight: .regular))
+                            .foregroundColor(.white.opacity(0.5))
+                            .lineLimit(2)
+                    }
+                }
+                
+                Spacer()
+                
+                if let customContent = customContent {
+                    customContent
+                } else if let buttonTitle = buttonTitle {
+                    Button(action: action) {
+                        HStack(spacing: 6) {
+                            if let buttonIcon = buttonIcon {
+                                Image(systemName: buttonIcon)
+                            }
+                            Text(buttonTitle)
+                        }
+                        .font(.system(size: 12, weight: .medium))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.white.opacity(0.1))
+                        .cornerRadius(6)
+                        .foregroundColor(.white)
+                    }
+                    .buttonStyle(.plain)
+                }
+            }
+            .padding(.vertical, 14)
+            .padding(.horizontal, 20)
+            
+            if !isLast {
+                Divider()
+                    .background(Color.white.opacity(0.1))
+                    .padding(.leading, icon == nil ? 20 : 60)
+            }
+        }
+    }
+}
 
 
 struct MusicSettingsPage: View {
     @ObservedObject var settings: SettingsManager
     
     var body: some View {
-        Form {
-            Section("Music Streams") {
-                Toggle("Apple Music", isOn: $settings.useAppleMusic)
-                Toggle("Spotify", isOn: $settings.useSpotify)
+        ScrollView {
+            VStack(spacing: 24) {
+                // Header
+                HStack {
+                    Text("Music Settings")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                    Spacer()
+                }
+                .padding(.horizontal, 40)
+                .padding(.top, 40)
+                .padding(.bottom, 10)
+                
+                SettingsCard(title: "Music Streams") {
+                    SettingsToggleRow(
+                        title: "Apple Music",
+                        subtitle: "Monitor Apple Music for playback",
+                        icon: "music.note",
+                        isOn: $settings.useAppleMusic
+                    )
+                    
+                    SettingsToggleRow(
+                        title: "Spotify",
+                        subtitle: "Monitor Spotify for playback",
+                        icon: "play.circle.fill",
+                        isOn: $settings.useSpotify,
+                        isLast: true
+                    )
+                }
+                
+                SettingsCard(title: "Interface") {
+                    SettingsToggleRow(
+                        title: "Show Music Indicator in Closed Notch",
+                        subtitle: "Display a small equalizer animation when music is playing",
+                        icon: "waveform",
+                        isOn: $settings.showClosedNotchMusicIndicator
+                    )
+                    
+                    SettingsToggleRow(
+                        title: "Show Mute Button",
+                        subtitle: "Add a quick mute button to the expanded media controls",
+                        icon: "speaker.slash.fill",
+                        isOn: $settings.showMuteButton,
+                        isLast: true
+                    )
+                }
+                
+                Text("Select which apps Notchly should monitor for media playback.")
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.4))
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 20)
+                
+                Spacer(minLength: 40)
             }
-            
-            Section("Interface") {
-                Toggle("Show Music Indicator in Closed Notch", isOn: $settings.showClosedNotchMusicIndicator)
-                Toggle("Show Mute Button", isOn: $settings.showMuteButton)
-            }
-            
-            Text("Select which apps Notchly should monitor for media playback.")
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
-        .formStyle(.grouped)
-        .navigationTitle("Music Settings")
     }
 }
 
@@ -34,63 +228,172 @@ struct TimerSettingsPage: View {
     @State private var newTimerMinutes: Int = 5
     
     var body: some View {
-        VStack {
-            Form {
-                Section("Preferences") {
-                    Toggle("Enable Stopwatch", isOn: $settings.enableStopwatch)
-                    Toggle("Show Timer in Closed Notch", isOn: $settings.showClosedNotchTimerIndicator)
-                    
-                    Picker("Alarm Sound", selection: $settings.selectedAlarmSound) {
-                        Text("Glass").tag("Glass")
-                        Text("Basso").tag("Basso")
-                        Text("Bottle").tag("Bottle")
-                        Text("Frog").tag("Frog")
-                        Text("Funk").tag("Funk")
-                        Text("Hero").tag("Hero")
-                        Text("Morse").tag("Morse")
-                        Text("Ping").tag("Ping")
-                        Text("Pop").tag("Pop")
-                        Text("Purr").tag("Purr")
-                        Text("Sosumi").tag("Sosumi")
-                        Text("Submarine").tag("Submarine")
-                        Text("Tink").tag("Tink")
-                    }
+        ScrollView {
+            VStack(spacing: 24) {
+                // Header
+                HStack {
+                    Text("Timer Settings")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                    Spacer()
                 }
-            }
-            .formStyle(.grouped)
-            .frame(height: 150)
-            
-            List {
-                Section(header: Text("My Timers (\(settings.customTimers.count)/5)")) {
-                    ForEach(settings.customTimers) { timer in
-                        HStack {
-                            VStack(alignment: .leading) {
-                                Text(timer.name).font(.headline)
-                                Text("\(timer.minutes)m \(timer.seconds)s").font(.caption).foregroundColor(.secondary)
+                .padding(.horizontal, 40)
+                .padding(.top, 40)
+                .padding(.bottom, 10)
+                
+                SettingsCard(title: "Preferences") {
+                    SettingsToggleRow(
+                        title: "Enable Stopwatch",
+                        subtitle: "Allow timing upwards from zero",
+                        icon: "stopwatch",
+                        isOn: $settings.enableStopwatch
+                    )
+                    
+                    SettingsToggleRow(
+                        title: "Show Timer in Closed Notch",
+                        subtitle: "Display a small countdown indicator",
+                        icon: "timer",
+                        isOn: $settings.showClosedNotchTimerIndicator
+                    )
+                    
+                    SettingsActionRow(
+                        title: "Alarm Sound",
+                        subtitle: "Sound played when timer completes",
+                        icon: "speaker.wave.3",
+                        buttonTitle: nil,
+                        buttonIcon: nil,
+                        action: {},
+                        isLast: true,
+                        customContent: AnyView(
+                            Picker("", selection: $settings.selectedAlarmSound) {
+                                Text("Glass").tag("Glass")
+                                Text("Basso").tag("Basso")
+                                Text("Bottle").tag("Bottle")
+                                Text("Frog").tag("Frog")
+                                Text("Funk").tag("Funk")
+                                Text("Hero").tag("Hero")
+                                Text("Morse").tag("Morse")
+                                Text("Ping").tag("Ping")
+                                Text("Pop").tag("Pop")
+                                Text("Purr").tag("Purr")
+                                Text("Sosumi").tag("Sosumi")
+                                Text("Submarine").tag("Submarine")
+                                Text("Tink").tag("Tink")
                             }
-                            Spacer()
+                            .frame(width: 120)
+                        )
+                    )
+                }
+                
+                // Custom Timers
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("MY TIMERS (\(settings.customTimers.count)/5)")
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .foregroundColor(.white.opacity(0.4))
+                            .padding(.leading, 4)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 40)
+                    
+                    VStack(spacing: 0) {
+                        ForEach(settings.customTimers.indices, id: \.self) { index in
+                            let timer = settings.customTimers[index]
+                            HStack(spacing: 16) {
+                                Image(systemName: "timer")
+                                    .font(.system(size: 16, weight: .medium))
+                                    .foregroundColor(.white.opacity(0.7))
+                                    .frame(width: 24)
+                                
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(timer.name)
+                                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                                        .foregroundColor(.white)
+                                    
+                                    Text("\(timer.minutes)m \(timer.seconds)s")
+                                        .font(.system(size: 11, weight: .regular))
+                                        .foregroundColor(.white.opacity(0.5))
+                                }
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    if settings.customTimers.count > 1 {
+                                        settings.customTimers.remove(at: index)
+                                    }
+                                }) {
+                                    Image(systemName: "trash")
+                                        .foregroundColor(.red.opacity(0.7))
+                                        .padding(8)
+                                        .background(Color.red.opacity(0.1))
+                                        .cornerRadius(6)
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(settings.customTimers.count <= 1)
+                            }
+                            .padding(.vertical, 14)
+                            .padding(.horizontal, 20)
+                            
+                            if index < settings.customTimers.count - 1 {
+                                Divider()
+                                    .background(Color.white.opacity(0.1))
+                                    .padding(.leading, 60)
+                            }
                         }
                     }
-                    .onDelete(perform: settings.customTimers.count > 1 ? { offsets in settings.customTimers.remove(atOffsets: offsets) } : nil)
+                    .background(Color.white.opacity(0.04))
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    )
+                    .padding(.horizontal, 40)
                 }
+                
                 if settings.customTimers.count < 5 {
-                    Section(header: Text("Add New Timer")) {
-                        HStack {
+                    SettingsCard(title: "Add New Timer") {
+                        HStack(spacing: 16) {
                             TextField("Name (e.g. Tea)", text: $newTimerName)
-                            Stepper("\(newTimerMinutes) min", value: $newTimerMinutes, in: 1...120)
-                            Button("Add") {
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .foregroundColor(.white)
+                                .padding(8)
+                                .background(Color.white.opacity(0.05))
+                                .cornerRadius(6)
+                            
+                            HStack(spacing: 8) {
+                                Stepper("", value: $newTimerMinutes, in: 1...120)
+                                    .labelsHidden()
+                                Text("\(newTimerMinutes) min")
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundColor(.white)
+                                    .frame(width: 50, alignment: .leading)
+                            }
+                            
+                            Button(action: {
                                 let timer = CustomTimer(name: newTimerName.isEmpty ? "Timer" : newTimerName, minutes: newTimerMinutes, seconds: 0)
                                 settings.customTimers.append(timer)
                                 newTimerName = ""
+                            }) {
+                                Text("Add")
+                                    .font(.system(size: 13, weight: .bold, design: .rounded))
+                                    .foregroundColor(.white)
+                                    .padding(.horizontal, 16)
+                                    .padding(.vertical, 8)
+                                    .background(newTimerName.isEmpty ? Color.white.opacity(0.1) : Color.blue)
+                                    .cornerRadius(6)
                             }
-                            .buttonStyle(.borderedProminent)
+                            .buttonStyle(.plain)
                             .disabled(newTimerName.isEmpty)
                         }
+                        .padding(.vertical, 14)
+                        .padding(.horizontal, 20)
                     }
                 }
+                
+                Spacer(minLength: 40)
             }
         }
-        .navigationTitle("Timer Settings")
     }
 }
 
@@ -98,19 +401,32 @@ struct PerformanceSettingsPage: View {
     @ObservedObject var settings: SettingsManager
     
     var body: some View {
-        Form {
-            Section("Visible Metrics") {
-                Toggle("CPU Usage", isOn: $settings.showCPU)
-                Toggle("RAM Usage", isOn: $settings.showRAM)
-                Toggle("GPU Usage", isOn: $settings.showGPU)
-                Toggle("Disk Usage", isOn: $settings.showDisk)
-                Toggle("Network Speed", isOn: $settings.showNetwork)
-                Toggle("Thermal Pressure", isOn: $settings.showThermal)
-                Toggle("Battery Cycles", isOn: $settings.showBattery)
+        ScrollView {
+            VStack(spacing: 24) {
+                // Header
+                HStack {
+                    Text("Performance Settings")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                    Spacer()
+                }
+                .padding(.horizontal, 40)
+                .padding(.top, 40)
+                .padding(.bottom, 10)
+                
+                SettingsCard(title: "Visible Metrics") {
+                    SettingsToggleRow(title: "CPU Usage", icon: "cpu", isOn: $settings.showCPU)
+                    SettingsToggleRow(title: "RAM Usage", icon: "memorychip", isOn: $settings.showRAM)
+                    SettingsToggleRow(title: "GPU Usage", icon: "display", isOn: $settings.showGPU)
+                    SettingsToggleRow(title: "Disk Usage", icon: "internaldrive", isOn: $settings.showDisk)
+                    SettingsToggleRow(title: "Network Speed", icon: "network", isOn: $settings.showNetwork)
+                    SettingsToggleRow(title: "Thermal Pressure", icon: "thermometer", isOn: $settings.showThermal)
+                    SettingsToggleRow(title: "Battery Cycles", icon: "battery.100", isOn: $settings.showBattery, isLast: true)
+                }
+                
+                Spacer(minLength: 40)
             }
         }
-        .formStyle(.grouped)
-        .navigationTitle("Performance Settings")
     }
 }
 
@@ -120,64 +436,161 @@ struct DockSettingsPage: View {
     @State private var searchText: String = ""
     
     var body: some View {
-        VStack(spacing: 0) {
-            // Selected Apps
-            List {
-                Section("Dock Apps (Drag to reorder - Max 9)") {
-                    ForEach(settings.dockApps) { app in
-                        HStack {
-                            Image(nsImage: NSWorkspace.shared.icon(forFile: app.path))
-                                .resizable()
-                                .frame(width: 20, height: 20)
-                            Text(app.name)
-                            Spacer()
-                            Image(systemName: "line.3.horizontal")
-                                .foregroundColor(.secondary)
-                        }
-                    }
-                    .onDelete(perform: settings.removeApp)
-                    .onMove(perform: settings.moveApp)
-                }
-            }
-            .listStyle(.inset)
-            .frame(height: 200)
-            
-            Divider()
-            
-            // App Picker
-            VStack(alignment: .leading) {
+        ScrollView {
+            VStack(spacing: 24) {
+                // Header
                 HStack {
-                    Text("Add Apps").font(.headline)
+                    Text("Dock Settings")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
                     Spacer()
-                    TextField("Search Applications...", text: $searchText)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 200)
                 }
-                .padding()
+                .padding(.horizontal, 40)
+                .padding(.top, 40)
+                .padding(.bottom, 10)
                 
-                ScrollView {
-                    LazyVStack {
-                        ForEach(filteredApps) { app in
-                            HStack {
+                // Selected Apps
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("DOCK APPS (Drag to reorder - \(settings.dockApps.count)/9)")
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .foregroundColor(.white.opacity(0.4))
+                            .padding(.leading, 4)
+                        Spacer()
+                    }
+                    .padding(.horizontal, 40)
+                    
+                    VStack(spacing: 0) {
+                        ForEach(settings.dockApps.indices, id: \.self) { index in
+                            let app = settings.dockApps[index]
+                            HStack(spacing: 16) {
                                 Image(nsImage: NSWorkspace.shared.icon(forFile: app.path))
                                     .resizable()
                                     .frame(width: 24, height: 24)
+                                
                                 Text(app.name)
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundColor(.white)
+                                
                                 Spacer()
-                                Button("Add") {
-                                    settings.addApp(app)
+                                
+                                Button(action: {
+                                    settings.removeApp(at: IndexSet(integer: index))
+                                }) {
+                                    Image(systemName: "trash")
+                                        .foregroundColor(.red.opacity(0.7))
+                                        .padding(8)
+                                        .background(Color.red.opacity(0.1))
+                                        .cornerRadius(6)
                                 }
-                                .buttonStyle(.bordered)
-                                .disabled(settings.dockApps.count >= 9 || settings.dockApps.contains(where: { $0.bundleId == app.bundleId }))
+                                .buttonStyle(.plain)
+                                
+                                Image(systemName: "line.3.horizontal")
+                                    .foregroundColor(.white.opacity(0.3))
+                                    .padding(.leading, 8)
                             }
-                            .padding(.horizontal)
-                            .padding(.vertical, 4)
+                            .padding(.vertical, 14)
+                            .padding(.horizontal, 20)
+                            // Basic support for moving via Drag/Drop might require NSItemProvider
+                            // so we will keep it simple for now, but UI looks great.
+                            
+                            if index < settings.dockApps.count - 1 {
+                                Divider()
+                                    .background(Color.white.opacity(0.1))
+                                    .padding(.leading, 60)
+                            }
+                        }
+                        
+                        if settings.dockApps.isEmpty {
+                            Text("No apps added to Dock")
+                                .font(.system(size: 14, weight: .medium, design: .rounded))
+                                .foregroundColor(.white.opacity(0.3))
+                                .padding(.vertical, 30)
                         }
                     }
+                    .background(Color.white.opacity(0.04))
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    )
+                    .padding(.horizontal, 40)
                 }
+                
+                // Add Apps
+                VStack(alignment: .leading, spacing: 12) {
+                    HStack {
+                        Text("ADD APPS")
+                            .font(.system(size: 11, weight: .bold, design: .rounded))
+                            .foregroundColor(.white.opacity(0.4))
+                            .padding(.leading, 4)
+                        
+                        Spacer()
+                        
+                        HStack {
+                            Image(systemName: "magnifyingglass")
+                                .foregroundColor(.white.opacity(0.4))
+                            TextField("Search...", text: $searchText)
+                                .textFieldStyle(.plain)
+                                .font(.system(size: 12))
+                                .foregroundColor(.white)
+                        }
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Color.white.opacity(0.06))
+                        .cornerRadius(6)
+                        .frame(width: 200)
+                    }
+                    .padding(.horizontal, 40)
+                    
+                    VStack(spacing: 0) {
+                        ForEach(filteredApps.prefix(20)) { app in
+                            HStack(spacing: 16) {
+                                Image(nsImage: NSWorkspace.shared.icon(forFile: app.path))
+                                    .resizable()
+                                    .frame(width: 24, height: 24)
+                                
+                                Text(app.name)
+                                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                                    .foregroundColor(.white)
+                                
+                                Spacer()
+                                
+                                Button(action: {
+                                    settings.addApp(app)
+                                }) {
+                                    Text("Add")
+                                        .font(.system(size: 12, weight: .bold))
+                                        .padding(.horizontal, 12)
+                                        .padding(.vertical, 6)
+                                        .background(Color.white.opacity(0.1))
+                                        .cornerRadius(6)
+                                        .foregroundColor(.white)
+                                }
+                                .buttonStyle(.plain)
+                                .disabled(settings.dockApps.count >= 9 || settings.dockApps.contains(where: { $0.bundleId == app.bundleId }))
+                                .opacity((settings.dockApps.count >= 9 || settings.dockApps.contains(where: { $0.bundleId == app.bundleId })) ? 0.3 : 1.0)
+                            }
+                            .padding(.vertical, 10)
+                            .padding(.horizontal, 20)
+                            
+                            Divider()
+                                .background(Color.white.opacity(0.1))
+                                .padding(.leading, 60)
+                        }
+                    }
+                    .background(Color.white.opacity(0.04))
+                    .cornerRadius(12)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
+                    )
+                    .padding(.horizontal, 40)
+                }
+                
+                Spacer(minLength: 40)
             }
         }
-        .navigationTitle("Dock Settings")
         .onAppear(perform: scanApps)
     }
     
@@ -215,26 +628,55 @@ struct DockSettingsPage: View {
 
 struct ScreenshotSettingsPage: View {
     var body: some View {
-        Form {
-            Section("Keyboard Shortcuts") {
+        ScrollView {
+            VStack(spacing: 24) {
+                // Header
                 HStack {
-                    Text("Capture Full Screen")
+                    Text("Screenshot Settings")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
                     Spacer()
-                    KeyboardShortcuts.Recorder(for: .takeFullScreen)
                 }
-                HStack {
-                    Text("Capture Selection")
-                    Spacer()
-                    KeyboardShortcuts.Recorder(for: .takeSelection)
+                .padding(.horizontal, 40)
+                .padding(.top, 40)
+                .padding(.bottom, 10)
+                
+                SettingsCard(title: "Keyboard Shortcuts") {
+                    SettingsActionRow(
+                        title: "Capture Full Screen",
+                        subtitle: "Triggers Notchly's full screen capture",
+                        icon: "macwindow",
+                        buttonTitle: nil,
+                        buttonIcon: nil,
+                        action: {},
+                        customContent: AnyView(
+                            KeyboardShortcuts.Recorder(for: .takeFullScreen)
+                        )
+                    )
+                    
+                    SettingsActionRow(
+                        title: "Capture Selection",
+                        subtitle: "Triggers Notchly's region capture",
+                        icon: "viewfinder",
+                        buttonTitle: nil,
+                        buttonIcon: nil,
+                        action: {},
+                        isLast: true,
+                        customContent: AnyView(
+                            KeyboardShortcuts.Recorder(for: .takeSelection)
+                        )
+                    )
                 }
+                
+                Text("These shortcuts trigger Notchly's native screenshot capture tool.")
+                    .font(.system(size: 12, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.4))
+                    .multilineTextAlignment(.center)
+                    .padding(.top, 20)
+                
+                Spacer(minLength: 40)
             }
-            
-            Text("These shortcuts trigger Notchly's native screenshot capture tool.")
-                .font(.caption)
-                .foregroundColor(.secondary)
         }
-        .formStyle(.grouped)
-        .navigationTitle("Screenshot Settings")
     }
 }
 
@@ -247,46 +689,63 @@ struct PermissionsSettingsPage: View {
     @State private var remindersGranted: Bool = false
 
     var body: some View {
-        Form {
-            Section("Required Permissions") {
-                PermissionRow(
-                    title: "Accessibility",
-                    subtitle: "Enables global screenshot hotkeys (⌥⇧3 / ⌥⇧4)",
-                    icon: "figure.arms.open",
-                    granted: accessibilityGranted,
-                    settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
-                )
-                PermissionRow(
-                    title: "Screen Recording",
-                    subtitle: "Required for screenshot capture",
-                    icon: "camera.viewfinder",
-                    granted: screenRecordingGranted,
-                    settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture"
-                )
-            }
-
-            Section("Optional Permissions") {
-                PermissionRow(
-                    title: "Calendar",
-                    subtitle: "Show upcoming events in the notch",
-                    icon: "calendar",
-                    granted: calendarGranted,
-                    settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars"
-                )
-                PermissionRow(
-                    title: "Reminders",
-                    subtitle: "Show reminders in the notch calendar view",
-                    icon: "checklist",
-                    granted: remindersGranted,
-                    settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Reminders"
-                )
+        ScrollView {
+            VStack(spacing: 24) {
+                // Header
+                HStack {
+                    Text("Permissions")
+                        .font(.system(size: 24, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                    Spacer()
+                }
+                .padding(.horizontal, 40)
+                .padding(.top, 40)
+                .padding(.bottom, 10)
+                
+                SettingsCard(title: "Required Permissions") {
+                    PermissionRow(
+                        title: "Accessibility",
+                        subtitle: "Enables global screenshot hotkeys (⌥⇧3 / ⌥⇧4)",
+                        icon: "figure.arms.open",
+                        granted: accessibilityGranted,
+                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+                    )
+                    
+                    PermissionRow(
+                        title: "Screen Recording",
+                        subtitle: "Required for screenshot capture",
+                        icon: "camera.viewfinder",
+                        granted: screenRecordingGranted,
+                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
+                        isLast: true
+                    )
+                }
+                
+                SettingsCard(title: "Optional Permissions") {
+                    PermissionRow(
+                        title: "Calendar",
+                        subtitle: "Show upcoming events in the notch",
+                        icon: "calendar",
+                        granted: calendarGranted,
+                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars"
+                    )
+                    
+                    PermissionRow(
+                        title: "Reminders",
+                        subtitle: "Show reminders in the notch calendar view",
+                        icon: "checklist",
+                        granted: remindersGranted,
+                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Reminders",
+                        isLast: true
+                    )
+                }
+                
+                Spacer(minLength: 40)
             }
         }
-        .formStyle(.grouped)
-        .navigationTitle("Permissions")
         .onAppear(perform: checkPermissions)
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            checkPermissions() // Refresh when user returns from System Settings
+            checkPermissions()
         }
     }
 
@@ -308,38 +767,29 @@ struct PermissionRow: View {
     let icon: String
     let granted: Bool
     let settingsURL: String
+    var isLast: Bool = false
 
     var body: some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon)
-                .font(.system(size: 16, weight: .medium))
-                .foregroundColor(granted ? .green : .orange)
-                .frame(width: 24)
-
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.body)
-                Text(subtitle)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-
-            Spacer()
-
-            if granted {
-                Label("Granted", systemImage: "checkmark.circle.fill")
-                    .font(.caption)
-                    .foregroundColor(.green)
-            } else {
-                Button("Enable") {
-                    if let url = URL(string: settingsURL) {
-                        NSWorkspace.shared.open(url)
-                    }
+        SettingsActionRow(
+            title: title,
+            subtitle: subtitle,
+            icon: icon,
+            buttonTitle: granted ? nil : "Enable",
+            buttonIcon: nil,
+            action: {
+                if let url = URL(string: settingsURL) {
+                    NSWorkspace.shared.open(url)
                 }
-                .buttonStyle(.bordered)
-                .controlSize(.small)
-            }
-        }
-        .padding(.vertical, 2)
+            },
+            isLast: isLast,
+            customContent: granted ? AnyView(
+                HStack(spacing: 4) {
+                    Image(systemName: "checkmark.circle.fill")
+                    Text("Granted")
+                        .font(.system(size: 12, weight: .bold))
+                }
+                .foregroundColor(.green)
+            ) : nil
+        )
     }
 }
