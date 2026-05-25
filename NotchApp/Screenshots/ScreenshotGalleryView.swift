@@ -74,7 +74,7 @@ struct ScreenshotGalleryView: View {
                 } else {
                     ScrollView(.horizontal, showsIndicators: false) {
                         LazyHStack(spacing: 16) {
-                            ForEach(filteredItems) { item in
+                            ForEach(Array(filteredItems.prefix(4))) { item in
                                 ScreenshotThumbnail(
                                     item: item,
                                     isWiggling: isWiggleMode,
@@ -95,6 +95,26 @@ struct ScreenshotGalleryView: View {
                                     }
                                 }
                             }
+                            
+                            Button(action: {
+                                NotchlyHubWindowController.shared.show()
+                                NotificationCenter.default.post(name: NSNotification.Name("OpenScreenshotManager"), object: nil)
+                                // Collapse notch optionally
+                                NotchWindowController.shared.isExpanded = false
+                            }) {
+                                VStack(spacing: 8) {
+                                    Image(systemName: "square.grid.2x2.fill")
+                                        .font(.system(size: 20))
+                                    Text("View All")
+                                        .font(.system(size: 10, weight: .bold))
+                                }
+                                .frame(width: 80, height: 60)
+                                .background(Color.white.opacity(0.05))
+                                .clipShape(RoundedRectangle(cornerRadius: 8))
+                                .foregroundColor(.white.opacity(0.7))
+                            }
+                            .buttonStyle(.plain)
+                            .padding(.leading, 8)
                         }
                         .padding(.horizontal, 40)
                     }

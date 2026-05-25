@@ -202,6 +202,9 @@ struct NotchlyHubView: View {
         }
         } // end ZStack
         .frame(minWidth: 900, maxWidth: .infinity, minHeight: 620, maxHeight: .infinity)
+        .onReceive(NotificationCenter.default.publisher(for: NSNotification.Name("OpenScreenshotManager"))) { _ in
+            currentTab = .screenshotManager
+        }
     }
 
 
