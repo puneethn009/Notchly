@@ -8,6 +8,7 @@ enum NotchPage: String, CaseIterable {
     case calendar = "calendar"
     case launcher = "square.grid.2x2"
     case screenshots = "camera.viewfinder"
+    case game = "gamecontroller"
     
     func next() -> NotchPage {
         let all = NotchPage.allCases

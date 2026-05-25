@@ -47,6 +47,7 @@ class SettingsManager: ObservableObject {
     @AppStorage("showNotchCalendar") var showNotchCalendar: Bool = true
     @AppStorage("showNotchLauncher") var showNotchLauncher: Bool = true
     @AppStorage("showNotchScreenshots") var showNotchScreenshots: Bool = true
+    @AppStorage("showNotchGame") var showNotchGame: Bool = true
     
     var activeNotchPages: [NotchPage] {
         var pages: [NotchPage] = []
@@ -56,6 +57,7 @@ class SettingsManager: ObservableObject {
         if showNotchCalendar { pages.append(.calendar) }
         if showNotchLauncher { pages.append(.launcher) }
         if showNotchScreenshots { pages.append(.screenshots) }
+        if showNotchGame { pages.append(.game) }
         return pages.isEmpty ? [.media] : pages
     }
     

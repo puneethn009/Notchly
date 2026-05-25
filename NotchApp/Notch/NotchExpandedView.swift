@@ -155,6 +155,9 @@ struct NotchExpandedView: View {
                         LauncherModuleView(launcherManager: launcherManager)
                     case .screenshots:
                         ScreenshotGalleryView()
+                    case .game:
+                        NotchBreakoutView()
+                            .frame(maxWidth: .infinity, maxHeight: .infinity)
                     }
                 }
                 .id(NotchState.shared.selectedPage)

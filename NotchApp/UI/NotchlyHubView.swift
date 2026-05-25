@@ -286,6 +286,11 @@ struct NotchControlsView: View {
                                             .foregroundColor(.cyan)
                                             .font(.system(size: 10, weight: .bold))
                                     }
+                                    if settings.showNotchGame {
+                                        Image(systemName: "gamecontroller")
+                                            .foregroundColor(Color(hue: 0.07, saturation: 0.88, brightness: 1.0))
+                                            .font(.system(size: 10, weight: .bold))
+                                    }
                                 }
                             }
                             
@@ -347,6 +352,14 @@ struct NotchControlsView: View {
                         icon: "camera.viewfinder",
                         iconColor: .cyan,
                         isOn: $settings.showNotchScreenshots
+                    )
+
+                    ToggleCard(
+                        title: "Notch Breaker",
+                        subtitle: "A retro Breakout game — move your mouse to control the paddle",
+                        icon: "gamecontroller",
+                        iconColor: Color(hue: 0.07, saturation: 0.88, brightness: 1.0),
+                        isOn: $settings.showNotchGame
                     )
                 }
             }
