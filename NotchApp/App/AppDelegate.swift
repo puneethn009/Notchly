@@ -145,7 +145,6 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             
             // Start screenshot monitoring with persistence
             ScreenshotMonitor.shared.start(container: PersistenceController.shared.container)
-            
             // Start Media Manager with a slight delay to ensure UI stability
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 MediaPlayerManager.shared.start()

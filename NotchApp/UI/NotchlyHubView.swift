@@ -296,15 +296,6 @@ struct NotchControlsView: View {
                             Text("Mock Dynamic Live Notch Status")
                                 .font(.system(size: 10, weight: .semibold))
                                 .foregroundColor(.white.opacity(0.3))
-                                
-                            Button("Debug: Test Volume HUD") {
-                                HUDState.shared.showHUD(type: .volume, value: 0.75)
-                            }
-                            .buttonStyle(.plain)
-                            .font(.system(size: 10, weight: .bold))
-                            .foregroundColor(.pink)
-                            .padding(.top, 4)
-                            
                         }
                     }
                     .clipShape(RoundedRectangle(cornerRadius: 12))
