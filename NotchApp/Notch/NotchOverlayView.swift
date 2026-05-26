@@ -108,8 +108,7 @@ struct NotchOverlayView: View {
                                         .scaleEffect(0.5)
                                 } else {
                                     Image(systemName: "music.note")
-                                        .foregroundColor(mediaManager.primaryArtworkColor)
-                                        .shadow(color: mediaManager.primaryArtworkColor.opacity(0.9), radius: 8)
+                                        .foregroundColor(.white.opacity(0.3))
                                 }
                             }
                             .frame(width: 14)
