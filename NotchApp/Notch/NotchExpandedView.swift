@@ -332,6 +332,7 @@ struct NotchExpandedView: View {
 struct MediaModuleView: View {
     @ObservedObject var mediaManager: MediaPlayerManager
     @State private var showLyrics = true
+    @ObservedObject private var settings = SettingsManager.shared
     
     var body: some View {
         Group {
@@ -444,11 +445,13 @@ struct MediaModuleView: View {
                                 Image(systemName: "forward.fill").font(.system(size: 18))
                             }.buttonStyle(.plain)
                             
-                            Button(action: { mediaManager.toggleMute() }) {
-                                Image(systemName: mediaManager.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
-                                    .font(.system(size: 14))
-                                    .foregroundColor(mediaManager.primaryArtworkColor.opacity(0.7))
-                            }.buttonStyle(.plain)
+                            if settings.showMuteButton {
+                                Button(action: { mediaManager.toggleMute() }) {
+                                    Image(systemName: mediaManager.isMuted ? "speaker.slash.fill" : "speaker.wave.2.fill")
+                                        .font(.system(size: 14))
+                                        .foregroundColor(mediaManager.primaryArtworkColor.opacity(0.7))
+                                }.buttonStyle(.plain)
+                            }
                         }
                         .foregroundColor(.white)
                     }

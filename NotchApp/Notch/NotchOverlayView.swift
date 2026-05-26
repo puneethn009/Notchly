@@ -5,6 +5,7 @@ struct NotchOverlayView: View {
     @ObservedObject private var notchState = NotchState.shared
     @StateObject private var timerManager = TimerManager.shared
     @StateObject private var mediaManager = MediaPlayerManager.shared
+    @ObservedObject private var settings = SettingsManager.shared
 
     private let collapsedWidth: CGFloat = 192
     private let collapsedHeight: CGFloat = 29

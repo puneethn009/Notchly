@@ -120,6 +120,7 @@ class MediaPlayerManager: ObservableObject {
 
     // MARK: - Apple Music (from notification userInfo — no AppleScript needed)
     private func handleMusicNotification(_ notification: Notification) {
+        guard SettingsManager.shared.useAppleMusic else { return }
         guard let info = notification.userInfo else { return }
 
         let trackName   = info["Name"] as? String ?? ""
@@ -186,6 +187,7 @@ class MediaPlayerManager: ObservableObject {
 
     // MARK: - Spotify (AppleScript fetch after notification)
     private func fetchSpotifyState() async {
+        guard SettingsManager.shared.useSpotify else { return }
         let script = """
         tell application "Spotify"
             if running then
@@ -438,13 +440,13 @@ class MediaPlayerManager: ObservableObject {
         else { await AS.run("tell application \"Music\" to previous track") }
     }}
     func toggleMute() { Task {
-        await AS.run("set v to output volume of (get volume settings)\nif v > 0 then set volume output volume 0\nelse set volume output volume 50\nend if")
+        await AS.run("set volume output muted (not (output muted of (get volume settings)))")
         refreshMuteState()
     }}
     func refreshMuteState() { Task {
-        if let r = await AS.run("output volume of (get volume settings)") {
-            let v = r.int32Value
-            await MainActor.run { self.isMuted = v == 0 }
+        if let r = await AS.run("output muted of (get volume settings)") {
+            let muted = r.booleanValue
+            await MainActor.run { self.isMuted = muted }
         }
     }}
 
