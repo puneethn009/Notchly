@@ -689,6 +689,8 @@ struct PermissionsSettingsPage: View {
     @State private var screenRecordingGranted: Bool = false
     @State private var calendarGranted: Bool = false
     @State private var remindersGranted: Bool = false
+    @State private var spotifyGranted: Bool = false
+    @State private var musicGranted: Bool = false
 
     var body: some View {
         ScrollView {
@@ -738,7 +740,14 @@ struct PermissionsSettingsPage: View {
                         subtitle: "Show upcoming events in the notch",
                         icon: "calendar",
                         granted: calendarGranted,
-                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars"
+                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars",
+                        onEnable: {
+                            if #available(macOS 14.0, *) {
+                                EKEventStore().requestFullAccessToEvents { _, _ in }
+                            } else {
+                                EKEventStore().requestAccess(to: .event) { _, _ in }
+                            }
+                        }
                     )
                     
                     PermissionRow(
@@ -747,7 +756,39 @@ struct PermissionsSettingsPage: View {
                         icon: "checklist",
                         granted: remindersGranted,
                         settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Reminders",
-                        isLast: true
+                        isLast: true,
+                        onEnable: {
+                            if #available(macOS 14.0, *) {
+                                EKEventStore().requestFullAccessToReminders { _, _ in }
+                            } else {
+                                EKEventStore().requestAccess(to: .reminder) { _, _ in }
+                            }
+                        }
+                    )
+                }
+                
+                SettingsCard(title: "Music Integrations (Automation)") {
+                    PermissionRow(
+                        title: "Spotify",
+                        subtitle: "Required to fetch currently playing songs and lyrics",
+                        icon: "music.note",
+                        granted: spotifyGranted,
+                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
+                        onEnable: {
+                            _ = NSAppleScript(source: "tell application \"Spotify\" to running")?.executeAndReturnError(nil)
+                        }
+                    )
+                    
+                    PermissionRow(
+                        title: "Apple Music",
+                        subtitle: "Required to fetch currently playing songs and lyrics",
+                        icon: "music.note.list",
+                        granted: musicGranted,
+                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
+                        isLast: true,
+                        onEnable: {
+                            _ = NSAppleScript(source: "tell application \"Music\" to running")?.executeAndReturnError(nil)
+                        }
                     )
                 }
                 
@@ -769,6 +810,15 @@ struct PermissionsSettingsPage: View {
 
         let reminderStatus = EKEventStore.authorizationStatus(for: .reminder)
         remindersGranted = reminderStatus == .fullAccess || reminderStatus.rawValue == 3
+        
+        spotifyGranted = checkAutomationPermission(bundleID: "com.spotify.client")
+        musicGranted = checkAutomationPermission(bundleID: "com.apple.Music")
+    }
+    
+    private func checkAutomationPermission(bundleID: String) -> Bool {
+        let target = NSAppleEventDescriptor(bundleIdentifier: bundleID)
+        let status = AEDeterminePermissionToAutomateTarget(target.aeDesc, typeWildCard, typeWildCard, false)
+        return status == noErr
     }
 }
 
