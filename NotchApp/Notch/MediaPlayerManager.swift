@@ -72,6 +72,7 @@ class MediaPlayerManager: ObservableObject {
     private var artworkTask: Task<Void, Never>?
     private var ytmTimer: Timer?
     private var ytmConsecutiveFailures: Int = 0
+    private var cancellables = Set<AnyCancellable>()
 
     private init() {}
 
@@ -84,6 +85,22 @@ class MediaPlayerManager: ObservableObject {
         startSyncTimer()
         startYTMTracker()
         refreshMuteState()
+        
+        // Listen for setting changes to immediately stop tracking if disabled
+        SettingsManager.shared.objectWillChange
+            .sink { [weak self] _ in
+                DispatchQueue.main.async {
+                    if !SettingsManager.shared.useAppleMusic && self?.activeSource == "Music" {
+                        self?.isPlaying = false
+                        self?.isRunning = false
+                    }
+                    if !SettingsManager.shared.useSpotify && self?.activeSource == "Spotify" {
+                        self?.isPlaying = false
+                        self?.isRunning = false
+                    }
+                }
+            }
+            .store(in: &cancellables)
     }
 
     // MARK: - Distributed Notifications (no MRMediaRemote, no XPC blocks)
