@@ -136,13 +136,17 @@ class SystemMonitorManager: ObservableObject {
     }
     
     private func updateBatteryHealth() {
-        let snapshot = IOPSCopyPowerSourcesInfo().takeRetainedValue()
-        let sources = IOPSCopyPowerSourcesList(snapshot).takeRetainedValue() as Array
-        
-        for ps in sources {
-            let info = IOPSGetPowerSourceDescription(snapshot, ps).takeUnretainedValue() as! [String: Any]
-            if let cycles = info["Battery Cycle Count"] as? Int {
-                batteryCycles = cycles
+        var iterator: io_iterator_t = 0
+        let result = IOServiceGetMatchingServices(kIOMainPortDefault, IOServiceMatching("AppleSmartBattery"), &iterator)
+        if result == KERN_SUCCESS {
+            defer { IOObjectRelease(iterator) }
+            var service = IOIteratorNext(iterator)
+            while service != 0 {
+                if let cycleCount = IORegistryEntryCreateCFProperty(service, "CycleCount" as CFString, kCFAllocatorDefault, 0)?.takeRetainedValue() as? Int {
+                    batteryCycles = cycleCount
+                }
+                IOObjectRelease(service)
+                service = IOIteratorNext(iterator)
             }
         }
     }
