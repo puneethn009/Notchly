@@ -489,16 +489,14 @@ struct DockSettingsPage: View {
                                     .foregroundColor(.white.opacity(0.3))
                                     .padding(.leading, 8)
                             }
-                            .padding(.vertical, 14)
-                            .padding(.horizontal, 20)
-                            // Basic support for moving via Drag/Drop might require NSItemProvider
-                            // so we will keep it simple for now, but UI looks great.
-                            
-                            if index < settings.dockApps.count - 1 {
-                                Divider()
-                                    .background(Color.white.opacity(0.1))
-                                    .padding(.leading, 60)
-                            }
+                            .padding(.vertical, 8)
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets(top: 0, leading: 20, bottom: 0, trailing: 20))
+                            .listRowSeparator(.visible)
+                            .listRowSeparatorTint(Color.white.opacity(0.1))
+                        }
+                        .onMove { source, destination in
+                            settings.moveApp(from: source, to: destination)
                         }
                         
                         if settings.dockApps.isEmpty {
@@ -506,8 +504,12 @@ struct DockSettingsPage: View {
                                 .font(.system(size: 14, weight: .medium, design: .rounded))
                                 .foregroundColor(.white.opacity(0.3))
                                 .padding(.vertical, 30)
+                                .listRowBackground(Color.clear)
                         }
                     }
+                    .listStyle(.plain)
+                    .scrollContentBackground(.hidden)
+                    .frame(height: max(CGFloat(settings.dockApps.count * 50), 100))
                     .background(Color.white.opacity(0.04))
                     .cornerRadius(12)
                     .overlay(
