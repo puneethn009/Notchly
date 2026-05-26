@@ -10,7 +10,7 @@ enum HUDType {
 class HUDState: ObservableObject {
     static let shared = HUDState()
     
-    @Published var isVisible: Bool = true
+    @Published var isVisible: Bool = false
     @Published var hudType: HUDType = .volume
     @Published var value: Float = 0.5
     

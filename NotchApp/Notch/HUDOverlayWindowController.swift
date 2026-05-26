@@ -14,7 +14,8 @@ class HUDOverlayWindowController {
         let hostingController = NSHostingController(rootView: view)
         
         let screenRect = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
-        let windowRect = NSRect(x: screenRect.midX - 150, y: screenRect.maxY - 42, width: 300, height: 50)
+        let windowHeight: CGFloat = 60
+        let windowRect = NSRect(x: screenRect.midX - 150, y: screenRect.maxY - windowHeight, width: 300, height: windowHeight)
         
         let overlayWindow = NSWindow(
             contentRect: windowRect,
