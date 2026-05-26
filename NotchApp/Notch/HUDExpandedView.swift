@@ -59,5 +59,6 @@ struct HUDExpandedView: View {
             Spacer()
         }
         .frame(height: 60) // Match window height
+        .background(Color.red.opacity(0.5)) // DEBUG: Make the window visible at all times
     }
 }
