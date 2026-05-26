@@ -103,7 +103,7 @@ struct NotchOverlayView: View {
                         // Static Collapsed Icons
                         HStack(spacing: 25) {
                             ZStack {
-                                if SettingsManager.shared.showClosedNotchMusicIndicator && mediaManager.isPlaying {
+                                if settings.showClosedNotchMusicIndicator && mediaManager.isPlaying {
                                     VisualizerView(isPlaying: true)
                                         .scaleEffect(0.5)
                                 } else {
@@ -115,7 +115,7 @@ struct NotchOverlayView: View {
                             .frame(width: 14)
                             
                             ZStack {
-                                if SettingsManager.shared.showClosedNotchTimerIndicator && (timerManager.isRunning || timerManager.isStopwatchRunning) {
+                                if settings.showClosedNotchTimerIndicator && (timerManager.isRunning || timerManager.isStopwatchRunning) {
                                     Image(systemName: "timer")
                                         .foregroundColor(.orange)
                                 } else {
