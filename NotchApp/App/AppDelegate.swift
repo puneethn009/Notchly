@@ -1,6 +1,7 @@
 import SwiftUI
-import AppKit
 import SwiftData
+import AppKit
+import Sparkle
 
 class PassThroughHostingView<Content: View>: NSHostingView<Content> {
     private var timer: Timer?
@@ -13,6 +14,11 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
     required init?(coder: NSCoder) {
         super.init(coder: coder)
         startHoverTimer()
+    }
+    
+    deinit {
+        timer?.invalidate()
+        timer = nil
     }
 
     private func startHoverTimer() {
@@ -125,8 +131,11 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
 class AppDelegate: NSObject, NSApplicationDelegate {
     static var shared: AppDelegate?
     var statusItem: NSStatusItem!
+    var updaterController: SPUStandardUpdaterController!
 
     func applicationDidFinishLaunching(_ notification: Notification) {
+        updaterController = SPUStandardUpdaterController(startingUpdater: true, updaterDelegate: nil, userDriverDelegate: nil)
+        
         AppDelegate.shared = self
         setupMenuBar()
         
@@ -172,6 +181,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
         menu.addItem(NSMenuItem(title: "Open Notchly Hub", action: #selector(openHub), keyEquivalent: "o"))
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Settings…", action: #selector(openSettings), keyEquivalent: ","))
+        
+        let updateItem = NSMenuItem(title: "Check for Updates…", action: #selector(SPUStandardUpdaterController.checkForUpdates(_:)), keyEquivalent: "")
+        updateItem.target = updaterController
+        menu.addItem(updateItem)
+        
         menu.addItem(NSMenuItem.separator())
         menu.addItem(NSMenuItem(title: "Quit Notchly", action: #selector(NSApplication.terminate(_:)), keyEquivalent: "q"))
 
