@@ -90,13 +90,26 @@ class MediaPlayerManager: ObservableObject {
         SettingsManager.shared.objectWillChange
             .sink { [weak self] _ in
                 DispatchQueue.main.async {
-                    if !SettingsManager.shared.useAppleMusic && self?.activeSource == "Music" {
+                    let clearState = {
                         self?.isPlaying = false
                         self?.isRunning = false
+                        self?.title = ""
+                        self?.artist = ""
+                        self?.artworkImage = nil
+                        self?.lyrics = ""
+                        self?.syncedLyrics = []
+                        self?.currentLyricIndex = 0
+                        self?.progress = 0
+                        self?.positionStr = "0:00"
+                        self?.durationStr = "0:00"
+                        self?.totalDuration = 0
+                    }
+                    
+                    if !SettingsManager.shared.useAppleMusic && self?.activeSource == "Music" {
+                        clearState()
                     }
                     if !SettingsManager.shared.useSpotify && self?.activeSource == "Spotify" {
-                        self?.isPlaying = false
-                        self?.isRunning = false
+                        clearState()
                     }
                 }
             }
