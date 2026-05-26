@@ -28,7 +28,7 @@ class MediaKeyInterceptor {
         guard let tap = CGEvent.tapCreate(
             tap: .cgSessionEventTap,
             place: .headInsertEventTap,
-            options: .listenOnly, // Listen only, don't block
+            options: .defaultTap, // Active tap to ensure we get the event before OS consumes it
             eventsOfInterest: CGEventMask(1 << NX_SYSDEFINED),
             callback: { (proxy: CGEventTapProxy, type: CGEventType, event: CGEvent, refcon: UnsafeMutableRawPointer?) -> Unmanaged<CGEvent>? in
                 
