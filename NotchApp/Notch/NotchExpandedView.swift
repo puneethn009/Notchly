@@ -1008,6 +1008,7 @@ struct CircularGauge: View {
                 VStack(spacing: 0) {
                     Text("\(Int(value * 100))%")
                         .font(.system(size: 14, weight: .bold, design: .monospaced))
+                        .foregroundColor(.white)
                     Text(label)
                         .font(.system(size: 8, weight: .bold))
                         .foregroundColor(.gray)
