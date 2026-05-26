@@ -18,6 +18,21 @@ class TimerManager: ObservableObject {
     
     private var timer: AnyCancellable?
     private var alarmSound: NSSound?
+    private var cancellables = Set<AnyCancellable>()
+    
+    private init() {
+        SettingsManager.shared.objectWillChange
+            .sink { [weak self] _ in
+                DispatchQueue.main.async {
+                    if !SettingsManager.shared.showClosedNotchTimerIndicator && NotchState.shared.stickyType == .timer {
+                        withAnimation(.spring()) {
+                            NotchState.shared.isSticky = false
+                        }
+                    }
+                }
+            }
+            .store(in: &cancellables)
+    }
     
     var timeString: String {
         let minutes = Int(timeRemaining) / 60
@@ -61,8 +76,10 @@ class TimerManager: ObservableObject {
         isRunning = true
         isCompleted = false
         
-        NotchState.shared.stickyType = .timer
-        NotchState.shared.isSticky = true
+        if SettingsManager.shared.showClosedNotchTimerIndicator {
+            NotchState.shared.stickyType = .timer
+            NotchState.shared.isSticky = true
+        }
         withAnimation(.spring()) {
             NotchState.shared.isExpanded = false
         }
@@ -95,8 +112,10 @@ class TimerManager: ObservableObject {
         stopAlarm()
         
         isStopwatchRunning = true
-        NotchState.shared.stickyType = .timer // Reuse timer sticky for now or add .stopwatch
-        NotchState.shared.isSticky = true
+        if SettingsManager.shared.showClosedNotchTimerIndicator {
+            NotchState.shared.stickyType = .timer // Reuse timer sticky for now or add .stopwatch
+            NotchState.shared.isSticky = true
+        }
         withAnimation(.spring()) {
             NotchState.shared.isExpanded = false
         }

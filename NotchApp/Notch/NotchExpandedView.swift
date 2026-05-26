@@ -637,11 +637,12 @@ struct MediaAppLaunchButton: View {
 struct TimerModuleView: View {
     @ObservedObject var timerManager: TimerManager
     @State private var mode: Int = 0 // 0: Timer, 1: Stopwatch
+    @ObservedObject private var settings = SettingsManager.shared
     
     var body: some View {
         VStack(spacing: 6) {
             // Stabilized Segmented Control Toggle
-            if !timerManager.isAlarmPlaying && !timerManager.isRunning && !timerManager.isStopwatchRunning {
+            if settings.enableStopwatch && !timerManager.isAlarmPlaying && !timerManager.isRunning && !timerManager.isStopwatchRunning {
                 HStack(spacing: 0) {
                     ZStack {
                         // Sliding background pill
@@ -678,7 +679,7 @@ struct TimerModuleView: View {
             
             // Dynamic Height Content Area
             ZStack {
-                if timerManager.isStopwatchRunning || (mode == 1 && !timerManager.isRunning) {
+                if settings.enableStopwatch && (timerManager.isStopwatchRunning || (mode == 1 && !timerManager.isRunning)) {
                     StopwatchContent(timerManager: timerManager)
                         .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)), removal: .opacity))
                 } else {
