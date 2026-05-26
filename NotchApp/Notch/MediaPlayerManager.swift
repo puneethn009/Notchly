@@ -107,9 +107,13 @@ class MediaPlayerManager: ObservableObject {
                     
                     if !SettingsManager.shared.useAppleMusic && self?.activeSource == "Music" {
                         clearState()
+                    } else if SettingsManager.shared.useAppleMusic {
+                        Task { await self?.fetchAppleMusicState() }
                     }
                     if !SettingsManager.shared.useSpotify && self?.activeSource == "Spotify" {
                         clearState()
+                    } else if SettingsManager.shared.useSpotify {
+                        Task { await self?.fetchSpotifyState() }
                     }
                 }
             }
@@ -212,6 +216,62 @@ class MediaPlayerManager: ObservableObject {
                     }
                 }
             }
+        }
+    }
+    
+    private func fetchAppleMusicState() async {
+        guard SettingsManager.shared.useAppleMusic else { return }
+        let script = """
+        tell application "Music"
+            if running then
+                try
+                    set pState to player state is playing
+                    set tName to name of current track
+                    set tArtist to artist of current track
+                    set tPos to player position
+                    set tDur to duration of current track
+                    return {pState, tName, tArtist, tPos, tDur}
+                on error
+                    return {}
+                end try
+            end if
+        end tell
+        """
+        guard let d = await AS.run(script), d.numberOfItems >= 5 else { return }
+        let playing = d.atIndex(1)?.booleanValue ?? false
+        let tName   = d.atIndex(2)?.stringValue ?? ""
+        let tArtist = d.atIndex(3)?.stringValue ?? ""
+        let pos     = d.atIndex(4)?.doubleValue ?? 0
+        let dur     = d.atIndex(5)?.doubleValue ?? 0
+        
+        guard !tName.isEmpty else { return }
+        if activeSource == "Spotify" && isPlaying && !playing { return }
+        
+        let changed = self.title != tName || self.artist != tArtist
+        await MainActor.run {
+            self.title = tName
+            self.artist = tArtist
+            self.isPlaying = playing
+            self.isRunning = true
+            self.activeSource = "Music"
+            self.totalDuration = dur
+            self.lastElapsedTime = pos
+            self.lastTimestamp = Date()
+            self.updateProgress(pos: pos, dur: dur)
+            
+            if changed {
+                self.artworkImage = nil
+                self.lyrics = ""
+                self.syncedLyrics = []
+                self.currentLyricIndex = 0
+            }
+        }
+        
+        if changed {
+            let trackID = "\(tName)-\(tArtist)"
+            self.lastTrackID = trackID
+            fetchArtworkFromiTunes(title: tName, artist: tArtist)
+            fetchLyrics(title: tName, artist: tArtist)
         }
     }
 
