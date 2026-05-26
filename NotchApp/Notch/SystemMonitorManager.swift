@@ -162,19 +162,29 @@ class SystemMonitorManager: ObservableObject {
         var ptr = ifaddr
         while ptr != nil {
             let interface = ptr!.pointee
-            let addr = interface.ifa_addr.pointee
             
-            if addr.sa_family == UInt8(AF_LINK) {
-                let data = interface.ifa_data.assumingMemoryBound(to: if_data.self)
-                totalIn += UInt64(data.pointee.ifi_ibytes)
-                totalOut += UInt64(data.pointee.ifi_obytes)
+            if let addrPtr = interface.ifa_addr {
+                let addr = addrPtr.pointee
+                
+                if addr.sa_family == UInt8(AF_LINK) {
+                    let name = String(cString: interface.ifa_name)
+                    // Ignore local loopback, AWDL, and bridge interfaces
+                    if !name.hasPrefix("lo") && !name.hasPrefix("awdl") && !name.hasPrefix("bridge") {
+                        if let dataPtr = interface.ifa_data {
+                            let data = dataPtr.assumingMemoryBound(to: if_data.self)
+                            totalIn += UInt64(data.pointee.ifi_ibytes)
+                            totalOut += UInt64(data.pointee.ifi_obytes)
+                        }
+                    }
+                }
             }
             ptr = interface.ifa_next
         }
         
         if lastBytesIn > 0 {
-            let diffIn = totalIn - lastBytesIn
-            let diffOut = totalOut - lastBytesOut
+            // Guard against overflow/wrap-around
+            let diffIn = totalIn >= lastBytesIn ? totalIn - lastBytesIn : 0
+            let diffOut = totalOut >= lastBytesOut ? totalOut - lastBytesOut : 0
             downloadSpeed = formatSpeed(diffIn / 2) // 2 sec interval
             uploadSpeed = formatSpeed(diffOut / 2)
         }
