@@ -24,7 +24,17 @@ class TimerManager: ObservableObject {
         SettingsManager.shared.objectWillChange
             .sink { [weak self] _ in
                 DispatchQueue.main.async {
-                    if !SettingsManager.shared.showClosedNotchTimerIndicator && NotchState.shared.stickyType == .timer {
+                    if SettingsManager.shared.showClosedNotchTimerIndicator {
+                        if self?.isRunning == true || self?.isStopwatchRunning == true {
+                            NotchState.shared.stickyType = .timer
+                            if !NotchState.shared.isSticky {
+                                withAnimation(.spring()) {
+                                    NotchState.shared.isSticky = true
+                                    NotchState.shared.isExpanded = false
+                                }
+                            }
+                        }
+                    } else if NotchState.shared.stickyType == .timer {
                         withAnimation(.spring()) {
                             NotchState.shared.isSticky = false
                         }
