@@ -922,56 +922,60 @@ struct SystemModuleView: View {
     var body: some View {
         VStack(spacing: 12) {
             // Top Row: Core Gauges
-            HStack(spacing: 30) {
-                if settings.showCPU { CircularGauge(label: "CPU", value: systemManager.cpuUsage, color: .green) }
-                if settings.showRAM { CircularGauge(label: "RAM", value: systemManager.ramUsage, color: .blue) }
-                if settings.showGPU { CircularGauge(label: "GPU", value: systemManager.gpuUsage, color: .orange) }
-                if settings.showDisk { CircularGauge(label: "DISK", value: systemManager.diskUsage, color: .purple) }
+            if settings.showCPU || settings.showRAM || settings.showGPU || settings.showDisk {
+                HStack(spacing: 30) {
+                    if settings.showCPU { CircularGauge(label: "CPU", value: systemManager.cpuUsage, color: .green) }
+                    if settings.showRAM { CircularGauge(label: "RAM", value: systemManager.ramUsage, color: .blue) }
+                    if settings.showGPU { CircularGauge(label: "GPU", value: systemManager.gpuUsage, color: .orange) }
+                    if settings.showDisk { CircularGauge(label: "DISK", value: systemManager.diskUsage, color: .purple) }
+                }
             }
             
             // Bottom Row: Status Strip
-            HStack(spacing: 30) {
-                if settings.showNetwork {
-                    HStack(spacing: 12) {
-                        HStack(spacing: 4) {
-                            Image(systemName: "arrow.down")
-                                .font(.system(size: 8, weight: .bold))
-                                .foregroundColor(.cyan)
-                            Text(systemManager.downloadSpeed)
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+            if settings.showNetwork || settings.showThermal || settings.showBattery {
+                HStack(spacing: 30) {
+                    if settings.showNetwork {
+                        HStack(spacing: 12) {
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.down")
+                                    .font(.system(size: 8, weight: .bold))
+                                    .foregroundColor(.cyan)
+                                Text(systemManager.downloadSpeed)
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            }
+                            HStack(spacing: 4) {
+                                Image(systemName: "arrow.up")
+                                    .font(.system(size: 8, weight: .bold))
+                                    .foregroundColor(.orange)
+                                Text(systemManager.uploadSpeed)
+                                    .font(.system(size: 11, weight: .bold, design: .monospaced))
+                            }
                         }
-                        HStack(spacing: 4) {
-                            Image(systemName: "arrow.up")
-                                .font(.system(size: 8, weight: .bold))
-                                .foregroundColor(.orange)
-                            Text(systemManager.uploadSpeed)
-                                .font(.system(size: 11, weight: .bold, design: .monospaced))
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 6)
+                        .background(Capsule().fill(Color.white.opacity(0.05)))
+                    }
+                    
+                    if settings.showThermal {
+                        HStack(spacing: 6) {
+                            Image(systemName: "thermometer.medium")
+                                .foregroundColor(thermalColor(systemManager.thermalPressure))
+                            Text(systemManager.thermalPressure.uppercased())
+                                .font(.system(size: 10, weight: .black))
                         }
                     }
-                    .padding(.horizontal, 12)
-                    .padding(.vertical, 6)
-                    .background(Capsule().fill(Color.white.opacity(0.05)))
-                }
-                
-                if settings.showThermal {
-                    HStack(spacing: 6) {
-                        Image(systemName: "thermometer.medium")
-                            .foregroundColor(thermalColor(systemManager.thermalPressure))
-                        Text(systemManager.thermalPressure.uppercased())
-                            .font(.system(size: 10, weight: .black))
+                    
+                    if settings.showBattery && systemManager.batteryCycles > 0 {
+                        HStack(spacing: 6) {
+                            Image(systemName: "battery.100.bolt")
+                                .foregroundColor(.green)
+                            Text("\(systemManager.batteryCycles) CYCLES")
+                                .font(.system(size: 10, weight: .black))
+                        }
                     }
                 }
-                
-                if settings.showBattery && systemManager.batteryCycles > 0 {
-                    HStack(spacing: 6) {
-                        Image(systemName: "battery.100.bolt")
-                            .foregroundColor(.green)
-                        Text("\(systemManager.batteryCycles) CYCLES")
-                            .font(.system(size: 10, weight: .black))
-                    }
-                }
+                .foregroundColor(.white.opacity(0.6))
             }
-            .foregroundColor(.white.opacity(0.6))
         }
         .padding(.top, 15)
     }
