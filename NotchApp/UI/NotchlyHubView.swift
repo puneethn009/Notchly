@@ -1,6 +1,7 @@
 import SwiftUI
 import SwiftData
 import UniformTypeIdentifiers
+import Sparkle
 
 struct NotchlyHubView: View {
     @Environment(\.modelContext) private var modelContext
@@ -120,6 +121,37 @@ struct NotchlyHubView: View {
                 .padding(.horizontal, 12)
                 
                 Spacer()
+                
+                // Bottom Update Button
+                Button(action: {
+                    if let appDelegate = AppDelegate.shared {
+                        appDelegate.updaterController.checkForUpdates(nil)
+                    }
+                }) {
+                    HStack(spacing: 10) {
+                        Image(systemName: "arrow.triangle.2.circlepath")
+                            .font(.system(size: 11, weight: .bold))
+                        
+                        Text("Check for Updates")
+                            .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        
+                        Spacer()
+                    }
+                    .padding(.horizontal, 16)
+                    .padding(.vertical, 12)
+                    .foregroundColor(Color.white.opacity(0.4))
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .contentShape(Rectangle())
+                }
+                .buttonStyle(.plain)
+                .onHover { isHovered in
+                    if isHovered {
+                        NSCursor.pointingHand.push()
+                    } else {
+                        NSCursor.pop()
+                    }
+                }
+                
             }
             .frame(width: 220)
             .background(Color.black.opacity(0.18))
