@@ -460,7 +460,7 @@ struct DockSettingsPage: View {
                     }
                     .padding(.horizontal, 40)
                     
-                    VStack(spacing: 0) {
+                    List {
                         ForEach(settings.dockApps.indices, id: \.self) { index in
                             let app = settings.dockApps[index]
                             HStack(spacing: 16) {
