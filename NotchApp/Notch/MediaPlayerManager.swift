@@ -103,6 +103,7 @@ class MediaPlayerManager: ObservableObject {
                         self?.positionStr = "0:00"
                         self?.durationStr = "0:00"
                         self?.totalDuration = 0
+                        self?.lastTrackID = ""
                     }
                     
                     if !SettingsManager.shared.useAppleMusic && self?.activeSource == "Music" {
