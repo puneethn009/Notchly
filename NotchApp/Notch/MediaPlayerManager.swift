@@ -115,6 +115,8 @@ class MediaPlayerManager: ObservableObject {
                     } else if SettingsManager.shared.useSpotify {
                         Task { await self?.fetchSpotifyState() }
                     }
+                    
+                    self?.updateStickyState()
                 }
             }
             .store(in: &cancellables)
@@ -643,7 +645,7 @@ class MediaPlayerManager: ObservableObject {
 
     private func updateStickyState() {
         DispatchQueue.main.async {
-            if self.isPlaying {
+            if self.isPlaying && SettingsManager.shared.showClosedNotchMusicIndicator {
                 // If a timer is already running, don't override it (timer takes priority)
                 if !TimerManager.shared.isRunning && !TimerManager.shared.isStopwatchRunning {
                     NotchState.shared.stickyType = .media
