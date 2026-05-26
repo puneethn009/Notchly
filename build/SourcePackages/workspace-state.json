@@ -1,0 +1,100 @@
+{
+  "object" : {
+    "artifacts" : [
+      {
+        "kind" : {
+          "xcframework" : {
+
+          }
+        },
+        "packageRef" : {
+          "identity" : "sparkle",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/sparkle-project/Sparkle.git",
+          "name" : "Sparkle"
+        },
+        "path" : "/Users/puneeth/Documents/NotchApp/build/SourcePackages/artifacts/sparkle/Sparkle/Sparkle.xcframework",
+        "source" : {
+          "checksum" : "9fec2b888e6e2940b1bfbd5d3d010b9f67076b52170923549095cbb74132403b",
+          "type" : "remote",
+          "url" : "https://github.com/sparkle-project/Sparkle/releases/download/2.9.1/Sparkle-for-Swift-Package-Manager.zip"
+        },
+        "targetName" : "Sparkle"
+      }
+    ],
+    "dependencies" : [
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "defaults",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/sindresorhus/Defaults.git",
+          "name" : "Defaults"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "38925e3cfacf3fb89a81a35b1cd44fd5a5b7e0fa",
+            "version" : "8.2.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "Defaults"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "keyboardshortcuts",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/sindresorhus/KeyboardShortcuts.git",
+          "name" : "KeyboardShortcuts"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "1aef85578fdd4f9eaeeb8d53b7b4fc31bf08fe27",
+            "version" : "2.4.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "KeyboardShortcuts"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "launchatlogin-modern",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/sindresorhus/LaunchAtLogin-Modern.git",
+          "name" : "LaunchAtLogin-Modern"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "a04ec1c363be3627734f6dad757d82f5d4fa8fcc",
+            "version" : "1.1.0"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "LaunchAtLogin-Modern"
+      },
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "sparkle",
+          "kind" : "remoteSourceControl",
+          "location" : "https://github.com/sparkle-project/Sparkle.git",
+          "name" : "Sparkle"
+        },
+        "state" : {
+          "checkoutState" : {
+            "revision" : "066e75a8b3e99962685d6a90cdd5293ebffd9261",
+            "version" : "2.9.1"
+          },
+          "name" : "sourceControlCheckout"
+        },
+        "subpath" : "Sparkle"
+      }
+    ],
+    "prebuilts" : [
+
+    ]
+  },
+  "version" : 7
+}

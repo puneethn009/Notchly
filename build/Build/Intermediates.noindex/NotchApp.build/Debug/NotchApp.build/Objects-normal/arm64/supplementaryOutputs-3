@@ -1,0 +1,30 @@
+{
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Games/NotchSnakeView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchSnakeView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchSnakeView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchSnakeView.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchSnakeView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchSnakeView.swiftdeps"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/CGSSpaceOverlay.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CGSSpaceOverlay.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CGSSpaceOverlay.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CGSSpaceOverlay.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CGSSpaceOverlay.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CGSSpaceOverlay.swiftdeps"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/CalendarManager.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CalendarManager.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CalendarManager.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CalendarManager.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CalendarManager.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CalendarManager.swiftdeps"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/LauncherManager.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/LauncherManager.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/LauncherManager.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/LauncherManager.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/LauncherManager.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/LauncherManager.swiftdeps"
+  }
+}

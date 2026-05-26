@@ -1,0 +1,176 @@
+{
+  "source": "/Users/puneeth/Documents/NotchApp/NotchApp/Games/NotchBreakoutView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 395
+        }
+      },
+      {
+        "comment": "",
+        "key": "LVL %lld",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 400
+        }
+      },
+      {
+        "comment": "",
+        "key": "BEST: %lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 409
+        }
+      },
+      {
+        "comment": "",
+        "key": "SCORE %lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 589
+        }
+      },
+      {
+        "comment": "",
+        "key": "BEST %lld",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 596
+        }
+      },
+      {
+        "comment": "",
+        "key": "LVL %lld",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 610
+        }
+      },
+      {
+        "comment": "",
+        "key": "NOTCH BREAKER",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 648
+        }
+      },
+      {
+        "comment": "",
+        "key": "PRESS SPACE TO START",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 662
+        }
+      },
+      {
+        "comment": "",
+        "key": "← → MOVE PADDLE   SPACE PAUSE",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 667
+        }
+      },
+      {
+        "comment": "",
+        "key": "PAUSED",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 682
+        }
+      },
+      {
+        "comment": "",
+        "key": "CLICK TO RESUME",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 685
+        }
+      },
+      {
+        "comment": "",
+        "key": "LEVEL %lld",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 700
+        }
+      },
+      {
+        "comment": "",
+        "key": "GET READY",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 714
+        }
+      },
+      {
+        "comment": "",
+        "key": "GAME OVER",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 735
+        }
+      },
+      {
+        "comment": "",
+        "key": "CLICK TO RETRY",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 767
+        }
+      },
+      {
+        "comment": "",
+        "key": "NEW BEST!",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 750
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 742
+        }
+      },
+      {
+        "comment": "",
+        "key": "SCORE",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 745
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 757
+        }
+      },
+      {
+        "comment": "",
+        "key": "BEST",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 760
+        }
+      },
+      {
+        "comment": "",
+        "key": "GET READY",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 792
+        }
+      }
+    ]
+  },
+  "version": 1
+}

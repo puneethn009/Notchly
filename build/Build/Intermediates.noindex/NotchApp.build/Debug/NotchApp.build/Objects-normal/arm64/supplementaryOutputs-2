@@ -1,0 +1,30 @@
+{
+  "/Users/puneeth/Documents/NotchApp/NotchApp/App/PersistenceController.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PersistenceController.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PersistenceController.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PersistenceController.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PersistenceController.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PersistenceController.swiftdeps"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/App/SettingsManager.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsManager.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsManager.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsManager.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsManager.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsManager.swiftdeps"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Games/NotchBreakoutView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchBreakoutView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchBreakoutView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchBreakoutView.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchBreakoutView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchBreakoutView.swiftdeps"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Games/NotchFlappyView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchFlappyView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchFlappyView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchFlappyView.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchFlappyView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchFlappyView.swiftdeps"
+  }
+}

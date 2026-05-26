@@ -710,7 +710,12 @@ struct PermissionsSettingsPage: View {
                         subtitle: "Enables global screenshot hotkeys (⌥⇧3 / ⌥⇧4)",
                         icon: "figure.arms.open",
                         granted: accessibilityGranted,
-                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility"
+                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
+                        onEnable: {
+                            // This prompt option is what adds the app to the Accessibility list in System Settings!
+                            let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
+                            AXIsProcessTrustedWithOptions(options as CFDictionary)
+                        }
                     )
                     
                     PermissionRow(
@@ -719,7 +724,11 @@ struct PermissionsSettingsPage: View {
                         icon: "camera.viewfinder",
                         granted: screenRecordingGranted,
                         settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
-                        isLast: true
+                        isLast: true,
+                        onEnable: {
+                            // This is what adds the app to the Screen Recording list in System Settings!
+                            CGRequestScreenCaptureAccess()
+                        }
                     )
                 }
                 
@@ -770,6 +779,7 @@ struct PermissionRow: View {
     let granted: Bool
     let settingsURL: String
     var isLast: Bool = false
+    var onEnable: (() -> Void)? = nil
 
     var body: some View {
         SettingsActionRow(
@@ -779,6 +789,10 @@ struct PermissionRow: View {
             buttonTitle: granted ? nil : "Enable",
             buttonIcon: nil,
             action: {
+                // Trigger the system prompt FIRST so the app gets added to the list
+                onEnable?()
+                
+                // Then open the settings page so the user can flip the toggle
                 if let url = URL(string: settingsURL) {
                     NSWorkspace.shared.open(url)
                 }

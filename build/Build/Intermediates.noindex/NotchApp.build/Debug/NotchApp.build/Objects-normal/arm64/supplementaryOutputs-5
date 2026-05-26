@@ -1,0 +1,30 @@
+{
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/NSImage+Color.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NSImage+Color.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NSImage+Color.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NSImage+Color.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NSImage+Color.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NSImage+Color.swiftdeps"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/NotchWindowController.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchWindowController.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchWindowController.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchWindowController.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchWindowController.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchWindowController.swiftdeps"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/PreviewWindowController.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PreviewWindowController.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PreviewWindowController.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PreviewWindowController.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PreviewWindowController.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PreviewWindowController.swiftdeps"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/SystemMonitorManager.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SystemMonitorManager.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SystemMonitorManager.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SystemMonitorManager.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SystemMonitorManager.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SystemMonitorManager.swiftdeps"
+  }
+}

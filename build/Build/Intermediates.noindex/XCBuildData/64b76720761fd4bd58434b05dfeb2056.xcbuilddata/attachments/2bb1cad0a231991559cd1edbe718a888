@@ -1,0 +1,369 @@
+{
+  "" : {
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchApp-primary.dia",
+    "emit-module-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchApp-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchApp-primary-emit-module.dia",
+    "pch" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchApp-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchApp-primary.swiftdeps"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/App/AppDelegate.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppDelegate.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppDelegate.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppDelegate.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppDelegate.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppDelegate.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppDelegate.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppDelegate.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppDelegate~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/App/AppState.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppState.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppState.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppState.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppState.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppState.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppState.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppState.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/AppState~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/App/NotchAppApp.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchAppApp.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchAppApp.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchAppApp.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchAppApp.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchAppApp.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchAppApp.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchAppApp.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchAppApp~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/App/NotchState.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchState.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchState.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchState.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchState.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchState.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchState.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchState.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchState~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/App/PersistenceController.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PersistenceController.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PersistenceController.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PersistenceController.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PersistenceController.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PersistenceController.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PersistenceController.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PersistenceController.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PersistenceController~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/App/SettingsManager.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsManager.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsManager.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsManager.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsManager.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsManager.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsManager.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsManager.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsManager~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Games/NotchBreakoutView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchBreakoutView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchBreakoutView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchBreakoutView.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchBreakoutView.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchBreakoutView.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchBreakoutView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchBreakoutView.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchBreakoutView~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Games/NotchFlappyView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchFlappyView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchFlappyView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchFlappyView.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchFlappyView.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchFlappyView.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchFlappyView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchFlappyView.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchFlappyView~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Games/NotchSnakeView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchSnakeView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchSnakeView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchSnakeView.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchSnakeView.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchSnakeView.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchSnakeView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchSnakeView.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchSnakeView~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/CGSSpaceOverlay.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CGSSpaceOverlay.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CGSSpaceOverlay.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CGSSpaceOverlay.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CGSSpaceOverlay.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CGSSpaceOverlay.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CGSSpaceOverlay.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CGSSpaceOverlay.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CGSSpaceOverlay~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/CalendarManager.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CalendarManager.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CalendarManager.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CalendarManager.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CalendarManager.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CalendarManager.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CalendarManager.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CalendarManager.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CalendarManager~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/LauncherManager.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/LauncherManager.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/LauncherManager.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/LauncherManager.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/LauncherManager.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/LauncherManager.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/LauncherManager.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/LauncherManager.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/LauncherManager~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/MediaPlayerManager.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/MediaPlayerManager.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/MediaPlayerManager.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/MediaPlayerManager.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/MediaPlayerManager.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/MediaPlayerManager.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/MediaPlayerManager.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/MediaPlayerManager.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/MediaPlayerManager~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/NSImage+Color.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NSImage+Color.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NSImage+Color.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NSImage+Color.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NSImage+Color.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NSImage+Color.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NSImage+Color.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NSImage+Color.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NSImage+Color~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/NotchExpandedView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchExpandedView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchExpandedView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchExpandedView.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchExpandedView.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchExpandedView.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchExpandedView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchExpandedView.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchExpandedView~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/NotchOverlayView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchOverlayView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchOverlayView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchOverlayView.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchOverlayView.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchOverlayView.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchOverlayView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchOverlayView.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchOverlayView~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/NotchShape.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchShape.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchShape.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchShape.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchShape.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchShape.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchShape.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchShape.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchShape~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/NotchWindowController.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchWindowController.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchWindowController.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchWindowController.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchWindowController.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchWindowController.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchWindowController.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchWindowController.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchWindowController~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/PreviewWindowController.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PreviewWindowController.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PreviewWindowController.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PreviewWindowController.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PreviewWindowController.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PreviewWindowController.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PreviewWindowController.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PreviewWindowController.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/PreviewWindowController~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/SystemMonitorManager.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SystemMonitorManager.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SystemMonitorManager.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SystemMonitorManager.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SystemMonitorManager.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SystemMonitorManager.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SystemMonitorManager.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SystemMonitorManager.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SystemMonitorManager~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/TimerManager.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/TimerManager.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/TimerManager.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/TimerManager.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/TimerManager.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/TimerManager.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/TimerManager.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/TimerManager.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/TimerManager~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Screenshots/CaptureManager.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CaptureManager.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CaptureManager.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CaptureManager.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CaptureManager.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CaptureManager.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CaptureManager.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CaptureManager.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/CaptureManager~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Screenshots/ScreenshotActionBar.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotActionBar.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotActionBar.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotActionBar.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotActionBar.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotActionBar.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotActionBar.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotActionBar.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotActionBar~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Screenshots/ScreenshotAnalyzer.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotAnalyzer.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotAnalyzer.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotAnalyzer.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotAnalyzer.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotAnalyzer.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotAnalyzer.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotAnalyzer.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotAnalyzer~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Screenshots/ScreenshotEditorWindow.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotEditorWindow.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotEditorWindow.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotEditorWindow.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotEditorWindow.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotEditorWindow.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotEditorWindow.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotEditorWindow.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotEditorWindow~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Screenshots/ScreenshotFloatingPreview.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotFloatingPreview.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotFloatingPreview.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotFloatingPreview.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotFloatingPreview.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotFloatingPreview.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotFloatingPreview.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotFloatingPreview.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotFloatingPreview~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Screenshots/ScreenshotGalleryView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotGalleryView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotGalleryView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotGalleryView.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotGalleryView.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotGalleryView.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotGalleryView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotGalleryView.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotGalleryView~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Screenshots/ScreenshotItem.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotItem.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotItem.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotItem.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotItem.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotItem.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotItem.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotItem.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotItem~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Screenshots/ScreenshotMonitor.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotMonitor.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotMonitor.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotMonitor.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotMonitor.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotMonitor.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotMonitor.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotMonitor.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotMonitor~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Screenshots/ScreenshotNamingView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotNamingView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotNamingView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotNamingView.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotNamingView.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotNamingView.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotNamingView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotNamingView.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotNamingView~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Screenshots/ScreenshotPreviewPopup.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotPreviewPopup.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotPreviewPopup.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotPreviewPopup.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotPreviewPopup.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotPreviewPopup.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotPreviewPopup.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotPreviewPopup.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/ScreenshotPreviewPopup~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Settings/SettingsView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsView.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsView.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsView.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsView.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/SettingsView~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/UI/NotchlyHubView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubView.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubView.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubView.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubView.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubView~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/UI/NotchlyHubWindowController.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubWindowController.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubWindowController.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubWindowController.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubWindowController.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubWindowController.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubWindowController.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubWindowController.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchlyHubWindowController~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/UI/VisualEffectView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/VisualEffectView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/VisualEffectView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/VisualEffectView.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/VisualEffectView.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/VisualEffectView.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/VisualEffectView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/VisualEffectView.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/VisualEffectView~partial.swiftmodule"
+  },
+  "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/DerivedSources/GeneratedAssetSymbols.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/GeneratedAssetSymbols.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/GeneratedAssetSymbols.dia",
+    "index-unit-output-path" : "/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "llvm-bc" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/GeneratedAssetSymbols.bc",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/GeneratedAssetSymbols.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/GeneratedAssetSymbols.swiftdeps",
+    "swiftmodule" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/GeneratedAssetSymbols~partial.swiftmodule"
+  }
+}

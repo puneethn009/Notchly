@@ -1,0 +1,30 @@
+{
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/MediaPlayerManager.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/MediaPlayerManager.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/MediaPlayerManager.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/MediaPlayerManager.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/MediaPlayerManager.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/MediaPlayerManager.swiftdeps"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/NotchExpandedView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchExpandedView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchExpandedView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchExpandedView.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchExpandedView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchExpandedView.swiftdeps"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/NotchOverlayView.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchOverlayView.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchOverlayView.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchOverlayView.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchOverlayView.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchOverlayView.swiftdeps"
+  },
+  "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/NotchShape.swift" : {
+    "const-values" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchShape.swiftconstvalues",
+    "dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchShape.d",
+    "diagnostics" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchShape.dia",
+    "object" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchShape.o",
+    "swift-dependencies" : "/Users/puneeth/Documents/NotchApp/build/Build/Intermediates.noindex/NotchApp.build/Debug/NotchApp.build/Objects-normal/arm64/NotchShape.swiftdeps"
+  }
+}

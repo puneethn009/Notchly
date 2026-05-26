@@ -1,0 +1,64 @@
+{
+  "source": "/Users/puneeth/Documents/NotchApp/NotchApp/Games/NotchFlappyView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "FLAPPY BIRD",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 192
+        }
+      },
+      {
+        "comment": "",
+        "key": "PRESS SPACE TO FLAP",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 196
+        }
+      },
+      {
+        "comment": "",
+        "key": "GAME OVER",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 204
+        }
+      },
+      {
+        "comment": "",
+        "key": "Score: %lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 208
+        }
+      },
+      {
+        "comment": "",
+        "key": "PRESS SPACE TO RESTART",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 211
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 220
+        }
+      },
+      {
+        "comment": "",
+        "key": "BEST: %lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 224
+        }
+      }
+    ]
+  },
+  "version": 1
+}

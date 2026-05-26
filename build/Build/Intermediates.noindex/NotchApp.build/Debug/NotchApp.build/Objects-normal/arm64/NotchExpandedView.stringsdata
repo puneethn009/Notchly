@@ -1,0 +1,264 @@
+{
+  "source": "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/NotchExpandedView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "%lld%%",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 168
+        }
+      },
+      {
+        "comment": "",
+        "key": "LYRICS",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 464
+        }
+      },
+      {
+        "comment": "",
+        "key": "Fetching Lyrics...",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 514
+        }
+      },
+      {
+        "comment": "",
+        "key": "Ready to Play",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 554
+        }
+      },
+      {
+        "comment": "",
+        "key": "Pick a source to begin",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 566
+        }
+      },
+      {
+        "comment": "",
+        "key": "TIMER",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 657
+        }
+      },
+      {
+        "comment": "",
+        "key": "STOPWATCH",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 665
+        }
+      },
+      {
+        "comment": "",
+        "key": "TIME'S UP!",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 705
+        }
+      },
+      {
+        "comment": "",
+        "key": "STOP",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 710
+        }
+      },
+      {
+        "comment": "",
+        "key": "Stop Timer",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 753
+        }
+      },
+      {
+        "comment": "",
+        "key": "Select a Timer",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 767
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld mins",
+        "location": {
+          "startingColumn": 50,
+          "startingLine": 787
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add Timer",
+        "location": {
+          "startingColumn": 46,
+          "startingLine": 813
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lldm",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 907
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld CYCLES",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 972
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld%%",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1014
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld%%",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 1063
+        }
+      },
+      {
+        "comment": "",
+        "key": "Access Required",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1122
+        }
+      },
+      {
+        "comment": "",
+        "key": "Grant Access",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 1125
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reminders Access Required",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1142
+        }
+      },
+      {
+        "comment": "",
+        "key": "Grant Reminders Access",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 1145
+        }
+      },
+      {
+        "comment": "",
+        "key": "Access Denied",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1160
+        }
+      },
+      {
+        "comment": "",
+        "key": "Please enable access in Settings",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1162
+        }
+      },
+      {
+        "comment": "",
+        "key": "Open System Settings",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 1171
+        }
+      },
+      {
+        "comment": "",
+        "key": "AGENDA",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 1185
+        }
+      },
+      {
+        "comment": "",
+        "key": "Clear Agenda",
+        "location": {
+          "startingColumn": 54,
+          "startingLine": 1236
+        }
+      },
+      {
+        "comment": "",
+        "key": "All-day",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 1329
+        }
+      },
+      {
+        "comment": "",
+        "key": "•",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 1339
+        }
+      },
+      {
+        "comment": "",
+        "key": "Dock",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 1416
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notch Breaker",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1616
+        }
+      },
+      {
+        "comment": "",
+        "key": "Flappy Bird",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1642
+        }
+      },
+      {
+        "comment": "",
+        "key": "Snake",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1668
+        }
+      }
+    ]
+  },
+  "version": 1
+}

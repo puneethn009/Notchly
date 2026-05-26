@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>NSAppleMusicUsageDescription</key>
+	<string>Notchly needs access to your music library to show now playing info.</string>
+	<key>NSAppleEventsUsageDescription</key>
+	<string>Notchly uses Apple Events to get playback info from Spotify.</string>
+	<key>NSCalendarsFullAccessUsageDescription</key>
+	<string>Notchly needs full access to your calendar to show events in the notch.</string>
+	<key>NSCalendarsUsageDescription</key>
+	<string>Notchly needs access to your calendar to show events in the notch.</string>
+	<key>NSDesktopFolderUsageDescription</key>
+	<string>Notchly needs desktop access to monitor and organize your screenshots.</string>
+	<key>NSDocumentsFolderUsageDescription</key>
+	<string>Notchly needs documents access to store and manage your screenshot gallery.</string>
+	<key>NSRemindersFullAccessUsageDescription</key>
+	<string>Notchly needs full access to your reminders to show tasks in the notch.</string>
+	<key>NSRemindersUsageDescription</key>
+	<string>Notchly needs access to your reminders to show tasks in the notch.</string>
+	<key>NSScreenCaptureUsageDescription</key>
+	<string>Notchly needs screen recording access to capture screenshots.</string>
+</dict>
+</plist>

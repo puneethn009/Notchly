@@ -1,0 +1,136 @@
+{
+  "source": "/Users/puneeth/Documents/NotchApp/NotchApp/UI/NotchlyHubView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Notchly",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 64
+        }
+      },
+      {
+        "comment": "",
+        "key": "STUDIO HUB",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 67
+        }
+      },
+      {
+        "comment": "",
+        "key": "Notch Modules",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 226
+        }
+      },
+      {
+        "comment": "",
+        "key": "Customize exactly which sections are active and interactive inside your screen's notch.",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 230
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 238
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Order",
+        "location": {
+          "startingColumn": 51,
+          "startingLine": 238
+        }
+      },
+      {
+        "comment": "",
+        "key": "Mock Dynamic Live Notch Status",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 296
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 490
+        }
+      },
+      {
+        "comment": "",
+        "key": "Screenshot Studio",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 551
+        }
+      },
+      {
+        "comment": "",
+        "key": "View and select screenshots to edit in the pixel-perfect canvas.",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 555
+        }
+      },
+      {
+        "comment": "",
+        "key": "Search file name or OCR text...",
+        "location": {
+          "startingColumn": 31,
+          "startingLine": 567
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Screenshots Saved",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 592
+        }
+      },
+      {
+        "comment": "",
+        "key": "No Matches Found",
+        "location": {
+          "startingColumn": 72,
+          "startingLine": 592
+        }
+      },
+      {
+        "comment": "",
+        "key": "Captured screenshots will show up here automatically.",
+        "location": {
+          "startingColumn": 47,
+          "startingLine": 596
+        }
+      },
+      {
+        "comment": "",
+        "key": "Try clearing your query or typing something else.",
+        "location": {
+          "startingColumn": 105,
+          "startingLine": 596
+        }
+      },
+      {
+        "comment": "",
+        "key": "Edit Image",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 689
+        }
+      }
+    ]
+  },
+  "version": 1
+}

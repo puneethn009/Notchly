@@ -1,0 +1,80 @@
+{
+  "source": "/Users/puneeth/Documents/NotchApp/NotchApp/Games/NotchSnakeView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "SNAKE",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 218
+        }
+      },
+      {
+        "comment": "",
+        "key": "PRESS SPACE TO PLAY",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 222
+        }
+      },
+      {
+        "comment": "",
+        "key": "GAME OVER",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 230
+        }
+      },
+      {
+        "comment": "",
+        "key": "Score: %lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 234
+        }
+      },
+      {
+        "comment": "",
+        "key": "PRESS SPACE TO RESTART",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 237
+        }
+      },
+      {
+        "comment": "",
+        "key": "PAUSED",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 245
+        }
+      },
+      {
+        "comment": "",
+        "key": "PRESS SPACE TO RESUME",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 248
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 257
+        }
+      },
+      {
+        "comment": "",
+        "key": "BEST: %lld",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 261
+        }
+      }
+    ]
+  },
+  "version": 1
+}

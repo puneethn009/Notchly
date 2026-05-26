@@ -1,0 +1,16 @@
+{
+  "source": "/Users/puneeth/Documents/NotchApp/NotchApp/Notch/NotchOverlayView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "New Screenshot Captured",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 77
+        }
+      }
+    ]
+  },
+  "version": 1
+}

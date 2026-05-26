@@ -1,0 +1,320 @@
+{
+  "source": "/Users/puneeth/Documents/NotchApp/NotchApp/Screenshots/ScreenshotEditorWindow.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "Save with Background",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 899
+        }
+      },
+      {
+        "comment": "",
+        "key": "Save Screenshot Only",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 904
+        }
+      },
+      {
+        "comment": "",
+        "key": "Copy to Clipboard",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 910
+        }
+      },
+      {
+        "comment": "",
+        "key": "SAVE",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 920
+        }
+      },
+      {
+        "comment": "",
+        "key": "Use the scissors tool to capture specific areas.",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 966
+        }
+      },
+      {
+        "comment": "",
+        "key": "EXTRACTED SNIPPETS",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 959
+        }
+      },
+      {
+        "comment": "",
+        "key": "TEXT INSIGHTS",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 1007
+        }
+      },
+      {
+        "comment": "",
+        "key": "Extracted Text",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 1014
+        }
+      },
+      {
+        "comment": "",
+        "key": "Type something...",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 1697
+        }
+      },
+      {
+        "comment": "",
+        "key": "SCREENSHOTS",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 2139
+        }
+      },
+      {
+        "comment": "",
+        "key": "TYPOGRAPHY",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 2260
+        }
+      },
+      {
+        "comment": "",
+        "key": "FONT FAMILY",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 2266
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 28,
+          "startingLine": 2267
+        }
+      },
+      {
+        "comment": "",
+        "key": "Helvetica",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 2268
+        }
+      },
+      {
+        "comment": "",
+        "key": "Inter",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 2269
+        }
+      },
+      {
+        "comment": "",
+        "key": "SF Pro",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 2270
+        }
+      },
+      {
+        "comment": "",
+        "key": "Georgia",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 2271
+        }
+      },
+      {
+        "comment": "",
+        "key": "Courier",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 2272
+        }
+      },
+      {
+        "comment": "",
+        "key": "Avenir",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 2273
+        }
+      },
+      {
+        "comment": "",
+        "key": "Times New Roman",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 2274
+        }
+      },
+      {
+        "comment": "",
+        "key": "SIZE",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 2282
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 2295
+        }
+      },
+      {
+        "comment": "",
+        "key": "BLUR SETTINGS",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 2330
+        }
+      },
+      {
+        "comment": "",
+        "key": "ERASER SETTINGS",
+        "location": {
+          "startingColumn": 80,
+          "startingLine": 2330
+        }
+      },
+      {
+        "comment": "",
+        "key": "STROKE SETTINGS",
+        "location": {
+          "startingColumn": 100,
+          "startingLine": 2330
+        }
+      },
+      {
+        "comment": "",
+        "key": "BLUR RADIUS",
+        "location": {
+          "startingColumn": 45,
+          "startingLine": 2336
+        }
+      },
+      {
+        "comment": "",
+        "key": "ERASER SIZE",
+        "location": {
+          "startingColumn": 82,
+          "startingLine": 2336
+        }
+      },
+      {
+        "comment": "",
+        "key": "WIDTH",
+        "location": {
+          "startingColumn": 98,
+          "startingLine": 2336
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 35,
+          "startingLine": 2340
+        }
+      },
+      {
+        "comment": "",
+        "key": "DASHED STROKE",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 2351
+        }
+      },
+      {
+        "comment": "",
+        "key": "SNIPPET MODE",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 2362
+        }
+      },
+      {
+        "comment": "",
+        "key": "ARROW STYLE",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 2385
+        }
+      },
+      {
+        "comment": "",
+        "key": "SHAPE TOOL",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 2408
+        }
+      },
+      {
+        "comment": "",
+        "key": "SOLID FILL",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 2445
+        }
+      },
+      {
+        "comment": "",
+        "key": "OBJECT RADIUS",
+        "location": {
+          "startingColumn": 58,
+          "startingLine": 2526
+        }
+      },
+      {
+        "comment": "",
+        "key": "SCREENSHOT RADIUS",
+        "location": {
+          "startingColumn": 76,
+          "startingLine": 2526
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 2534
+        }
+      },
+      {
+        "comment": "",
+        "key": "Reset",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 3011
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 3020
+        }
+      }
+    ]
+  },
+  "version": 1
+}

@@ -1,0 +1,64 @@
+{
+  "source": "/Users/puneeth/Documents/NotchApp/NotchApp/Screenshots/ScreenshotGalleryView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "EDIT MODE",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 30
+        }
+      },
+      {
+        "comment": "",
+        "key": "Done",
+        "location": {
+          "startingColumn": 32,
+          "startingLine": 51
+        }
+      },
+      {
+        "comment": "",
+        "key": "Search screenshots...",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 38
+        }
+      },
+      {
+        "comment": "",
+        "key": "No screenshots yet",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 69
+        }
+      },
+      {
+        "comment": "",
+        "key": "Manager",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 124
+        }
+      },
+      {
+        "comment": "",
+        "key": "View All",
+        "location": {
+          "startingColumn": 50,
+          "startingLine": 118
+        }
+      },
+      {
+        "comment": "",
+        "key": "EXTRACTED TEXT",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 304
+        }
+      }
+    ]
+  },
+  "version": 1
+}

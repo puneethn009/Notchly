@@ -1,0 +1,288 @@
+{
+  "source": "/Users/puneeth/Documents/NotchApp/NotchApp/Settings/SettingsView.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 24,
+          "startingLine": 78
+        }
+      },
+      {
+        "comment": "",
+        "key": "Select which apps Notchly should monitor for media playback.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 213
+        }
+      },
+      {
+        "comment": "",
+        "key": "Music Settings",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 170
+        }
+      },
+      {
+        "comment": "",
+        "key": "Timer Settings",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 235
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 36,
+          "startingLine": 268
+        }
+      },
+      {
+        "comment": "",
+        "key": "Glass",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 269
+        }
+      },
+      {
+        "comment": "",
+        "key": "Basso",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 270
+        }
+      },
+      {
+        "comment": "",
+        "key": "Bottle",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 271
+        }
+      },
+      {
+        "comment": "",
+        "key": "Frog",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 272
+        }
+      },
+      {
+        "comment": "",
+        "key": "Funk",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 273
+        }
+      },
+      {
+        "comment": "",
+        "key": "Hero",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 274
+        }
+      },
+      {
+        "comment": "",
+        "key": "Morse",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 275
+        }
+      },
+      {
+        "comment": "",
+        "key": "Ping",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 276
+        }
+      },
+      {
+        "comment": "",
+        "key": "Pop",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 277
+        }
+      },
+      {
+        "comment": "",
+        "key": "Purr",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 278
+        }
+      },
+      {
+        "comment": "",
+        "key": "Sosumi",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 279
+        }
+      },
+      {
+        "comment": "",
+        "key": "Submarine",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 280
+        }
+      },
+      {
+        "comment": "",
+        "key": "Tink",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 281
+        }
+      },
+      {
+        "comment": "",
+        "key": "MY TIMERS (%lld/5)",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 291
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lldm %llds",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 313
+        }
+      },
+      {
+        "comment": "",
+        "key": "Name (e.g. Tea)",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 356
+        }
+      },
+      {
+        "comment": "",
+        "key": "%lld min",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 367
+        }
+      },
+      {
+        "comment": "",
+        "key": "",
+        "location": {
+          "startingColumn": 41,
+          "startingLine": 365
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add",
+        "location": {
+          "startingColumn": 38,
+          "startingLine": 378
+        }
+      },
+      {
+        "comment": "",
+        "key": "Performance Settings",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 408
+        }
+      },
+      {
+        "comment": "",
+        "key": "Dock Settings",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 443
+        }
+      },
+      {
+        "comment": "",
+        "key": "DOCK APPS (Drag to reorder - %lld/9)",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 455
+        }
+      },
+      {
+        "comment": "",
+        "key": "No apps added to Dock",
+        "location": {
+          "startingColumn": 34,
+          "startingLine": 503
+        }
+      },
+      {
+        "comment": "",
+        "key": "ADD APPS",
+        "location": {
+          "startingColumn": 30,
+          "startingLine": 525
+        }
+      },
+      {
+        "comment": "",
+        "key": "Search...",
+        "location": {
+          "startingColumn": 39,
+          "startingLine": 535
+        }
+      },
+      {
+        "comment": "",
+        "key": "Add",
+        "location": {
+          "startingColumn": 42,
+          "startingLine": 564
+        }
+      },
+      {
+        "comment": "",
+        "key": "These shortcuts trigger Notchly's native screenshot capture tool.",
+        "location": {
+          "startingColumn": 22,
+          "startingLine": 673
+        }
+      },
+      {
+        "comment": "",
+        "key": "Screenshot Settings",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 637
+        }
+      },
+      {
+        "comment": "",
+        "key": "Permissions",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 698
+        }
+      },
+      {
+        "comment": "",
+        "key": "Granted",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 790
+        }
+      }
+    ]
+  },
+  "version": 1
+}

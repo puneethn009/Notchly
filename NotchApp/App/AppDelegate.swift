@@ -199,7 +199,11 @@ class AppDelegate: NSObject, NSApplicationDelegate {
     /// Check Accessibility permission needed for global hotkeys.
     /// If not granted, prompt user once and show a non-blocking alert.
     private func checkAccessibilityPermission() {
-        guard !AXIsProcessTrusted() else { return }
+        // Use the Options dictionary to prompt the system to add the app to the list
+        let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
+        let isTrusted = AXIsProcessTrustedWithOptions(options as CFDictionary)
+        
+        guard !isTrusted else { return }
         
         DispatchQueue.main.asyncAfter(deadline: .now() + 1.0) {
             let alert = NSAlert()
