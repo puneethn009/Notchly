@@ -1,8 +1,7 @@
 import Cocoa
 import CoreGraphics
 import CoreAudio
-import AudioToolbox
-import IOKit
+import AVFoundation
 
 class MediaKeyInterceptor {
     static let shared = MediaKeyInterceptor()
@@ -18,7 +17,14 @@ class MediaKeyInterceptor {
         
         if !isTrusted {
             print("WARNING: Accessibility permissions are not granted. The MediaKeyInterceptor will not work.")
-            // You could potentially show an NSAlert here as well
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.messageText = "Accessibility Permissions Required"
+                alert.informativeText = "NotchApp needs Accessibility permissions to intercept media keys. Please enable it in System Settings > Privacy & Security > Accessibility."
+                alert.alertStyle = .critical
+                alert.addButton(withTitle: "OK")
+                alert.runModal()
+            }
         }
         
         let NX_SYSDEFINED: UInt32 = 14
@@ -35,14 +41,29 @@ class MediaKeyInterceptor {
                 let NX_SYSDEFINED: UInt32 = 14
                 if type.rawValue == NX_SYSDEFINED, let refcon = refcon {
                     let mySelf = Unmanaged<MediaKeyInterceptor>.fromOpaque(refcon).takeUnretainedValue()
-                    mySelf.handleSystemDefinedEvent(event)
+                    let consumed = mySelf.handleSystemDefinedEvent(event)
+                    
+                    // If we successfully consumed a volume/brightness key, we return nil
+                    // to completely block macOS from seeing it, killing the Apple default square HUD.
+                    if consumed {
+                        return nil
+                    }
                 }
                 
+                // Allow all other keys to pass through normally
                 return Unmanaged.passUnretained(event)
             },
             userInfo: pointer
         ) else {
             print("Failed to create event tap. Make sure app has Accessibility permissions.")
+            DispatchQueue.main.async {
+                let alert = NSAlert()
+                alert.messageText = "Failed to Bind Keyboard"
+                alert.informativeText = "macOS denied the CGEventTap. If Accessibility is already ON, you MUST delete NotchApp using the minus (-) button and re-add it to reset the signature."
+                alert.alertStyle = .critical
+                alert.addButton(withTitle: "I Understand")
+                alert.runModal()
+            }
             return
         }
         
@@ -55,49 +76,121 @@ class MediaKeyInterceptor {
         }
     }
     
-    private func handleSystemDefinedEvent(_ event: CGEvent) {
-        guard let nsevent = NSEvent(cgEvent: event) else { return }
+    private func handleSystemDefinedEvent(_ event: CGEvent) -> Bool {
+        guard let nsevent = NSEvent(cgEvent: event) else { return false }
         
         let data1 = nsevent.data1
         let keyCode = (data1 & 0xFFFF0000) >> 16
         let keyFlags = (data1 & 0x0000FFFF)
-        let keyState = (((keyFlags & 0xFF00) >> 8)) == 0xA
+        let isKeyDown = ((keyFlags & 0xFF00) >> 8) == 0xA
         
-        let NX_KEYTYPE_SOUND_UP = 0
-        let NX_KEYTYPE_SOUND_DOWN = 1
-        let NX_KEYTYPE_MUTE = 7
-        let NX_KEYTYPE_ILLUMINATION_UP = 21
-        let NX_KEYTYPE_ILLUMINATION_DOWN = 22
-        let NX_KEYTYPE_BRIGHTNESS_UP = 2
-        let NX_KEYTYPE_BRIGHTNESS_DOWN = 3
+        guard isKeyDown else { return false } // Only trigger on key down
         
-        if keyState {
-            let key = Int(keyCode)
-            if key == NX_KEYTYPE_SOUND_UP || key == NX_KEYTYPE_SOUND_DOWN || key == NX_KEYTYPE_MUTE {
-                // Wait a tiny bit for the OS to actually apply the volume change before reading it
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                    let vol = self.getSystemVolume()
-                    HUDState.shared.showHUD(type: .volume, value: vol)
-                }
-            } else if key == NX_KEYTYPE_BRIGHTNESS_UP || key == NX_KEYTYPE_BRIGHTNESS_DOWN {
-                DispatchQueue.main.asyncAfter(deadline: .now() + 0.05) {
-                    let br = self.getSystemBrightness()
-                    HUDState.shared.showHUD(type: .brightness, value: br)
-                }
+        let NX_KEYTYPE_SOUND_UP: Int32 = 0
+        let NX_KEYTYPE_SOUND_DOWN: Int32 = 1
+        let NX_KEYTYPE_MUTE: Int32 = 7
+        let NX_KEYTYPE_BRIGHTNESS_UP: Int32 = 2
+        let NX_KEYTYPE_BRIGHTNESS_DOWN: Int32 = 3
+        
+        switch Int32(keyCode) {
+        case NX_KEYTYPE_SOUND_UP:
+            let newVol = min(getSystemVolume() + 0.0625, 1.0)
+            setSystemVolume(newVol)
+            DispatchQueue.main.async {
+                HUDState.shared.showHUD(type: .volume, value: newVol)
             }
+            return true
+            
+        case NX_KEYTYPE_SOUND_DOWN:
+            let newVol = max(getSystemVolume() - 0.0625, 0.0)
+            setSystemVolume(newVol)
+            DispatchQueue.main.async {
+                HUDState.shared.showHUD(type: .volume, value: newVol)
+            }
+            return true
+            
+        case NX_KEYTYPE_BRIGHTNESS_UP:
+            let newBright = min(getSystemBrightness() + 0.0625, 1.0)
+            setSystemBrightness(newBright)
+            DispatchQueue.main.async {
+                HUDState.shared.showHUD(type: .brightness, value: newBright)
+            }
+            return true
+            
+        case NX_KEYTYPE_BRIGHTNESS_DOWN:
+            let newBright = max(getSystemBrightness() - 0.0625, 0.0)
+            setSystemBrightness(newBright)
+            DispatchQueue.main.async {
+                HUDState.shared.showHUD(type: .brightness, value: newBright)
+            }
+            return true
+            
+        case NX_KEYTYPE_MUTE:
+            let newVol: Float = getSystemVolume() > 0 ? 0.0 : 0.5
+            setSystemVolume(newVol)
+            DispatchQueue.main.async {
+                HUDState.shared.showHUD(type: .volume, value: newVol)
+            }
+            return true
+            
+        default:
+            return false
         }
     }
     
+    // MARK: - Hardware Control
+    
     private func getSystemVolume() -> Float {
         var defaultOutputDeviceID = AudioDeviceID(0)
-        var defaultOutputDeviceIDSize = UInt32(MemoryLayout.size(ofValue: defaultOutputDeviceID))
+        var defaultOutputDeviceIDSize = UInt32(MemoryLayout<AudioDeviceID>.size)
+        
         var getDefaultOutputDevicePropertyAddress = AudioObjectPropertyAddress(
             mSelector: kAudioHardwarePropertyDefaultOutputDevice,
             mScope: kAudioObjectPropertyScopeGlobal,
             mElement: kAudioObjectPropertyElementMain
         )
         
-        AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &getDefaultOutputDevicePropertyAddress, 0, nil, &defaultOutputDeviceIDSize, &defaultOutputDeviceID)
+        let result = AudioObjectGetPropertyData(
+            AudioObjectID(kAudioObjectSystemObject),
+            &getDefaultOutputDevicePropertyAddress,
+            0,
+            nil,
+            &defaultOutputDeviceIDSize,
+            &defaultOutputDeviceID
+        )
+        
+        guard result == noErr else { return 0.5 }
+        
+        var volume: Float32 = 0.0
+        var volumeSize = UInt32(MemoryLayout<Float32>.size)
+        var volumePropertyAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
+            mScope: kAudioDevicePropertyScopeOutput,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        
+        AudioObjectGetPropertyData(
+            defaultOutputDeviceID,
+            &volumePropertyAddress,
+            0,
+            nil,
+            &volumeSize,
+            &volume
+        )
+        
+        return volume
+    }
+
+    private func setSystemVolume(_ volume: Float) {
+        var defaultOutputDeviceID = AudioDeviceID(0)
+        var defaultOutputDeviceIDSize = UInt32(MemoryLayout<AudioDeviceID>.size)
+        var propertyAddress = AudioObjectPropertyAddress(
+            mSelector: kAudioHardwarePropertyDefaultOutputDevice,
+            mScope: kAudioObjectPropertyScopeGlobal,
+            mElement: kAudioObjectPropertyElementMain
+        )
+        
+        guard AudioObjectGetPropertyData(AudioObjectID(kAudioObjectSystemObject), &propertyAddress, 0, nil, &defaultOutputDeviceIDSize, &defaultOutputDeviceID) == noErr else { return }
         
         var volumePropertyAddress = AudioObjectPropertyAddress(
             mSelector: kAudioHardwareServiceDeviceProperty_VirtualMainVolume,
@@ -105,35 +198,36 @@ class MediaKeyInterceptor {
             mElement: kAudioObjectPropertyElementMain
         )
         
-        var volume: Float32 = 0.0
-        var volumeSize = UInt32(MemoryLayout.size(ofValue: volume))
+        var newVolume: Float32 = volume
+        let volumeSize = UInt32(MemoryLayout<Float32>.size)
         
-        let status = AudioObjectGetPropertyData(defaultOutputDeviceID, &volumePropertyAddress, 0, nil, &volumeSize, &volume)
-        if status != noErr {
-            // Fallback if unable to read (e.g. external DAC)
-            return 0.5
-        }
-        
-        return volume
+        AudioObjectSetPropertyData(defaultOutputDeviceID, &volumePropertyAddress, 0, nil, volumeSize, &newVolume)
     }
     
     private func getSystemBrightness() -> Float {
-        let kIODisplayBrightnessKey = "brightness"
-        var iterator: io_iterator_t = 0
-        let result = IOServiceGetMatchingServices(kIOMasterPortDefault, IOServiceMatching("IODisplayConnect"), &iterator)
+        let display = CGMainDisplayID()
+        var brightness: Float = 0.0
         
-        if result == kIOReturnSuccess {
-            var service = IOIteratorNext(iterator)
-            while service != 0 {
-                var brightness: Float = 0.0
-                let status = IODisplayGetFloatParameter(service, 0, kIODisplayBrightnessKey as CFString, &brightness)
-                IOObjectRelease(service)
-                if status == kIOReturnSuccess {
-                    return brightness
-                }
-                service = IOIteratorNext(iterator)
-            }
+        let handle = dlopen("/System/Library/PrivateFrameworks/DisplayServices.framework/DisplayServices", RTLD_NOW)
+        if let handle = handle, let sym = dlsym(handle, "DisplayServicesGetBrightness") {
+            typealias GetBrightnessFunc = @convention(c) (CGDirectDisplayID, UnsafeMutablePointer<Float>) -> Int
+            let getBrightness = unsafeBitCast(sym, to: GetBrightnessFunc.self)
+            _ = getBrightness(display, &brightness)
+            dlclose(handle)
         }
-        return 0.5 // Default fallback if not supported (e.g. external monitor)
+        
+        return brightness
+    }
+    
+    private func setSystemBrightness(_ brightness: Float) {
+        let display = CGMainDisplayID()
+        
+        let handle = dlopen("/System/Library/PrivateFrameworks/DisplayServices.framework/DisplayServices", RTLD_NOW)
+        if let handle = handle, let sym = dlsym(handle, "DisplayServicesSetBrightness") {
+            typealias SetBrightnessFunc = @convention(c) (CGDirectDisplayID, Float) -> Int
+            let setBrightness = unsafeBitCast(sym, to: SetBrightnessFunc.self)
+            _ = setBrightness(display, brightness)
+            dlclose(handle)
+        }
     }
 }

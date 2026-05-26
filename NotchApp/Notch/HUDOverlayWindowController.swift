@@ -13,9 +13,15 @@ class HUDOverlayWindowController {
         let view = HUDExpandedView()
         let hostingController = NSHostingController(rootView: view)
         
-        let screenRect = NSScreen.main?.frame ?? NSRect(x: 0, y: 0, width: 1440, height: 900)
+        // Find the screen with the physical notch (has safeAreaInsets at the top)
+        let notchScreen = NSScreen.screens.first(where: { $0.safeAreaInsets.top > 0 }) ?? NSScreen.main ?? NSScreen.screens[0]
+        let screenRect = notchScreen.frame
+        
         let windowHeight: CGFloat = 60
         let windowRect = NSRect(x: screenRect.midX - 150, y: screenRect.maxY - windowHeight, width: 300, height: windowHeight)
+        
+        // Force the frame of the SwiftUI view to match exactly
+        hostingController.view.frame = NSRect(x: 0, y: 0, width: 300, height: windowHeight)
         
         let overlayWindow = NSWindow(
             contentRect: windowRect,
