@@ -9,6 +9,8 @@ enum NotchPage: String, CaseIterable, Codable {
     case launcher = "square.grid.2x2"
     case screenshots = "camera.viewfinder"
     case game = "gamecontroller"
+    case clipboard = "doc.on.clipboard"
+    case todo = "checklist"
     
     func next() -> NotchPage {
         let all = NotchPage.allCases
@@ -34,15 +36,28 @@ enum StickyType {
 class NotchState: NSObject, ObservableObject {
     static let shared = NotchState()
     
-    @Published var isExpanded: Bool = false
+    @Published var isExpanded: Bool = false {
+        didSet {
+            if !isExpanded && extraHeight > 0 {
+                extraHeight = 0
+            }
+        }
+    }
     @Published var isHovering: Bool = false
     @Published var stickyType: StickyType = .none
     @Published var isSticky: Bool = false {
         didSet { if !isSticky { stickyType = .none } }
     }
-    @Published var selectedPage: NotchPage = .media
+    @Published var selectedPage: NotchPage = .media {
+        didSet {
+            if extraHeight > 0 {
+                extraHeight = 0
+            }
+        }
+    }
     @Published var lastCapturedScreenshotURL: URL?
     @Published var pendingScreenshotURL: URL?
     @Published var isShowingScreenshotPopup: Bool = false
     @Published var activeGame: String? = nil
+    @Published var extraHeight: CGFloat = 0
 }

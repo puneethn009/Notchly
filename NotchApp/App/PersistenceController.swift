@@ -9,6 +9,8 @@ class PersistenceController {
     init() {
         let schema = Schema([
             ScreenshotItem.self,
+            ClipboardItem.self,
+            TodoItem.self
         ])
         let modelConfiguration = ModelConfiguration(schema: schema, isStoredInMemoryOnly: false)
         

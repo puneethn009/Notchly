@@ -86,7 +86,7 @@ struct NotchExpandedView: View {
                 // Navigation Icons
                 if notchState.selectedPage != .game || notchState.activeGame == nil {
                     HStack(spacing: 8) {
-                        ForEach(Array(activePages.dropLast()), id: \.self) { page in
+                        ForEach(Array(activePages.prefix(6)), id: \.self) { page in
                             Button(action: { 
                                 withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
                                     notchState.selectedPage = page 
@@ -134,42 +134,43 @@ struct NotchExpandedView: View {
                             }
                         }
                         .buttonStyle(.plain)
-                    }
-
-                    // Dynamic Last Button (Right Aligned)
-                    if let lastPage = activePages.last {
-                        Button(action: {
-                            withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
-                                notchState.selectedPage = lastPage
+                    } else {
+                        HStack(spacing: 8) {
+                            ForEach(Array(activePages.dropFirst(6)), id: \.self) { page in
+                                Button(action: {
+                                    withAnimation(.spring(response: 0.3, dampingFraction: 0.7)) {
+                                        notchState.selectedPage = page
+                                    }
+                                }) {
+                                    Image(systemName: page.rawValue)
+                                        .font(.system(size: 14, weight: .bold))
+                                        .foregroundColor(notchState.selectedPage == page ? .white : .white.opacity(0.4))
+                                        .frame(width: 28, height: 28)
+                                        .background(
+                                            RoundedRectangle(cornerRadius: 8)
+                                                .fill(notchState.selectedPage == page ? Color.white.opacity(0.15) : Color.clear)
+                                        )
+                                }
+                                .buttonStyle(.plain)
                             }
+                        }
+                        
+                        Button(action: {
+                            NotchlyHubWindowController.shared.show()
+                            NotchState.shared.isExpanded = false
                         }) {
-                            Image(systemName: lastPage.rawValue)
-                                .font(.system(size: 14, weight: .bold))
-                                .foregroundColor(notchState.selectedPage == lastPage ? .white : .white.opacity(0.5))
-                                .padding(4)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 6)
-                                        .fill(notchState.selectedPage == lastPage ? Color.white.opacity(0.15) : Color.clear)
-                                )
+                            Image(systemName: "gearshape.fill")
+                                .foregroundColor(.white.opacity(0.6))
                         }
                         .buttonStyle(.plain)
-                    } 
-                    
-                    Button(action: {
-                        NotchlyHubWindowController.shared.show()
-                        NotchState.shared.isExpanded = false
-                    }) {
-                        Image(systemName: "gearshape.fill")
-                            .foregroundColor(.white.opacity(0.6))
-                    }
-                    .buttonStyle(.plain)
-                    
-                    HStack(spacing: 4) {
-                        Text("\(batteryManager.batteryPercentage)%")
-                            .font(.system(size: 11, weight: .bold))
-                            .foregroundColor(.white.opacity(0.6))
                         
-                        MacBatteryIcon(percentage: batteryManager.batteryPercentage, state: batteryManager.state)
+                        HStack(spacing: 4) {
+                            Text("\(batteryManager.batteryPercentage)%")
+                                .font(.system(size: 11, weight: .bold))
+                                .foregroundColor(.white.opacity(0.6))
+                            
+                            MacBatteryIcon(percentage: batteryManager.batteryPercentage, state: batteryManager.state)
+                        }
                     }
                 }
                 .padding(.trailing, 40)
@@ -208,6 +209,10 @@ struct NotchExpandedView: View {
                             GamesLibraryView()
                                 .frame(maxWidth: .infinity, maxHeight: .infinity)
                         }
+                    case .clipboard:
+                        NotchClipboardView()
+                    case .todo:
+                        NotchTodoView()
                     }
                 }
                 .id(NotchState.shared.selectedPage)
@@ -218,11 +223,11 @@ struct NotchExpandedView: View {
             }
             .offset(x: shakeOffset)
             .frame(maxWidth: .infinity)
-            .frame(height: 150, alignment: .top) // Force top alignment for everything
+            .frame(height: 150 + notchState.extraHeight, alignment: .top) // Force top alignment for everything
             
             Spacer(minLength: 0) // Anchor everything to the top
         }
-        .frame(height: 200) // Explicitly match expandedHeight
+        .frame(height: 200 + notchState.extraHeight) // Explicitly match expandedHeight
         .background(Color.clear)
         .contentShape(Rectangle())
         .gesture(

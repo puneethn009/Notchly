@@ -46,7 +46,7 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
         currentWidth += (flareSize * 2)
         
         let isRunning = MediaPlayerManager.shared.isPlaying || TimerManager.shared.isRunning || TimerManager.shared.isStopwatchRunning
-        let currentHeight = isExpanded ? 200.0 : (isSticky ? 34.0 : (isRunning ? 32.0 : 31.0))
+        let currentHeight = isExpanded ? (200.0 + NotchState.shared.extraHeight) : (isSticky ? 34.0 : (isRunning ? 32.0 : 31.0))
         
         let notchRect = NSRect(
             x: screenMidX - (currentWidth / 2.0),
@@ -144,7 +144,7 @@ class AppDelegate: NSObject, NSApplicationDelegate {
                 .modelContainer(PersistenceController.shared.container)
             
             let hostingView = PassThroughHostingView(rootView: rootView)
-            hostingView.frame = NSRect(x: 0, y: 0, width: 900, height: 400)
+            hostingView.frame = NSRect(x: 0, y: 0, width: 900, height: 800)
             hostingView.autoresizingMask = []
             window.contentView = hostingView
             
@@ -152,8 +152,9 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             CaptureManager.shared.setup()
             CaptureManager.shared.disableNativeThumbnails()
             
-            // Start screenshot monitoring with persistence
+            // Start monitors
             ScreenshotMonitor.shared.start(container: PersistenceController.shared.container)
+            ClipboardMonitor.shared.start()
             // Start Media Manager with a slight delay to ensure UI stability
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 MediaPlayerManager.shared.start()

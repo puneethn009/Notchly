@@ -1,6 +1,12 @@
 import SwiftUI
 import KeyboardShortcuts
 import EventKit
+import Combine
+import ScreenCaptureKit
+
+class SharedEventStore {
+    static let shared = EKEventStore()
+}
 // MARK: - Reusable UI Components
 
 struct SettingsCard<Content: View>: View {
@@ -684,6 +690,14 @@ struct ScreenshotSettingsPage: View {
 
 // MARK: - Permissions Page
 
+/// Keys used to persist automation permission grants across launches.
+/// Once the user grants, we save true here. We only clear it if TCC
+/// explicitly returns -1743 (denied) — meaning the user revoked it.
+private enum AutomationGrantKey {
+    static let spotify = "notchly.automation.spotify.granted"
+    static let music   = "notchly.automation.music.granted"
+}
+
 struct PermissionsSettingsPage: View {
     @State private var accessibilityGranted: Bool = false
     @State private var screenRecordingGranted: Bool = false
@@ -691,6 +705,7 @@ struct PermissionsSettingsPage: View {
     @State private var remindersGranted: Bool = false
     @State private var spotifyGranted: Bool = false
     @State private var musicGranted: Bool = false
+    @State private var timerFired: Bool = false
 
     var body: some View {
         ScrollView {
@@ -705,129 +720,255 @@ struct PermissionsSettingsPage: View {
                 .padding(.horizontal, 40)
                 .padding(.top, 40)
                 .padding(.bottom, 10)
-                
+
                 SettingsCard(title: "Required Permissions") {
                     PermissionRow(
                         title: "Accessibility",
                         subtitle: "Enables global screenshot hotkeys (⌥⇧3 / ⌥⇧4)",
                         icon: "figure.arms.open",
                         granted: accessibilityGranted,
-                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility",
                         onEnable: {
-                            // This prompt option is what adds the app to the Accessibility list in System Settings!
                             let options = [kAXTrustedCheckOptionPrompt.takeUnretainedValue() as String: true]
                             AXIsProcessTrustedWithOptions(options as CFDictionary)
+                            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Accessibility") {
+                                NSWorkspace.shared.open(url)
+                            }
                         }
                     )
-                    
+
                     PermissionRow(
                         title: "Screen Recording",
                         subtitle: "Required for screenshot capture",
                         icon: "camera.viewfinder",
                         granted: screenRecordingGranted,
-                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture",
                         isLast: true,
                         onEnable: {
-                            // This is what adds the app to the Screen Recording list in System Settings!
                             CGRequestScreenCaptureAccess()
+                            // On macOS 14+, SCShareableContent reliably forces the prompt if CG fails
+                            if #available(macOS 12.3, *) {
+                                SCShareableContent.getExcludingDesktopWindows(true, onScreenWindowsOnly: false) { _, _ in }
+                            }
+                            if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_ScreenCapture") {
+                                NSWorkspace.shared.open(url)
+                            }
                         }
                     )
                 }
-                
+
                 SettingsCard(title: "Optional Permissions") {
                     PermissionRow(
                         title: "Calendar",
                         subtitle: "Show upcoming events in the notch",
                         icon: "calendar",
                         granted: calendarGranted,
-                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Calendars",
                         onEnable: {
                             if #available(macOS 14.0, *) {
-                                EKEventStore().requestFullAccessToEvents { _, _ in }
+                                SharedEventStore.shared.requestFullAccessToEvents { _, _ in
+                                    DispatchQueue.main.async { refreshFastChecks() }
+                                }
                             } else {
-                                EKEventStore().requestAccess(to: .event) { _, _ in }
+                                SharedEventStore.shared.requestAccess(to: .event) { _, _ in
+                                    DispatchQueue.main.async { refreshFastChecks() }
+                                }
                             }
                         }
                     )
-                    
+
                     PermissionRow(
                         title: "Reminders",
                         subtitle: "Show reminders in the notch calendar view",
                         icon: "checklist",
                         granted: remindersGranted,
-                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Reminders",
                         isLast: true,
                         onEnable: {
                             if #available(macOS 14.0, *) {
-                                EKEventStore().requestFullAccessToReminders { _, _ in }
+                                SharedEventStore.shared.requestFullAccessToReminders { _, _ in
+                                    DispatchQueue.main.async { refreshFastChecks() }
+                                }
                             } else {
-                                EKEventStore().requestAccess(to: .reminder) { _, _ in }
+                                SharedEventStore.shared.requestAccess(to: .reminder) { _, _ in
+                                    DispatchQueue.main.async { refreshFastChecks() }
+                                }
                             }
                         }
                     )
                 }
-                
+
                 SettingsCard(title: "Music Integrations (Automation)") {
                     PermissionRow(
                         title: "Spotify",
-                        subtitle: "Required to fetch currently playing songs and lyrics",
+                        subtitle: spotifyGranted
+                            ? "Notchly can control Spotify"
+                            : "Tap Enable — Spotify will launch and ask for permission",
                         icon: "music.note",
                         granted: spotifyGranted,
-                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
                         onEnable: {
-                            _ = NSAppleScript(source: "tell application \"Spotify\" to running")?.executeAndReturnError(nil)
+                            launchAndPromptAutomation(bundleID: "com.spotify.client",
+                                                     persistKey: AutomationGrantKey.spotify) {
+                                loadAutomationState()
+                            }
                         }
                     )
-                    
+
                     PermissionRow(
                         title: "Apple Music",
-                        subtitle: "Required to fetch currently playing songs and lyrics",
+                        subtitle: musicGranted
+                            ? "Notchly can control Apple Music"
+                            : "Tap Enable — Music will launch and ask for permission",
                         icon: "music.note.list",
                         granted: musicGranted,
-                        settingsURL: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation",
                         isLast: true,
                         onEnable: {
-                            _ = NSAppleScript(source: "tell application \"Music\" to running")?.executeAndReturnError(nil)
+                            launchAndPromptAutomation(bundleID: "com.apple.Music",
+                                                     persistKey: AutomationGrantKey.music) {
+                                loadAutomationState()
+                            }
                         }
                     )
                 }
-                
+
                 Spacer(minLength: 40)
             }
         }
-        .onAppear(perform: checkPermissions)
+        .onAppear {
+            refreshFastChecks()
+            loadAutomationState()
+            // Also do a live check in case app is already running
+            refreshAutomationChecks()
+            startPollingTimer()
+        }
+        .onChange(of: timerFired) { _ in
+            refreshFastChecks()
+        }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in
-            checkPermissions()
+            refreshFastChecks()
+            loadAutomationState()
+            refreshAutomationChecks()
         }
     }
 
-    private func checkPermissions() {
+    // MARK: - State Loaders
+
+    /// Fast O(1) checks — safe on main thread
+    private func refreshFastChecks() {
         accessibilityGranted = AXIsProcessTrusted()
         screenRecordingGranted = CGPreflightScreenCaptureAccess()
 
-        let calendarStatus = EKEventStore.authorizationStatus(for: .event)
-        calendarGranted = calendarStatus == .fullAccess || calendarStatus.rawValue == 3
+        let calStatus = EKEventStore.authorizationStatus(for: .event)
+        calendarGranted = calStatus == .fullAccess || calStatus.rawValue == 3
 
-        let reminderStatus = EKEventStore.authorizationStatus(for: .reminder)
-        remindersGranted = reminderStatus == .fullAccess || reminderStatus.rawValue == 3
-        
-        spotifyGranted = checkAutomationPermission(bundleID: "com.spotify.client")
-        musicGranted = checkAutomationPermission(bundleID: "com.apple.Music")
+        let remStatus = EKEventStore.authorizationStatus(for: .reminder)
+        remindersGranted = remStatus == .fullAccess || remStatus.rawValue == 3
     }
-    
-    private func checkAutomationPermission(bundleID: String) -> Bool {
+
+    /// Load persisted automation state from UserDefaults (instant, no blocking).
+    /// This is the PRIMARY source of truth for automation grants.
+    private func loadAutomationState() {
+        spotifyGranted = UserDefaults.standard.bool(forKey: AutomationGrantKey.spotify)
+        musicGranted   = UserDefaults.standard.bool(forKey: AutomationGrantKey.music)
+    }
+
+    /// Live check — only used to detect if user REVOKED access in System Settings.
+    /// Runs on background thread. If the app is running and TCC says denied (-1743),
+    /// we clear the persisted grant. If noErr, we confirm (re-persist) the grant.
+    private func refreshAutomationChecks() {
+        DispatchQueue.global(qos: .utility).async {
+            let sResult = liveAutomationCheck(for: "com.spotify.client")
+            let mResult = liveAutomationCheck(for: "com.apple.Music")
+
+            DispatchQueue.main.async {
+                if let s = sResult {
+                    UserDefaults.standard.set(s, forKey: AutomationGrantKey.spotify)
+                    spotifyGranted = s
+                }
+                if let m = mResult {
+                    UserDefaults.standard.set(m, forKey: AutomationGrantKey.music)
+                    musicGranted = m
+                }
+            }
+        }
+    }
+
+    /// Returns `true` if granted, `false` if explicitly denied, `nil` if app not running (unknown).
+    private func liveAutomationCheck(for bundleID: String) -> Bool? {
         let target = NSAppleEventDescriptor(bundleIdentifier: bundleID)
         let status = AEDeterminePermissionToAutomateTarget(target.aeDesc, typeWildCard, typeWildCard, false)
-        return status == noErr
+        switch status {
+        case noErr:        return true    // Explicitly granted
+        case OSStatus(-1743): return false // Explicitly denied — user revoked
+        default:           return nil     // App not running — don't change stored state
+        }
+    }
+
+    // MARK: - Enable Flow
+
+    /// Launch app → wait for it to be ready → trigger macOS prompt → persist result.
+    private func launchAndPromptAutomation(bundleID: String, persistKey: String, completion: @escaping () -> Void) {
+        DispatchQueue.global(qos: .userInitiated).async {
+            let isRunning = NSWorkspace.shared.runningApplications.contains {
+                $0.bundleIdentifier == bundleID
+            }
+
+            if !isRunning {
+                guard let url = NSWorkspace.shared.urlForApplication(withBundleIdentifier: bundleID) else {
+                    // App not installed — open System Settings Automation pane
+                    DispatchQueue.main.async {
+                        if let url = URL(string: "x-apple.systempreferences:com.apple.preference.security?Privacy_Automation") {
+                            NSWorkspace.shared.open(url)
+                        }
+                        completion()
+                    }
+                    return
+                }
+                NSWorkspace.shared.openApplication(at: url, configuration: NSWorkspace.OpenConfiguration())
+                // Wait up to 5s for app to appear in running list
+                for _ in 0..<10 {
+                    Thread.sleep(forTimeInterval: 0.5)
+                    if NSWorkspace.shared.runningApplications.contains(where: { $0.bundleIdentifier == bundleID }) {
+                        break
+                    }
+                }
+                // Extra half-second for app to finish launching
+                Thread.sleep(forTimeInterval: 0.5)
+            }
+
+            // Trigger the native macOS automation permission dialog
+            let target = NSAppleEventDescriptor(bundleIdentifier: bundleID)
+            let result = AEDeterminePermissionToAutomateTarget(target.aeDesc, typeWildCard, typeWildCard, true)
+
+            // Wait for TCC to write the grant
+            Thread.sleep(forTimeInterval: 0.8)
+
+            // Verify the result
+            let verifyTarget = NSAppleEventDescriptor(bundleIdentifier: bundleID)
+            let verifyResult = AEDeterminePermissionToAutomateTarget(verifyTarget.aeDesc, typeWildCard, typeWildCard, false)
+            let granted = (result == noErr || verifyResult == noErr)
+
+            DispatchQueue.main.async {
+                if granted {
+                    // Persist so we remember it even when app is closed
+                    UserDefaults.standard.set(true, forKey: persistKey)
+                }
+                completion()
+            }
+        }
+    }
+
+    private func startPollingTimer() {
+        DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+            timerFired.toggle()
+            refreshFastChecks()
+            startPollingTimer()
+        }
     }
 }
+
 
 struct PermissionRow: View {
     let title: String
     let subtitle: String
     let icon: String
     let granted: Bool
-    let settingsURL: String
     var isLast: Bool = false
     var onEnable: (() -> Void)? = nil
 
@@ -838,19 +979,12 @@ struct PermissionRow: View {
             icon: icon,
             buttonTitle: granted ? nil : "Enable",
             buttonIcon: nil,
-            action: {
-                // Trigger the system prompt FIRST so the app gets added to the list
-                onEnable?()
-                
-                // Then open the settings page so the user can flip the toggle
-                if let url = URL(string: settingsURL) {
-                    NSWorkspace.shared.open(url)
-                }
-            },
+            action: { onEnable?() },
             isLast: isLast,
             customContent: granted ? AnyView(
-                HStack(spacing: 4) {
+                HStack(spacing: 6) {
                     Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 14))
                     Text("Granted")
                         .font(.system(size: 12, weight: .bold))
                 }
@@ -859,3 +993,4 @@ struct PermissionRow: View {
         )
     }
 }
+

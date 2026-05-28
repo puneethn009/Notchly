@@ -10,7 +10,7 @@ struct NotchOverlayView: View {
     private let collapsedWidth: CGFloat = 192
     private let collapsedHeight: CGFloat = 29
     private let expandedWidth: CGFloat = 700
-    private let expandedHeight: CGFloat = 200
+    private var expandedHeight: CGFloat { 200 + notchState.extraHeight }
 
     @State private var currentRadius: CGFloat = 6
     
@@ -146,7 +146,7 @@ struct NotchOverlayView: View {
                 }
             }
         }
-        .frame(width: 900, height: 400, alignment: .top)
+        .frame(width: 900, height: 800, alignment: .top)
         .animation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45), value: isExpanded)
         .animation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45), value: isSticky)
         .animation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45), value: isShowingPopup)

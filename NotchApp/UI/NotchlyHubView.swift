@@ -1,4 +1,5 @@
 import SwiftUI
+import Combine
 import SwiftData
 import UniformTypeIdentifiers
 import Sparkle
@@ -19,6 +20,8 @@ struct NotchlyHubView: View {
         case timer = "Timer"
         case performance = "Performance"
         case dock = "Dock"
+        case clipboard = "Clipboard"
+        case todo = "To-Do"
         case permissions = "Permissions"
         
         var id: String { self.rawValue }
@@ -31,6 +34,8 @@ struct NotchlyHubView: View {
             case .timer: return "timer"
             case .performance: return "cpu"
             case .dock: return "dock.rectangle"
+            case .clipboard: return "doc.on.clipboard"
+            case .todo: return "checklist"
             case .permissions: return "lock.shield"
             }
         }
@@ -207,6 +212,12 @@ struct NotchlyHubView: View {
                 case .dock:
                     DockSettingsPage(settings: settings)
                         .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)), removal: .opacity))
+                case .clipboard:
+                    ClipboardSettingsPage(settings: settings)
+                        .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)), removal: .opacity))
+                case .todo:
+                    TodoSettingsPage(settings: settings)
+                        .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)), removal: .opacity))
                 case .permissions:
                     PermissionsSettingsPage()
                         .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .trailing)), removal: .opacity))
@@ -337,25 +348,34 @@ struct NotchControlsView: View {
                 // TOGGLES GRID
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 20), GridItem(.flexible(), spacing: 20)], spacing: 20) {
                     ForEach(settings.notchPagesOrder, id: \.self) { page in
-                        ToggleCard(
-                            title: title(for: page),
-                            subtitle: subtitle(for: page),
-                            icon: page.rawValue,
-                            iconColor: iconColor(for: page),
-                            isOn: binding(for: page)
-                        )
-                        .disabled(isEditing)
+                        Group {
+                            if isEditing {
+                                ToggleCard(
+                                    title: title(for: page),
+                                    subtitle: subtitle(for: page),
+                                    icon: page.rawValue,
+                                    iconColor: iconColor(for: page),
+                                    isOn: binding(for: page)
+                                )
+                                .disabled(true)
+                                .onDrag {
+                                    self.draggedPage = page
+                                    return NSItemProvider(object: page.rawValue as NSString)
+                                }
+                                .onDrop(of: [.text], delegate: NotchPageDropDelegate(item: page, items: $settings.notchPagesOrder, draggedItem: $draggedPage))
+                            } else {
+                                ToggleCard(
+                                    title: title(for: page),
+                                    subtitle: subtitle(for: page),
+                                    icon: page.rawValue,
+                                    iconColor: iconColor(for: page),
+                                    isOn: binding(for: page)
+                                )
+                            }
+                        }
                         .opacity(draggedPage == page ? 0.0 : 1.0)
                         .rotationEffect(.degrees(isEditing ? (Double.random(in: -1...1)) : 0))
                         .animation(isEditing ? wiggleAnimation : .default, value: isEditing)
-                        .onDrag {
-                            if isEditing {
-                                self.draggedPage = page
-                                return NSItemProvider(object: page.rawValue as NSString)
-                            }
-                            return NSItemProvider()
-                        }
-                        .onDrop(of: [.text], delegate: NotchPageDropDelegate(item: page, items: $settings.notchPagesOrder, draggedItem: $draggedPage))
                     }
                 }
             }
@@ -376,6 +396,8 @@ struct NotchControlsView: View {
                 case .launcher: return settings.showNotchLauncher
                 case .screenshots: return settings.showNotchScreenshots
                 case .game: return settings.showNotchGame
+                case .clipboard: return settings.showNotchClipboard
+                case .todo: return settings.showNotchTodo
                 }
             },
             set: { newValue in
@@ -387,7 +409,10 @@ struct NotchControlsView: View {
                 case .launcher: settings.showNotchLauncher = newValue
                 case .screenshots: settings.showNotchScreenshots = newValue
                 case .game: settings.showNotchGame = newValue
+                case .clipboard: settings.showNotchClipboard = newValue
+                case .todo: settings.showNotchTodo = newValue
                 }
+                settings.objectWillChange.send()
             }
         )
     }
@@ -401,6 +426,8 @@ struct NotchControlsView: View {
         case .launcher: return "Quick App Launcher"
         case .screenshots: return "Screenshot Manager"
         case .game: return "Notch Breaker"
+        case .clipboard: return "Clipboard History"
+        case .todo: return "To-Do List"
         }
     }
     
@@ -413,6 +440,8 @@ struct NotchControlsView: View {
         case .launcher: return "A personalized mini-dock for high-speed app launches"
         case .screenshots: return "Browse captured screenshots history in the notch"
         case .game: return "A retro Breakout game — move your mouse to control the paddle"
+        case .clipboard: return "Access clipboard history and drag & drop past items"
+        case .todo: return "Manage quick tasks with a beautiful checklist"
         }
     }
     
@@ -425,6 +454,8 @@ struct NotchControlsView: View {
         case .launcher: return .purple
         case .screenshots: return .cyan
         case .game: return Color(hue: 0.07, saturation: 0.88, brightness: 1.0)
+        case .clipboard: return .mint
+        case .todo: return .yellow
         }
     }
 }
@@ -791,4 +822,64 @@ struct ScreenshotGridCard: View {
     }
 }
 
+struct ClipboardSettingsPage: View {
+    @ObservedObject var settings: SettingsManager
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 30) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("Clipboard Manager")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                    
+                    Text("Manage how Notchly stores your clipboard history.")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.5))
+                }
+                
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Features coming soon: History retention limits, exclusion lists for sensitive apps (like 1Password), and iCloud Sync.")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.6))
+                        .padding()
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.05)))
+                }
+            }
+            .padding(.top, 52)
+            .padding(.horizontal, 40)
+            .padding(.bottom, 40)
+        }
+    }
+}
 
+struct TodoSettingsPage: View {
+    @ObservedObject var settings: SettingsManager
+    
+    var body: some View {
+        ScrollView {
+            VStack(alignment: .leading, spacing: 30) {
+                VStack(alignment: .leading, spacing: 6) {
+                    Text("To-Do List")
+                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .foregroundColor(.white)
+                    
+                    Text("Manage your tasks and sync settings.")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.5))
+                }
+                
+                VStack(alignment: .leading, spacing: 16) {
+                    Text("Features coming soon: Reminder notifications, Apple Reminders sync, and custom categories.")
+                        .font(.system(size: 14))
+                        .foregroundColor(.white.opacity(0.6))
+                        .padding()
+                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.05)))
+                }
+            }
+            .padding(.top, 52)
+            .padding(.horizontal, 40)
+            .padding(.bottom, 40)
+        }
+    }
+}

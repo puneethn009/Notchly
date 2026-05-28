@@ -44,9 +44,11 @@ class SettingsManager: ObservableObject {
     @AppStorage("showNotchLauncher") var showNotchLauncher: Bool = true
     @AppStorage("showNotchScreenshots") var showNotchScreenshots: Bool = true
     @AppStorage("showNotchGame") var showNotchGame: Bool = true
+    @AppStorage("showNotchClipboard") var showNotchClipboard: Bool = true
+    @AppStorage("showNotchTodo") var showNotchTodo: Bool = true
     
     @AppStorage("notchPagesOrderData") private var notchPagesOrderData: Data = Data()
-    @Published var notchPagesOrder: [NotchPage] = [.media, .timer, .system, .calendar, .launcher, .screenshots, .game] {
+    @Published var notchPagesOrder: [NotchPage] = [.media, .timer, .system, .calendar, .launcher, .screenshots, .game, .clipboard, .todo] {
         didSet {
             saveNotchPagesOrder()
         }
@@ -63,6 +65,8 @@ class SettingsManager: ObservableObject {
             case .launcher: if showNotchLauncher { pages.append(page) }
             case .screenshots: if showNotchScreenshots { pages.append(page) }
             case .game: if showNotchGame { pages.append(page) }
+            case .clipboard: if showNotchClipboard { pages.append(page) }
+            case .todo: if showNotchTodo { pages.append(page) }
             }
         }
         return pages.isEmpty ? [.media] : pages
@@ -101,9 +105,16 @@ class SettingsManager: ObservableObject {
     
     private func loadNotchPagesOrder() {
         if let decoded = try? JSONDecoder().decode([NotchPage].self, from: notchPagesOrderData) {
-            notchPagesOrder = decoded
+            var loadedPages = decoded
+            // Add any newly introduced pages that aren't in the saved order
+            for page in NotchPage.allCases {
+                if !loadedPages.contains(page) {
+                    loadedPages.append(page)
+                }
+            }
+            notchPagesOrder = loadedPages
         } else {
-            notchPagesOrder = [.media, .timer, .system, .calendar, .launcher, .screenshots, .game]
+            notchPagesOrder = NotchPage.allCases
         }
     }
     

@@ -11,7 +11,7 @@ class NotchWindowController: NSWindowController {
     static let shared = NotchWindowController()
 
     private let windowWidth: CGFloat = 900
-    private let windowHeight: CGFloat = 400
+    private let windowHeight: CGFloat = 800
 
     var isExpanded: Bool = false
 
