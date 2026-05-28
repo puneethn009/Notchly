@@ -212,7 +212,12 @@ struct NotchExpandedView: View {
                     case .clipboard:
                         NotchClipboardView()
                     case .todo:
-                        NotchTodoView()
+                        if notchState.activeTaskReminderId != nil {
+                            TaskReminderPopupView()
+                                .transition(.asymmetric(insertion: .opacity.combined(with: .move(edge: .leading)), removal: .opacity))
+                        } else {
+                            NotchTodoView()
+                        }
                     }
                 }
                 .id(NotchState.shared.selectedPage)
@@ -262,7 +267,7 @@ struct NotchExpandedView: View {
             setupSwipeMonitor()
             ensureSelectedPageIsValid()
         }
-        .onChange(of: settings.activeNotchPages) { _ in
+        .onChange(of: settings.activeNotchPages) {
             ensureSelectedPageIsValid()
         }
         .onDisappear {
@@ -391,9 +396,10 @@ struct MediaModuleView: View {
                             .background(
                                 RoundedRectangle(cornerRadius: 16)
                                     .fill(LinearGradient(colors: mediaManager.artworkColors, startPoint: .topLeading, endPoint: .bottomTrailing))
+                                    .opacity(mediaManager.isPlaying ? 0.15 : 0.0)
                                     .blur(radius: mediaManager.isPlaying ? 20 : 0)
-                                    .opacity(mediaManager.isPlaying ? 0.12 : 0.0)
                                     .scaleEffect(mediaManager.isPlaying ? 1.05 : 0.85)
+                                    .drawingGroup()
                                     .animation(.spring(response: 0.5, dampingFraction: 0.7), value: mediaManager.isPlaying)
                             )
                             .shadow(color: mediaManager.primaryArtworkColor.opacity(0.25), radius: 15)
@@ -1682,5 +1688,55 @@ struct GamesLibraryView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .padding(.horizontal, 20)
+    }
+}
+
+struct TaskReminderPopupView: View {
+    @ObservedObject var notchState = NotchState.shared
+    
+    var body: some View {
+        VStack(spacing: 12) {
+            Text("TASK REMINDER")
+                .font(.system(size: 24, weight: .black))
+                .foregroundColor(.red)
+            
+            Text(notchState.activeTaskReminderTitle)
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundColor(.white)
+                .multilineTextAlignment(.center)
+                .lineLimit(2)
+                .padding(.horizontal, 40)
+            
+            HStack(spacing: 16) {
+                Button(action: {
+                    Task { @MainActor in
+                        TodoReminderManager.shared.cancelAlarm()
+                    }
+                }) {
+                    Text("Cancel")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.white.opacity(0.8))
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 10)
+                        .background(Capsule().fill(Color.white.opacity(0.1)))
+                }
+                .buttonStyle(.plain)
+                
+                Button(action: {
+                    Task { @MainActor in
+                        TodoReminderManager.shared.completeActiveAlarm()
+                    }
+                }) {
+                    Text("Completed")
+                        .font(.system(size: 14, weight: .bold))
+                        .foregroundColor(.black)
+                        .padding(.horizontal, 24)
+                        .padding(.vertical, 10)
+                        .background(Capsule().fill(Color.red))
+                }
+                .buttonStyle(.plain)
+            }
+        }
+        .padding(.top, 4)
     }
 }

@@ -304,37 +304,34 @@ struct NotchControlsView: View {
                         // Active modules indicator lights in mock notch
                         VStack(spacing: 8) {
                             // Mock Notch itself
-                            ZStack {
-                                RoundedRectangle(cornerRadius: 12, style: .continuous)
-                                    .fill(Color.black)
-                                    .frame(width: 260, height: 35)
-                                
-                                HStack {
-                                    HStack(spacing: 16) {
-                                        ForEach(Array(settings.activeNotchPages.dropLast()), id: \.self) { page in
-                                            Image(systemName: page.rawValue)
-                                                .foregroundColor(iconColor(for: page))
-                                                .font(.system(size: 10, weight: .bold))
-                                        }
-                                    }
-                                    .padding(.leading, 16)
-                                    
-                                    Spacer()
-                                    
-                                    HStack(spacing: 16) {
-                                        if let lastPage = settings.activeNotchPages.last {
-                                            Image(systemName: lastPage.rawValue)
-                                                .foregroundColor(iconColor(for: lastPage))
-                                                .font(.system(size: 10, weight: .bold))
-                                        }
-                                        Image(systemName: "gearshape.fill")
-                                            .foregroundColor(.white.opacity(0.5))
+                            HStack {
+                                HStack(spacing: 12) {
+                                    ForEach(Array(settings.activeNotchPages.prefix(6)), id: \.self) { page in
+                                        Image(systemName: page.rawValue)
+                                            .foregroundColor(iconColor(for: page))
                                             .font(.system(size: 10, weight: .bold))
                                     }
-                                    .padding(.trailing, 16)
                                 }
-                                .frame(width: 260)
+                                
+                                Spacer()
+                                
+                                HStack(spacing: 12) {
+                                    ForEach(Array(settings.activeNotchPages.dropFirst(6)), id: \.self) { page in
+                                        Image(systemName: page.rawValue)
+                                            .foregroundColor(iconColor(for: page))
+                                            .font(.system(size: 10, weight: .bold))
+                                    }
+                                    Image(systemName: "gearshape.fill")
+                                        .foregroundColor(.white.opacity(0.5))
+                                        .font(.system(size: 10, weight: .bold))
+                                }
                             }
+                            .padding(.horizontal, 16)
+                            .frame(width: 280, height: 35)
+                            .background(
+                                RoundedRectangle(cornerRadius: 12, style: .continuous)
+                                    .fill(Color.black)
+                            )
                             
                             Text("Mock Dynamic Live Notch Status")
                                 .font(.system(size: 10, weight: .semibold))
@@ -824,6 +821,11 @@ struct ScreenshotGridCard: View {
 
 struct ClipboardSettingsPage: View {
     @ObservedObject var settings: SettingsManager
+    @Environment(\.modelContext) private var modelContext
+    
+    @State private var showClearConfirm = false
+    
+    let historyLimits = [50, 100, 500, 1000]
     
     var body: some View {
         ScrollView {
@@ -838,12 +840,83 @@ struct ClipboardSettingsPage: View {
                         .foregroundColor(.white.opacity(0.5))
                 }
                 
-                VStack(alignment: .leading, spacing: 16) {
-                    Text("Features coming soon: History retention limits, exclusion lists for sensitive apps (like 1Password), and iCloud Sync.")
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.6))
-                        .padding()
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.05)))
+                VStack(spacing: 16) {
+                    // Retention Picker
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("History Limit")
+                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .foregroundColor(.white)
+                            Text("Maximum number of non-pinned items to store.")
+                                .font(.system(size: 11))
+                                .foregroundColor(.white.opacity(0.45))
+                        }
+                        Spacer()
+                        Picker("", selection: $settings.clipboardHistoryLimit) {
+                            ForEach(historyLimits, id: \.self) { limit in
+                                Text("\(limit) Items").tag(limit)
+                            }
+                        }
+                        .frame(width: 120)
+                        .labelsHidden()
+                    }
+                    .padding(20)
+                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.04)))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.white.opacity(0.06), lineWidth: 1))
+                    
+                    // Privacy Mode Toggle
+                    ToggleCard(
+                        title: "Privacy Mode",
+                        subtitle: "Automatically ignore text copied from known password managers (1Password, Bitwarden, Keychain).",
+                        icon: "lock.shield",
+                        iconColor: .mint,
+                        isOn: $settings.clipboardPrivacyMode
+                    )
+                }
+                
+                Divider().background(Color.white.opacity(0.1)).padding(.vertical, 10)
+                
+                // Destructive Actions
+                VStack(alignment: .leading, spacing: 12) {
+                    Text("Danger Zone")
+                        .font(.system(size: 13, weight: .bold, design: .rounded))
+                        .foregroundColor(.red.opacity(0.8))
+                        .textCase(.uppercase)
+                    
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Clear Unpinned History")
+                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .foregroundColor(.white)
+                            Text("Permanently deletes all clipboard items that are not pinned.")
+                                .font(.system(size: 11))
+                                .foregroundColor(.white.opacity(0.45))
+                        }
+                        Spacer()
+                        
+                        Button(action: {
+                            showClearConfirm = true
+                        }) {
+                            Text("Clear History")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(RoundedRectangle(cornerRadius: 6).fill(Color.red.opacity(0.8)))
+                        }
+                        .buttonStyle(.plain)
+                        .alert("Clear Clipboard History", isPresented: $showClearConfirm) {
+                            Button("Cancel", role: .cancel) { }
+                            Button("Delete", role: .destructive) {
+                                clearClipboardHistory()
+                            }
+                        } message: {
+                            Text("Are you sure? This will delete all unpinned clipboard items. This action cannot be undone.")
+                        }
+                    }
+                    .padding(20)
+                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.red.opacity(0.05)))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.red.opacity(0.2), lineWidth: 1))
                 }
             }
             .padding(.top, 52)
@@ -851,10 +924,28 @@ struct ClipboardSettingsPage: View {
             .padding(.bottom, 40)
         }
     }
+    
+    private func clearClipboardHistory() {
+        do {
+            let descriptor = FetchDescriptor<ClipboardItem>(predicate: #Predicate<ClipboardItem> { item in
+                item.isPinned == false
+            })
+            let unpinnedItems = try modelContext.fetch(descriptor)
+            for item in unpinnedItems {
+                modelContext.delete(item)
+            }
+            try modelContext.save()
+        } catch {
+            print("Failed to clear clipboard history: \(error)")
+        }
+    }
 }
 
 struct TodoSettingsPage: View {
     @ObservedObject var settings: SettingsManager
+    @Environment(\.modelContext) private var modelContext
+    
+    @State private var showClearConfirm = false
     
     var body: some View {
         ScrollView {
@@ -869,17 +960,153 @@ struct TodoSettingsPage: View {
                         .foregroundColor(.white.opacity(0.5))
                 }
                 
+                VStack(spacing: 16) {
+                    ToggleCard(
+                        title: "Completion Sound",
+                        subtitle: "Play a satisfying sound effect when you check off a task.",
+                        icon: "checkmark.circle",
+                        iconColor: .green,
+                        isOn: $settings.todoCompletionSound
+                    )
+                    
+                    ToggleCard(
+                        title: "Show Overdue Indicator",
+                        subtitle: "Periodically pulse a red overdue indicator on the notch when tasks are past due.",
+                        icon: "bell.badge",
+                        iconColor: .orange,
+                        isOn: $settings.todoShowOverdue
+                    )
+                    
+                    if settings.todoShowOverdue {
+                        HStack {
+                            VStack(alignment: .leading, spacing: 4) {
+                                Text("Reminder Interval")
+                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                    .foregroundColor(.white)
+                                Text("The overdue indicator will flash for 5 seconds every \(settings.todoOverdueReminderInterval) minutes.")
+                                    .font(.system(size: 11))
+                                    .foregroundColor(.white.opacity(0.45))
+                            }
+                            Spacer()
+                            
+                            Stepper(value: $settings.todoOverdueReminderInterval, in: 1...60) {
+                                Text("\(settings.todoOverdueReminderInterval) min")
+                                    .font(.system(size: 13, weight: .bold))
+                                    .foregroundColor(.white)
+                                    .frame(width: 45, alignment: .trailing)
+                            }
+                            .labelsHidden()
+                        }
+                        .padding(20)
+                        .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.04)))
+                        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.white.opacity(0.06), lineWidth: 1))
+                    }
+                }
+                
+                Divider().background(Color.white.opacity(0.1)).padding(.vertical, 10)
+                
+                // Actions
                 VStack(alignment: .leading, spacing: 16) {
-                    Text("Features coming soon: Reminder notifications, Apple Reminders sync, and custom categories.")
-                        .font(.system(size: 14))
-                        .foregroundColor(.white.opacity(0.6))
-                        .padding()
-                        .background(RoundedRectangle(cornerRadius: 12).fill(Color.white.opacity(0.05)))
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Export Tasks")
+                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .foregroundColor(.white)
+                            Text("Copy all your pending tasks to the clipboard as Markdown.")
+                                .font(.system(size: 11))
+                                .foregroundColor(.white.opacity(0.45))
+                        }
+                        Spacer()
+                        
+                        Button(action: {
+                            exportTasks()
+                        }) {
+                            Text("Export")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(RoundedRectangle(cornerRadius: 6).fill(Color.white.opacity(0.15)))
+                        }
+                        .buttonStyle(.plain)
+                    }
+                    .padding(20)
+                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.white.opacity(0.04)))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.white.opacity(0.06), lineWidth: 1))
+                    
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text("Clear Completed Tasks")
+                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .foregroundColor(.white)
+                            Text("Permanently deletes all tasks that have been marked as done.")
+                                .font(.system(size: 11))
+                                .foregroundColor(.white.opacity(0.45))
+                        }
+                        Spacer()
+                        
+                        Button(action: {
+                            showClearConfirm = true
+                        }) {
+                            Text("Clear Tasks")
+                                .font(.system(size: 12, weight: .bold))
+                                .foregroundColor(.white)
+                                .padding(.horizontal, 16)
+                                .padding(.vertical, 8)
+                                .background(RoundedRectangle(cornerRadius: 6).fill(Color.red.opacity(0.8)))
+                        }
+                        .buttonStyle(.plain)
+                        .alert("Clear Completed Tasks", isPresented: $showClearConfirm) {
+                            Button("Cancel", role: .cancel) { }
+                            Button("Delete", role: .destructive) {
+                                clearCompletedTasks()
+                            }
+                        } message: {
+                            Text("Are you sure? This will delete all completed tasks.")
+                        }
+                    }
+                    .padding(20)
+                    .background(RoundedRectangle(cornerRadius: 14, style: .continuous).fill(Color.red.opacity(0.05)))
+                    .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).stroke(Color.red.opacity(0.2), lineWidth: 1))
                 }
             }
             .padding(.top, 52)
             .padding(.horizontal, 40)
             .padding(.bottom, 40)
+        }
+    }
+    
+    private func exportTasks() {
+        do {
+            let descriptor = FetchDescriptor<TodoItem>(predicate: #Predicate<TodoItem> { item in
+                item.isCompleted == false
+            })
+            let pendingItems = try modelContext.fetch(descriptor)
+            
+            var exportString = "# Pending Tasks\n\n"
+            for item in pendingItems {
+                exportString += "- [ ] \(item.title)\n"
+            }
+            
+            NSPasteboard.general.clearContents()
+            NSPasteboard.general.setString(exportString, forType: .string)
+        } catch {
+            print("Failed to export tasks: \(error)")
+        }
+    }
+    
+    private func clearCompletedTasks() {
+        do {
+            let descriptor = FetchDescriptor<TodoItem>(predicate: #Predicate<TodoItem> { item in
+                item.isCompleted == true
+            })
+            let completedItems = try modelContext.fetch(descriptor)
+            for item in completedItems {
+                modelContext.delete(item)
+            }
+            try modelContext.save()
+        } catch {
+            print("Failed to clear tasks: \(error)")
         }
     }
 }

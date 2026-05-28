@@ -74,7 +74,8 @@ class PassThroughHostingView<Content: View>: NSHostingView<Content> {
             // Don't auto-collapse when a game is actively playing — player needs the notch to stay open.
             // The game provides its own explicit X button to close.
             let gameIsActive = NotchState.shared.selectedPage == .game && NotchState.shared.activeGame != nil
-            if !isInside && !TimerManager.shared.isAlarmPlaying && NotchState.shared.pendingScreenshotURL == nil && !gameIsActive {
+            let taskAlarmIsActive = NotchState.shared.activeTaskReminderId != nil
+            if !isInside && !TimerManager.shared.isAlarmPlaying && NotchState.shared.pendingScreenshotURL == nil && !gameIsActive && !taskAlarmIsActive {
                 updateExpansion(false)
             }
         } else {
@@ -155,6 +156,8 @@ class AppDelegate: NSObject, NSApplicationDelegate {
             // Start monitors
             ScreenshotMonitor.shared.start(container: PersistenceController.shared.container)
             ClipboardMonitor.shared.start()
+            TodoReminderManager.shared.start()
+            
             // Start Media Manager with a slight delay to ensure UI stability
             DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
                 MediaPlayerManager.shared.start()

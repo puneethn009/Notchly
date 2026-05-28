@@ -2,13 +2,13 @@ import SwiftUI
 
 struct NotchShape: Shape {
     var cornerRadius: CGFloat
-    
     var animatableData: CGFloat {
         get { cornerRadius }
         set { cornerRadius = newValue }
     }
     
     func path(in rect: CGRect) -> Path {
+        
         var path = Path()
         let r = cornerRadius
         let tr = r * 0.7 // Top outside flare is 70% of bottom corner radius for a sleeker look

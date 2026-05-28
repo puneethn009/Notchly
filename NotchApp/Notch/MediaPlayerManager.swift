@@ -79,8 +79,11 @@ class MediaPlayerManager: ObservableObject {
     // MARK: - Start
     func start() {
         setupNotifications()
-        // Initial Spotify check (Music will update via notification when track changes)
-        Task { await fetchSpotifyState() }
+        // Initial states
+        Task {
+            await fetchSpotifyState()
+            await fetchAppleMusicState()
+        }
         startProgressTimer()
         startSyncTimer()
         startYTMTracker()
@@ -291,7 +294,8 @@ class MediaPlayerManager: ObservableObject {
                     set tPos to player position
                     set tDur to (duration of current track) / 1000
                     set artURL to artwork url of current track
-                    return {pState, tName, tArtist, tPos, tDur, artURL}
+                    set tURL to spotify url of current track
+                    return {pState, tName, tArtist, tPos, tDur, artURL, tURL}
                 on error
                     return {}
                 end try
@@ -301,11 +305,17 @@ class MediaPlayerManager: ObservableObject {
         guard let d = await AS.run(script), d.numberOfItems >= 5 else { return }
 
         let playing = d.atIndex(1)?.booleanValue ?? false
-        let tName   = d.atIndex(2)?.stringValue ?? ""
-        let tArtist = d.atIndex(3)?.stringValue ?? ""
+        var tName   = d.atIndex(2)?.stringValue ?? ""
+        var tArtist = d.atIndex(3)?.stringValue ?? ""
         let pos     = d.atIndex(4)?.doubleValue ?? 0
         let dur     = d.atIndex(5)?.doubleValue ?? 0
         let artURL  = (d.atIndex(6)?.stringValue ?? "").replacingOccurrences(of: "missing value", with: "")
+        let tURL    = d.atIndex(7)?.stringValue ?? ""
+        
+        if tURL.hasPrefix("spotify:ad") || (playing && tName.isEmpty && tArtist.isEmpty) {
+            tName = "Advertisement"
+            tArtist = "Spotify"
+        }
 
         guard !tName.isEmpty else { return }
         // Don't override Music if it's actively playing

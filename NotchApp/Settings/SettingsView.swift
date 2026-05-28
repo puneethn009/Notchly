@@ -837,7 +837,7 @@ struct PermissionsSettingsPage: View {
             refreshAutomationChecks()
             startPollingTimer()
         }
-        .onChange(of: timerFired) { _ in
+        .onChange(of: timerFired) {
             refreshFastChecks()
         }
         .onReceive(NotificationCenter.default.publisher(for: NSApplication.didBecomeActiveNotification)) { _ in

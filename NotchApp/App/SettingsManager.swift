@@ -47,6 +47,15 @@ class SettingsManager: ObservableObject {
     @AppStorage("showNotchClipboard") var showNotchClipboard: Bool = true
     @AppStorage("showNotchTodo") var showNotchTodo: Bool = true
     
+    // Clipboard Settings
+    @AppStorage("clipboardHistoryLimit") var clipboardHistoryLimit: Int = 100
+    @AppStorage("clipboardPrivacyMode") var clipboardPrivacyMode: Bool = true
+    
+    // To-Do Settings
+    @AppStorage("todoCompletionSound") var todoCompletionSound: Bool = true
+    @AppStorage("todoShowOverdue") var todoShowOverdue: Bool = true
+    @AppStorage("todoOverdueReminderInterval") var todoOverdueReminderInterval: Int = 2
+    
     @AppStorage("notchPagesOrderData") private var notchPagesOrderData: Data = Data()
     @Published var notchPagesOrder: [NotchPage] = [.media, .timer, .system, .calendar, .launcher, .screenshots, .game, .clipboard, .todo] {
         didSet {

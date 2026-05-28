@@ -1,18 +1,22 @@
 import SwiftUI
 import Combine
+import SwiftData
 
 struct NotchOverlayView: View {
+    @Environment(\.modelContext) private var modelContext
+    @Query(filter: #Predicate<TodoItem> { !$0.isCompleted }, sort: [SortDescriptor(\TodoItem.createdAt, order: .forward)]) private var pendingTasks: [TodoItem]
+    
     @ObservedObject private var notchState = NotchState.shared
     @StateObject private var timerManager = TimerManager.shared
     @StateObject private var mediaManager = MediaPlayerManager.shared
     @ObservedObject private var settings = SettingsManager.shared
 
     private let collapsedWidth: CGFloat = 192
-    private let collapsedHeight: CGFloat = 29
+    private let collapsedHeight: CGFloat = 32
     private let expandedWidth: CGFloat = 700
     private var expandedHeight: CGFloat { 200 + notchState.extraHeight }
 
-    @State private var currentRadius: CGFloat = 6
+    @State private var currentRadius: CGFloat = 9
     
     private var isExpanded: Bool { notchState.isExpanded }
     private var isSticky: Bool { notchState.isSticky }
@@ -20,15 +24,17 @@ struct NotchOverlayView: View {
     private var notchWidth: CGFloat {
         if isExpanded { return expandedWidth }
         if notchState.isShowingScreenshotPopup { return 280 }
-        if isSticky { return 300 }
+        if isSticky {
+            if notchState.stickyType == .todo { return 380 }
+            if notchState.stickyType == .clipboard { return 340 }
+            return 300
+        }
         return collapsedWidth
     }
     
     private var notchHeight: CGFloat {
         if isExpanded { return expandedHeight }
         if notchState.isShowingScreenshotPopup { return 35 }
-        if isSticky { return 33 }
-        if mediaManager.isPlaying || timerManager.isRunning { return 30 }
         return collapsedHeight
     }
 
@@ -45,16 +51,16 @@ struct NotchOverlayView: View {
                     .fill(Color.black)
                     .shadow(color: Color.black.opacity((isExpanded || notchState.isHovering || isShowingPopup) ? 0.5 : 0), radius: isExpanded ? 20 : 8, x: 0, y: isExpanded ? 10 : 4)
                     .onAppear {
-                        currentRadius = isExpanded ? 20 : (isSticky ? 12 : 6)
+                        currentRadius = isExpanded ? 20 : (isSticky ? 12 : 9)
                     }
-                    .onChange(of: isExpanded) { expanded in
+                    .onChange(of: isExpanded) { oldValue, expanded in
                         withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45)) {
-                            currentRadius = expanded ? 20 : (isSticky ? 12 : 6)
+                            currentRadius = expanded ? 20 : (isSticky ? 12 : 9)
                         }
                     }
-                    .onChange(of: isSticky) { sticky in
+                    .onChange(of: isSticky) { oldValue, sticky in
                         withAnimation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45)) {
-                            currentRadius = isExpanded ? 20 : (sticky ? 12 : 6)
+                            currentRadius = isExpanded ? 20 : (sticky ? 12 : 9)
                         }
                     }
                 
@@ -92,13 +98,26 @@ struct NotchOverlayView: View {
                         }
                         .padding(.horizontal, 16)
                         .frame(width: 280, height: 36)
+                        .clipShape(NotchShape(cornerRadius: currentRadius))
                         .transition(.scale(scale: 0.9).combined(with: .opacity))
                     } else if isSticky {
-                        if timerManager.isRunning || timerManager.isStopwatchRunning || notchState.stickyType == .timer {
-                            StickyTimerView()
-                        } else if notchState.stickyType == .media {
-                            StickyMediaView()
+                        ZStack {
+                            if notchState.stickyType == .clipboard {
+                                StickyClipboardCopiedView().transition(.opacity)
+                            } else if notchState.stickyType == .todo {
+                                StickyTodoView().transition(.opacity)
+                            } else if notchState.stickyType == .timer {
+                                StickyTimerView().transition(.opacity)
+                            } else if notchState.stickyType == .media {
+                                StickyMediaView().transition(.opacity)
+                            }
                         }
+                        .frame(width: width, height: collapsedHeight)
+                        .clipShape(NotchShape(cornerRadius: currentRadius))
+                        .transition(.asymmetric(
+                            insertion: .opacity.animation(.easeIn(duration: 0.3).delay(0.1)),
+                            removal: .opacity.animation(.easeOut(duration: 0.1))
+                        ))
                     } else {
                         // Static Collapsed Icons
                         HStack(spacing: 25) {
@@ -124,7 +143,23 @@ struct NotchOverlayView: View {
                             }
                             .frame(width: 14)
                             
-                            Image(systemName: "calendar")
+                            ZStack {
+                                Image(systemName: "checklist")
+                                    .foregroundColor(.white.opacity(0.3))
+                                
+                                if notchState.hasOverdueTodo && settings.todoShowOverdue {
+                                    Circle()
+                                        .fill(Color.red)
+                                        .frame(width: 4, height: 4)
+                                        .offset(x: 6, y: -6)
+                                } else if pendingTasks.first != nil {
+                                    Circle()
+                                        .fill(Color.blue)
+                                        .frame(width: 4, height: 4)
+                                        .offset(x: 6, y: -6)
+                                }
+                            }
+                            
                             Image(systemName: "cpu")
                             Image(systemName: "gearshape")
                         }
@@ -149,6 +184,7 @@ struct NotchOverlayView: View {
         .frame(width: 900, height: 800, alignment: .top)
         .animation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45), value: isExpanded)
         .animation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45), value: isSticky)
+        .animation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45), value: notchState.stickyType)
         .animation(.timingCurve(0.4, 0, 0.2, 1, duration: 0.45), value: isShowingPopup)
     }
 
@@ -195,11 +231,11 @@ struct StickyMediaView: View {
                         .aspectRatio(contentMode: .fill)
                         .frame(width: 20, height: 20)
                         .cornerRadius(4)
-                        .offset(y: -1) // Move 1 more pixel down
+                        .offset(x: -3, y: -2)
                 } else {
                     Image(systemName: "music.note")
                         .font(.system(size: 10))
-                        .offset(y: 0)
+                        .offset(x: -3, y: -1)
                 }
             }
             .padding(.leading, 20)
@@ -207,6 +243,7 @@ struct StickyMediaView: View {
             Spacer()
             
             VisualizerView(isPlaying: mediaManager.isPlaying)
+                .offset(y: -2)
                 .padding(.trailing, 20)
         }
         .frame(width: 300, height: 32)
@@ -231,7 +268,84 @@ struct VisualizerView: View {
         .onReceive(timer) { _ in
             if isPlaying {
                 withAnimation(.easeInOut(duration: 0.15)) {
-                    heights = (0..<5).map { _ in CGFloat.random(in: 4...16) }
+                    for i in 0..<5 {
+                        heights[i] = CGFloat.random(in: 4...18)
+                    }
+                }
+            }
+        }
+    }
+}
+
+struct StickyTodoView: View {
+    @State private var pulse = false
+    var body: some View {
+        HStack {
+            HStack(spacing: 8) {
+                Image(systemName: "checklist")
+                    .foregroundColor(.white.opacity(0.5))
+            }
+            .padding(.leading, 20)
+            
+            Spacer()
+            
+            HStack(spacing: 6) {
+                Circle()
+                    .fill(Color.red)
+                    .frame(width: 6, height: 6)
+                    .scaleEffect(pulse ? 1.4 : 1.0)
+                    .opacity(pulse ? 0.7 : 1.0)
+                    .animation(Animation.easeInOut(duration: 0.8).repeatForever(autoreverses: true), value: pulse)
+                Text("Overdue")
+                    .font(.system(size: 11, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+            }
+            .padding(.trailing, 16)
+        }
+        .frame(width: 380, height: 32)
+        .onAppear {
+            pulse = true
+        }
+    }
+}
+
+struct StickyClipboardCopiedView: View {
+    @State private var showCheck = false
+    @State private var showText = false
+    
+    var body: some View {
+        HStack {
+            HStack(spacing: 8) {
+                if showCheck {
+                    Image(systemName: "checkmark.circle.fill")
+                        .foregroundColor(.green)
+                        .font(.system(size: 14))
+                        .transition(.scale.combined(with: .opacity))
+                } else {
+                    Image(systemName: "doc.on.clipboard.fill")
+                        .foregroundColor(.white.opacity(0.5))
+                        .font(.system(size: 14))
+                }
+            }
+            .padding(.leading, 24)
+            .animation(.spring(response: 0.3, dampingFraction: 0.6), value: showCheck)
+            
+            Spacer()
+            
+            if showText {
+                Text("Copied")
+                    .font(.system(size: 12, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .padding(.trailing, 24)
+                    .transition(.move(edge: .trailing).combined(with: .opacity))
+            }
+        }
+        .frame(width: 340, height: 32)
+        .onAppear {
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) {
+                withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) {
+                    showCheck = true
+                    showText = true
                 }
             }
         }

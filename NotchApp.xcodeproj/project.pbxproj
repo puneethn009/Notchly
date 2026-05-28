@@ -139,20 +139,23 @@
 /* Begin PBXShellScriptBuildPhase section */
 		A1B2C3D4E5F67890AABB1122 /* Rebuild AppIcon.icns */ = {
 			isa = PBXShellScriptBuildPhase;
+			alwaysOutOfDate = 1;
 			buildActionMask = 2147483647;
 			files = (
 			);
 			inputFileListPaths = (
 			);
 			inputPaths = (
-				"$(SRCROOT)/NotchApp/Assets.xcassets/AppIcon.appiconset/1024.png",
+				"$(SRCROOT)/NotchApp/Assets.xcassets/AppIcon.appiconset/icon_1024x1024.png",
 			);
 			name = "Rebuild AppIcon.icns";
 			outputFileListPaths = (
 			);
+			outputPaths = (
+			);
 			runOnlyForDeploymentPostprocessing = 0;
 			shellPath = /bin/sh;
-			shellScript = "#!/bin/sh\nset -e\nSOURCE=\"$SRCROOT/NotchApp/Assets.xcassets/AppIcon.appiconset/1024.png\"\nOUT_ICNS=\"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/Resources/AppIcon.icns\"\nTMPSET=\"/tmp/Notchly_build_$$.iconset\"\nmkdir -p \"$TMPSET\"\nsips -z 16 16     \"$SOURCE\" --out \"$TMPSET/icon_16x16.png\" 2>/dev/null\nsips -z 32 32     \"$SOURCE\" --out \"$TMPSET/icon_16x16@2x.png\" 2>/dev/null\nsips -z 32 32     \"$SOURCE\" --out \"$TMPSET/icon_32x32.png\" 2>/dev/null\nsips -z 64 64     \"$SOURCE\" --out \"$TMPSET/icon_32x32@2x.png\" 2>/dev/null\nsips -z 128 128   \"$SOURCE\" --out \"$TMPSET/icon_128x128.png\" 2>/dev/null\nsips -z 256 256   \"$SOURCE\" --out \"$TMPSET/icon_128x128@2x.png\" 2>/dev/null\nsips -z 256 256   \"$SOURCE\" --out \"$TMPSET/icon_256x256.png\" 2>/dev/null\nsips -z 512 512   \"$SOURCE\" --out \"$TMPSET/icon_256x256@2x.png\" 2>/dev/null\nsips -z 512 512   \"$SOURCE\" --out \"$TMPSET/icon_512x512.png\" 2>/dev/null\nsips -z 1024 1024 \"$SOURCE\" --out \"$TMPSET/icon_512x512@2x.png\" 2>/dev/null\niconutil --convert icns \"$TMPSET\" --output \"$OUT_ICNS\"\nrm -rf \"$TMPSET\"\necho \"[Notchly] AppIcon.icns rebuilt successfully\"\n";
+			shellScript = "#!/bin/sh\nset -e\nSOURCE=\"$SRCROOT/NotchApp/Assets.xcassets/AppIcon.appiconset/icon_1024x1024.png\"\nOUT_ICNS=\"$BUILT_PRODUCTS_DIR/$PRODUCT_NAME.app/Contents/Resources/AppIcon.icns\"\nTMPSET=\"/tmp/Notchly_build_$$.iconset\"\nmkdir -p \"$TMPSET\"\nsips -z 16 16     \"$SOURCE\" --out \"$TMPSET/icon_16x16.png\" 2>/dev/null\nsips -z 32 32     \"$SOURCE\" --out \"$TMPSET/icon_16x16@2x.png\" 2>/dev/null\nsips -z 32 32     \"$SOURCE\" --out \"$TMPSET/icon_32x32.png\" 2>/dev/null\nsips -z 64 64     \"$SOURCE\" --out \"$TMPSET/icon_32x32@2x.png\" 2>/dev/null\nsips -z 128 128   \"$SOURCE\" --out \"$TMPSET/icon_128x128.png\" 2>/dev/null\nsips -z 256 256   \"$SOURCE\" --out \"$TMPSET/icon_128x128@2x.png\" 2>/dev/null\nsips -z 256 256   \"$SOURCE\" --out \"$TMPSET/icon_256x256.png\" 2>/dev/null\nsips -z 512 512   \"$SOURCE\" --out \"$TMPSET/icon_256x256@2x.png\" 2>/dev/null\nsips -z 512 512   \"$SOURCE\" --out \"$TMPSET/icon_512x512.png\" 2>/dev/null\nsips -z 1024 1024 \"$SOURCE\" --out \"$TMPSET/icon_512x512@2x.png\" 2>/dev/null\niconutil --convert icns \"$TMPSET\" --output \"$OUT_ICNS\"\nrm -rf \"$TMPSET\"\necho \"[Notchly] AppIcon.icns rebuilt successfully\"\n";
 		};
 /* End PBXShellScriptBuildPhase section */
 

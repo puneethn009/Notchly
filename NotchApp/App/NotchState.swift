@@ -31,6 +31,8 @@ enum StickyType {
     case none
     case timer
     case media
+    case todo
+    case clipboard
 }
 
 class NotchState: NSObject, ObservableObject {
@@ -44,6 +46,10 @@ class NotchState: NSObject, ObservableObject {
         }
     }
     @Published var isHovering: Bool = false
+    
+    // Priority State Flags
+    @Published var isOverdueReminderActive: Bool = false
+    
     @Published var stickyType: StickyType = .none
     @Published var isSticky: Bool = false {
         didSet { if !isSticky { stickyType = .none } }
@@ -55,9 +61,70 @@ class NotchState: NSObject, ObservableObject {
             }
         }
     }
+    
+    var clipboardDisplayTimer: Timer? = nil
+    
     @Published var lastCapturedScreenshotURL: URL?
     @Published var pendingScreenshotURL: URL?
     @Published var isShowingScreenshotPopup: Bool = false
     @Published var activeGame: String? = nil
     @Published var extraHeight: CGFloat = 0
+    
+    // Task Reminder Alarm State
+    @Published var activeTaskReminderId: UUID? = nil
+    @Published var activeTaskReminderTitle: String = ""
+    @Published var activeTaskReminderTags: [String] = []
+    
+    @Published var hasOverdueTodo: Bool = false
+    
+    // The current active timer for 5s overdue reminder display
+    var overdueDisplayTimer: Timer? = nil
+    
+    func transitionTo(stickyType newType: StickyType) {
+        guard self.stickyType != newType || !self.isSticky else { return }
+        
+        if self.isSticky {
+            self.isSticky = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                self.stickyType = newType
+                if newType != .none {
+                    self.isSticky = true
+                }
+            }
+        } else {
+            self.stickyType = newType
+            if newType != .none {
+                self.isSticky = true
+            }
+        }
+    }
+    
+    func evaluateStickyPriority() {
+        // 1. Clipboard has highest priority
+        if stickyType == .clipboard { return }
+        
+        var targetType: StickyType = .none
+        
+        // 2. Overdue Reminder (5-second pulse)
+        if isOverdueReminderActive {
+            targetType = .todo
+        }
+        // 3. Timer / Stopwatch
+        else if TimerManager.shared.isRunning || TimerManager.shared.isStopwatchRunning {
+            targetType = .timer
+        }
+        // 4. Media
+        else if MediaPlayerManager.shared.isPlaying {
+            targetType = .media
+        }
+        
+        if targetType == .none {
+            isSticky = false
+            DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) {
+                if !self.isSticky { self.stickyType = .none }
+            }
+        } else {
+            transitionTo(stickyType: targetType)
+        }
+    }
 }
